@@ -129,10 +129,11 @@ STANDARD_SECOND_ROW_QUALTRICS_COLUMNS <- c(
 ##########################
 # Wrap it all up
 
-qc.clean_qualtrics <- function(qdf
-                               ,remove_unnamed_columns=FALSE
-                               ,extract_column_name=qc.extract_delimited
-                               ,...){
+qc.clean_qualtrics <- function(
+  qdf,
+  remove_unnamed_columns=FALSE,
+  extract_column_name=qc.extract_delimited,
+  ...){
   # Input: raw Qualtrics dataset, hidden column retrieving function, and
   # Output: clean Qualtrics dataset
   # takes a Qualtrics data.frame, a boolean indicating whether unnamed columns
