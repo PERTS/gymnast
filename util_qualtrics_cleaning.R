@@ -1,10 +1,10 @@
 ##############################################################################
 ########################## Qualtrics Cleaning Functions #####################
-#### Defines functions prefixed qc. for qualtrics cleaning
+#### Defines functions prefixed qc. for qualtrics cleaning. There's a do-it-all
+# function at the bottom called qc.clean_qualtrics that can be used in the
+# following way: pq.clean_qualtric(raw_qualtrics_dataframe, )
 
-require(stringr)
-setwd("~/Sites")
-source("gymnast/util.R")
+source("util.R")
 
 STANDARD_SECOND_ROW_QUALTRICS_COLUMNS <- c(
   "ResponseID"
