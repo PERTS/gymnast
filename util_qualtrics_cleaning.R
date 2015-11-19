@@ -1,47 +1,51 @@
-########################################################################################################
-########################## Qualtrics Cleaning Functions ################################################
+##############################################################################
+########################## Qualtrics Cleaning Functions #####################
 #### Defines functions prefixed qc. for qualtrics cleaning
 
 require(stringr)
+setwd("~/Sites")
+source("gymnast/util.R")
 
-KNOWN_QUALTRICS_COLUMNS <- c("ResponseID"
-                             ,"ResponseSet"
-                             ,"Name"
-                             ,"ExternalDataReference"
-                             ,"EmailAddress"
-                             ,"IPAddress"
-                             ,"Status"
-                             ,"StartDate"
-                             ,"EndDate"
-                             ,"Finished")
-
-# Warning if util.R has not been loaded
-if(!any(grepl("^util\\.", objects()))){
-  # util.R is required for util_qualtrics_cleaning.R
-  # raise exception if util.R objects missing from workspace
-  stop("util.R is required for util_qualtrics_cleaning.R.
-       Run source util.R before source util_qualtrics_cleaning.R")
-}
+STANDARD_SECOND_ROW_QUALTRICS_COLUMNS <- c(
+  "ResponseID"
+  ,"ResponseSet"
+  ,"Name"
+  ,"ExternalDataReference"
+  ,"EmailAddress"
+  ,"IPAddress"
+  ,"Status"
+  ,"StartDate"
+  ,"EndDate"
+  ,"Finished")
 
 ##########################
 # Name variables appropriately
 
-  # Input: all-character Qualtrics dataset, string-identifying function (e.g.,
-  # qc.extract_delimited) Output: Qualtrics dataset with all variables named
-  # appropriately.
-
   qc.insert_hidden_column_names <- function(qdf_char,
     extract_column_name=qc.extract_delimited, ...){
+    # Qualtrics uses two header rows, one for variables named in Qualtrics, and
+    # one for the question text itself. We have a practice of "hiding" column
+    # names in the second header row (in the question text) by wrapping them
+    # in hidden <div>s. This function scans the first row of the data.frame for
+    # these hidden values and fixes all the column names.
 
-    question_text <- as.character(qdf_char[1,])
-    q_labels <- names(qdf_char)
+    # Inputs:
+    # - all-character Qualtrics dataset with first row of data containing
+    # the extra Qualtrics headers
+    # - a string-identifying function (e.g., qc.extract_delimited)
+    # - arbitrary args to be passed to the string-identifying function (...)
+
+    # Output: Qualtrics dataset with all variables named
+    # appropriately.
+
+    question_text <- as.character(qdf_char[1, ])
+
+    # start with the names we already have
+    best_column_names <- names(qdf_char)
 
     # Find the hidden column names by applying the string-identifying function
     # to the question text.
-    hidden_column_names <- sapply(question_text,extract_column_name,...)
-
-    # start with the default labels
-    best_column_names <- q_labels
+    hidden_column_names <- sapply(question_text, extract_column_name, ...)
 
     # Wherever hidden column names appear, replace default labels with hidden
     # column names
@@ -60,7 +64,13 @@ if(!any(grepl("^util\\.", objects()))){
     return(qdf_char)
   }
 
-  qc.extract_delimited <- function(x,delimiter="__pdd__"){
+
+  qc.extract_delimited <- function(x,delimiter = "__pdd__"){
+    # Input:
+    # - string vector from first row of raw Qualtrics dataset containing second
+    # Qualtrics header
+    # - delimiter to demarcate the column name, e.g., "__pdd__toi_1__pdd__"
+    # becomes "toi_1"
     # x is a string vector
 
     # define a regular expression based on the delimiter:
@@ -73,25 +83,25 @@ if(!any(grepl("^util\\.", objects()))){
     return(delimited_strings)
   }
 
-  # Insert known Qualtrics columns that always appear in row 1 instead of in
-  # the header for some unknown reason.
-  qc.handle_known_Qualtrics_columns <- function(qdf_char,
-    known_qualtrics_columns=KNOWN_QUALTRICS_COLUMNS){
+  qc.handle_known_Qualtrics_columns <- function(
+    qdf_char,
+    known=STANDARD_SECOND_ROW_QUALTRICS_COLUMNS){
+    # Insert known Qualtrics columns that always appear in row 1 instead of in
+    # the header for some unknown reason.
     # insert known columns that appear in row 1
-    is_known_qualtrics_column <- qdf_char[1,] %in% known_qualtrics_columns
-    names(qdf_char)[is_known_qualtrics_column] <- as.character(qdf_char[1,is_known_qualtrics_column])
+    is_known <- qdf_char[1,] %in% known
+    names(qdf_char)[is_known] <- as.character(qdf_char[1,is_known])
     return(qdf_char)
   }
 
-  # Remove unnamed columns (optional)
   qc.remove_unnamed_columns <- function(qdf_rn){
-      # this function removed default-named Qualtrics columns (e.g., V1, Q3)
-      # it can be really useful to do this, but should be optional.
-      known_regex <- "^Q[[:digit:]]+_?[[:digit:]]*$|^V[[:digit:]]+$"
-      unnamed_columns <- grepl(known_regex, names(qdf_rn))
-      qdf_rn <- qdf_rn[, !unnamed_columns]
-      return(qdf_rn)
-    }
+    # Remove unnamed columns (optional)
+    # this function removed default-named Qualtrics columns (e.g., V1, Q3)
+    # it can be really useful to do this, but should be optional.
+    known_regex <- "^Q[[:digit:]]+_?[[:digit:]]*$|^V[[:digit:]]+$"
+    unnamed_columns <- grepl(known_regex, names(qdf_rn))
+    return(qdf_rn[, !unnamed_columns])
+  }
 
   # a wrapper function for all the above column-naming procedures:
   qc.rename_columns <- function( qdf_char,
@@ -119,13 +129,12 @@ if(!any(grepl("^util\\.", objects()))){
 ##########################
 # Wrap it all up
 
-# Input: raw Qualtrics dataset, hidden column retrieving function, and
-# Output: clean Qualtrics dataset
-
 qc.clean_qualtrics <- function(qdf
                                ,remove_unnamed_columns=FALSE
                                ,extract_column_name=qc.extract_delimited
                                ,...){
+  # Input: raw Qualtrics dataset, hidden column retrieving function, and
+  # Output: clean Qualtrics dataset
   # takes a Qualtrics data.frame, a boolean indicating whether unnamed columns
   # should be removed, a function (qc.extract_delimited, by default), and
   # optional arguments to be passed to a user-created function fun

@@ -28,14 +28,12 @@ util.recode <- function(vector, originals, replacements){
 # y <- c("A","B","C")
 # system.time(recode <- util.recode(vector,x,y))
 
-
 util.reverse_likert <- function(v, scale_levels) {
   # Require that responses are numeric so that we can do arithmetic
   reversed_data <- as.numeric(v)
   # Change 6's to 1's and 2's to 5's, etc.
   return(scale_levels - reversed_data + 1)
 }
-
 
 
 source("util_code_conventions.R")
