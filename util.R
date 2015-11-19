@@ -1,9 +1,7 @@
 # util.R
 
-# Collection of useful stuff.
-
-library(formatR)
-library(xtable)
+setwd("~/Sites/gymnast/")
+source("install_gymnast_packages.R")
 
 # cleans up coding style; by default from the clipboard
 # 1. copy ugly code to clipboard
