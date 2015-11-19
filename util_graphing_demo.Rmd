@@ -12,7 +12,7 @@ output:
 
 ## Load Util Graphing
 ```{r, message=FALSE}
-setwd("~/perts_analyses/common")
+setwd("~/Sites/gymnast")
 source("util_graphing.R")
 ```
 
