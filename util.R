@@ -36,13 +36,14 @@ util.clean_string <- util.clean_str
 
     # Other common approaches return a matrix, or else fail to remove factors
     # (for example, apply() and do.call(cbind, lapply()) both have these problems)
-    
+
 util.apply_columns <- function(df, fun){
-	# returns a data.frame with fun applied to every column.
-	# sets stringsAsFactors = FALSE to prevent factorizing characters.
-    # sets check.names = FALSE to avoid adding extra characters to column names by default.
+  # returns a data.frame with fun applied to every column. sets
+  # stringsAsFactors = FALSE to prevent factorizing characters.
+  # sets check.names = FALSE to avoid adding extra characters to column names
+  # by default.
     data.frame(lapply(df, fun), stringsAsFactors = FALSE, check.names=FALSE)
-} 
+}
 
 # same base::as.character() but accepts (and returns) data frames or vectors
 util.to_character <- function(x){
@@ -68,15 +69,15 @@ util.recode <- function(vector, originals, replacements){
 
 # Strip elements containing non-unicode characters
 
-	# Note that any time you are dealing with a file that contains open-text fields, especially from 
+	# Note that any time you are dealing with a file that contains open-text fields, especially from
 	# survey data, it is likely that there will be a couple of non-unicode characters, such as
-	# accent marks, umlauts, characters with tildes, etc. These non-unicode characters cause other 
-	# string manipulation functions to throw errors. 
-	
+	# accent marks, umlauts, characters with tildes, etc. These non-unicode characters cause other
+	# string manipulation functions to throw errors.
+
 	# Note to Dave: The disadvantage to this method is that it
-	# returns NA for values that contain non-unicode characters. In general this is rare, so I 
-	# haven't worried about it. But it might be worth digging around for a better solution, e.g., 
-	# a function that merely replaces the non-unicode CHARACTER with a capital "X" or something 
+	# returns NA for values that contain non-unicode characters. In general this is rare, so I
+	# haven't worried about it. But it might be worth digging around for a better solution, e.g.,
+	# a function that merely replaces the non-unicode CHARACTER with a capital "X" or something
 	# like that. I'd be interested in your thoughts on whether it's worth the time to fix this.
 
 util.to_unicode <- function(x){
@@ -89,46 +90,48 @@ util.to_unicode <- function(x){
 # Determine whether all elements of x are numbers (regardless of whether x is numeric)
 
 util.is_number <- function(x){
-  # Determines whether all elements of x are numbers, regardless of whether x is type character
-  # or type numeric, by evaluating whether all elements of x match a regular expression
-  # where there is at least one digit character and no non-digit characters
-  # A decimal is optional. This is useful when dealing with character vectors that may
-  # need to be changed to numerics, e.g., in Qualtrics datasets where all columns are
-  # set to character types by default, even if they are number columns. 
-  
+  # Determines whether all elements of x are numbers, regardless of whether x
+  # is type character or type numeric, by evaluating whether all elements of x
+  # match a regular expression where there is at least one digit character and
+  # no non-digit characters A decimal is optional. This is useful when dealing
+  # with character vectors that may need to be changed to numerics, e.g., in
+  # Qualtrics datasets where all columns are set to character types by default,
+  # even if they are number columns.
+
   # find the numeric values:
   numeric_values <- grepl("^[[:digit:]]*\\.*[[:digit:]]+$",x)
-  #numeric_values <- x[!is.na(as.numeric(x))] # can also do this but it throws a bunch of warnings.
-  
+  #numeric_values <- x[!is.na(as.numeric(x))] # can also do this but it throws
+  #a bunch of warnings.
+
   # find the non-blank values
   blank_values <- util.is_blank(x)
-  
-  # Return TRUE if values are either numeric or blank, and original vector otherwise
+
+  # Return TRUE if values are either numeric or blank, and original vector
+  # otherwise
   if(all(numeric_values | blank_values)){
     return(TRUE)
-  } 
+  }
   else{
      return(FALSE)
   }
-  
+
 }
 
 util.as_numeric_if_number <- function(x){
   # If x is a data.frame, call util.as_numeric_if_number on each column of x
-  # and return a data.frame with numbers converted to numerics. 
-  # If x is a vector, return a character or numeric vector depending on the contents of x
+  # and return a data.frame with numbers converted to numerics.  If x is a
+  # vector, return a character or numeric vector depending on the contents of x
   if(class(x) %in% "data.frame"){
     return(util.apply_columns(x, util.as_numeric_if_number))
   }
   else{
     if(util.is_number(x)){
-      as.numeric(x)
-      } 
-    else{
+      return(as.numeric(x))
+    } else{
       return(x)
     }
   }
-} 
+}
 
 # HTML PRINTING
 
@@ -143,18 +146,18 @@ util.html_table <- function(df, ...) {
   }
   if( ! interactive() ){
     if( any( class(df) %in% c("lmerMod","lm","aov","glm","glmerMod") ) ){
-      stargazer(df, type="html", 
+      stargazer(df, type="html",
                 star.cutoffs = c(.05, .01, .001),
-                notes        = "", 
+                notes        = "",
                 notes.label = "1 star p<.05; 2 stars p<.01; 3 stars p<.001",
                 notes.append = FALSE,
                 single.row=TRUE
       )
     }
     else{
-      print(xtable(df, ...), 
+      print(xtable(df, ...),
             type="html",
-            html.table.attributes = 
+            html.table.attributes =
               getOption("xtable.html.table.attributes", "border=0, class='xtable'"), ...)
     }
   }
@@ -169,7 +172,7 @@ util.html_table <- function(df, ...) {
 
 # prints to html as it would to console (preformatted html)
 util.print_pre <- function(x){
-  if(interactive()) return(x) 
+  if(interactive()) return(x)
   capture.output(print(x)) %>%
     paste(collapse="\n") %>%
     paste("<pre>",.,"</pre>") %>%
@@ -198,7 +201,7 @@ util.passed <- function(message) {
     } else {
         paste0("<div class='pass'>", message, "</div>") %>% cat()
     }
-} 
+}
 
 
 # Basic Data Transformation
@@ -219,7 +222,7 @@ util.round_df <- function(DF, digits=2, show_caution=TRUE){
     if( is.numeric(vec) ){
       vec <- round(vec,digits)
     }
-    else{ 
+    else{
       if(show_caution){
         util.caution("Any characters will make all columns characters.")
       }
