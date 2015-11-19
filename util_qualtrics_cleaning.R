@@ -1,5 +1,6 @@
 ########################################################################################################
 ########################## Qualtrics Cleaning Functions ################################################
+#### Defines functions prefixed qc. for qualtrics cleaning
 
 require(stringr)
 
@@ -26,11 +27,11 @@ if(!any(grepl("^util\\.", objects()))){
 # Name variables appropriately
 
   # Input: all-character Qualtrics dataset, string-identifying function (e.g.,
-  # pq.extract_delimited) Output: Qualtrics dataset with all variables named
+  # qc.extract_delimited) Output: Qualtrics dataset with all variables named
   # appropriately.
 
-  pq.insert_hidden_column_names <- function(qdf_char,
-    extract_column_name=pq.extract_delimited, ...){
+  qc.insert_hidden_column_names <- function(qdf_char,
+    extract_column_name=qc.extract_delimited, ...){
 
     question_text <- as.character(qdf_char[1,])
     q_labels <- names(qdf_char)
@@ -59,7 +60,7 @@ if(!any(grepl("^util\\.", objects()))){
     return(qdf_char)
   }
 
-  pq.extract_delimited <- function(x,delimiter="__pdd__"){
+  qc.extract_delimited <- function(x,delimiter="__pdd__"){
     # x is a string vector
 
     # define a regular expression based on the delimiter:
@@ -74,7 +75,7 @@ if(!any(grepl("^util\\.", objects()))){
 
   # Insert known Qualtrics columns that always appear in row 1 instead of in
   # the header for some unknown reason.
-  pq.handle_known_Qualtrics_columns <- function(qdf_char,
+  qc.handle_known_Qualtrics_columns <- function(qdf_char,
     known_qualtrics_columns=KNOWN_QUALTRICS_COLUMNS){
     # insert known columns that appear in row 1
     is_known_qualtrics_column <- qdf_char[1,] %in% known_qualtrics_columns
@@ -83,7 +84,7 @@ if(!any(grepl("^util\\.", objects()))){
   }
 
   # Remove unnamed columns (optional)
-  pq.remove_unnamed_columns <- function(qdf_rn){
+  qc.remove_unnamed_columns <- function(qdf_rn){
       # this function removed default-named Qualtrics columns (e.g., V1, Q3)
       # it can be really useful to do this, but should be optional.
       known_regex <- "^Q[[:digit:]]+_?[[:digit:]]*$|^V[[:digit:]]+$"
@@ -93,21 +94,21 @@ if(!any(grepl("^util\\.", objects()))){
     }
 
   # a wrapper function for all the above column-naming procedures:
-  pq.rename_columns <- function( qdf_char,
-                                 extract_column_name=pq.extract_delimited,
+  qc.rename_columns <- function( qdf_char,
+                                 extract_column_name=qc.extract_delimited,
                                  remove_unnamed_columns=FALSE,
                                  ...){
 
   # First, insert delimited column names (these should always override any
   # existing column names)
-  qdf_rn <- pq.insert_hidden_column_names(qdf_char, extract_column_name, ...)
+  qdf_rn <- qc.insert_hidden_column_names(qdf_char, extract_column_name, ...)
 
   # Now, insert known Qualtrics column names
-  qdf_rn <- pq.handle_known_Qualtrics_columns(qdf_rn)
+  qdf_rn <- qc.handle_known_Qualtrics_columns(qdf_rn)
 
   # Optionally, remove unnamed columns
   if(remove_unnamed_columns){
-    qdf_rn <- pq.remove_unnamed_columns(qdf_rn)
+    qdf_rn <- qc.remove_unnamed_columns(qdf_rn)
   }
 
   # Return a renamed Qualtrics data.frame
@@ -121,16 +122,16 @@ if(!any(grepl("^util\\.", objects()))){
 # Input: raw Qualtrics dataset, hidden column retrieving function, and
 # Output: clean Qualtrics dataset
 
-pq.clean_qualtrics <- function(qdf
+qc.clean_qualtrics <- function(qdf
                                ,remove_unnamed_columns=FALSE
-                               ,extract_column_name=pq.extract_delimited
+                               ,extract_column_name=qc.extract_delimited
                                ,...){
   # takes a Qualtrics data.frame, a boolean indicating whether unnamed columns
-  # should be removed, a function (pq.extract_delimited, by default), and
+  # should be removed, a function (qc.extract_delimited, by default), and
   # optional arguments to be passed to a user-created function fun
   qdf_char <- util.to_character(qdf)
   qdf_unicode <- util.to_unicode(qdf_char)
-  qdf_rn <- pq.rename_columns(qdf_unicode,
+  qdf_rn <- qc.rename_columns(qdf_unicode,
     remove_unnamed_columns,
     extract_column_name=extract_column_name,
     ...)
