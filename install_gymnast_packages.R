@@ -2,11 +2,10 @@
 
 gymnast_install <- function () {
     dependencies <- c(
-        "dplyr", "reshape2", "ggplot2",
-        "grid", "psych","scales",
-        "xtable", "stargazer", "stringr",
-        "Hmisc", "knitr", "digest",
-        "lme4", "lmerTest", "formatR"
+      "digest","dplyr","formatR","ggplot2",
+      "grid","Hmisc","knitr","lme4",
+      "lmerTest","psych","reshape2","scales" ,  
+      "stargazer","stringr","xtable"
     )
     for(lib_name in dependencies){
         message(paste0("Loading... ",lib_name))
