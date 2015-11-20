@@ -9,12 +9,18 @@ util.to_lowercase_and_numbers <- function(x){
   x %>%
     tolower() %>%
     util.strip_special_characters() %>%
-    gsub("(^ +)|( +$)", "", .) %>%  # leading/trailing spaces
-    gsub(" ", "", .)          # all spaces space
+    gsub(" ", "", .) # remove all spaces
 }
 
 if(! util.to_lowercase_and_numbers(" D*  i") %in% "di"){
   stop("util.to_lowercase_and_numbers failed test.")
 }
+
+util.trim <- function(x){
+  # trim leading/trailing spaces and tabs
+  gsub("(^[\t ]+)|([\t ]+$)", "", x)
+}
+
+
 
 

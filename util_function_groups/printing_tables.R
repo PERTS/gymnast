@@ -64,7 +64,7 @@ util.html_table <- function(x, ...) {
     util.html_table_psych_alphas(x)
   }
   
-  if( any(class(x) %in% accepted_dfs )))
+  if( any(class(x) %in% accepted_dfs ) ){
     util.html_table_data_frame(x)
   }
 }

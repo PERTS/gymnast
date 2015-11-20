@@ -12,8 +12,10 @@ output:
 
 ## Load Util Graphing
 ```{r, message=FALSE}
-setwd("~/Sites/gymnast")
-source("util_graphing.R")
+setwd("~")
+source("~/Sites/gymnast/util.R", chdir = TRUE)
+getwd()
+
 ```
 
 ## Simulate Some Data
