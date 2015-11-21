@@ -10,7 +10,7 @@ source("~/perts_analyses/common/util_qualtrics_cleaning.R")
 # With a KU qualtrics dataset including pdd tags
 
 qdf_test1 <- read.csv("~/Dropbox (PERTS)/PERTS shared data/test_data_qualtrics_cleaning/qualtrics_test1.csv")
-qdf_test1_clean <- pq.clean_qualtrics(qdf_test1,remove_unnamed_columns = TRUE)
+qdf_test1_clean <- qc.clean_qualtrics(qdf_test1,remove_unnamed_columns = TRUE)
 head(qdf_test1_clean)
 
 # did the numerics get properly recasted?
