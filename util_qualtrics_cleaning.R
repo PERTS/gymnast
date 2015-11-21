@@ -140,7 +140,7 @@ qc.clean_qualtrics <- function(
   # should be removed, a function (qc.extract_delimited, by default), and
   # optional arguments to be passed to a user-created function fun
   qdf_char <- util.to_character(qdf)
-  qdf_unicode <- util.to_unicode(qdf_char)
+  qdf_unicode <- util.to_stripped_characters(qdf_char)
   qdf_rn <- qc.rename_columns(qdf_unicode,
     remove_unnamed_columns,
     extract_column_name=extract_column_name,
