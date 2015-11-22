@@ -21,7 +21,7 @@ util.html_table_from_model <- function(model){
   }
 }
 
-util.html_table_data_frame <- function(df){
+util.html_table_data_frame <- function(x){
   # "grouped_df", "tbl_df" are dplyr type data.frames
   # ungroup to make them printable like a data.frame
   if(any(class(x) %in% c("grouped_df", "tbl_df"))){
@@ -29,11 +29,12 @@ util.html_table_data_frame <- function(df){
   }
   
   if( ! interactive() ){
-    print(xtable(x, ...), 
+    print(xtable(x), 
           type="html",
           html.table.attributes = 
             getOption("xtable.html.table.attributes", 
-                      "border=0, class='xtable'"), ...)  
+                      "border=0, class='xtable'")
+          )  
   }else{
     return(x)
   }
