@@ -81,8 +81,6 @@ validate_columns <- function(df, column_validation){
             }
         }
         validate_required(column_attributes, names(df))
-        # Finally, check that the column exists, if it's required
-        # If it was, throw a warning.
     }
 }
 
@@ -90,15 +88,15 @@ validate_columns <- function(df, column_validation){
 
 # @todo - turn into unit tests
 
-d <- read.csv("~/Documents/ctc_intervention.csv", stringsAsFactors = FALSE) %>%
-    qc.clean_qualtrics() %>% # clean the qualtrics
-    # add the test columns
-    mutate(
-        blanks_in_wrong_place = sample(c(1:7, NA), nrow(.), replace = TRUE),
-        out_of_range = sample(c(1:8, NA), nrow(.), replace = TRUE),
-        blanks_not_among_accepted_values = sample(c("Value1", "Value2", NA),
-                                                  nrow(.), replace = TRUE)
-    )
+# d <- read.csv("~/Documents/ctc_intervention.csv", stringsAsFactors = FALSE) %>%
+#     qc.clean_qualtrics() %>% # clean the qualtrics
+#     # add the test columns
+#     mutate(
+#         blanks_in_wrong_place = sample(c(1:7, NA), nrow(.), replace = TRUE),
+#         out_of_range = sample(c(1:8, NA), nrow(.), replace = TRUE),
+#         blanks_not_among_accepted_values = sample(c("Value1", "Value2", NA),
+#                                                   nrow(.), replace = TRUE)
+#     )
 
 column_validation <- list(
     # some archetype columns
