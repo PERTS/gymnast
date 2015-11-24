@@ -1,9 +1,3 @@
-################################################################################
-
-source("~/Sites/gymnast/util.R", chdir = FALSE)
-source("~/Sites/gymnast/util_qualtrics_cleaning.R", chdir = FALSE)
-
-
 ############################### rename_columns function  #################################################
 
 rename_columns <- function(data, mapping) {
@@ -216,7 +210,7 @@ test_basic_performance()
 
 ################################################################################
 
-validate_columns <- function(df, column_validation){
+util.validate_columns <- function(df, column_validation){
     
     # define custom validation functions for each column attribute
     
@@ -229,14 +223,12 @@ validate_columns <- function(df, column_validation){
                       %+% ". Should be " %+% exp_type 
                       %+% ".")
         }
-        print("Validated datatype")
     }
     
     validate_accepted_values <- function(column_attributes, x){
         if(!all(x %in% column_attributes$accepted_values)){
-            util.warn(column_attributes$column %+% " has non-accepted values.")
+            util.warn(column_attributes$column %+% " has unaccepted values.")
         }
-        print("Validated accepted values")
     }
     
     validate_accepted_range <- function(column_attributes, x){
@@ -250,7 +242,6 @@ validate_columns <- function(df, column_validation){
             util.warn(column_attributes$column %+%
                           " has out of range values.")
         }
-        print("Validated accepted range")
     }
     
     validate_blanks_allowed <- function(column_attributes, x){
@@ -258,7 +249,6 @@ validate_columns <- function(df, column_validation){
         if(!column_attributes$blanks_allowed & any(util.is_blank(x))){
             util.warn(column_attributes$column %+% " has blank values, when none are allowed.")
         }
-        print("Validated blanks allowed")
     }
     
     validate_required <- function(column_attributes, df_names){
@@ -269,7 +259,6 @@ validate_columns <- function(df, column_validation){
                 util.warn("Required column " %+% column %+% " does not appear in the data.")
             }
         }
-        print("Validated required")
     }
     
     for(column in names(column_validation)){
@@ -310,39 +299,39 @@ validate_columns <- function(df, column_validation){
 #         blanks_not_among_accepted_values = sample(c("Value1", "Value2", NA),
 #                                                   nrow(.), replace = TRUE)
 #     )
-
-column_validation <- list(
-    # some archetype columns
-    "nonexistant_required" = list(
-        "column_required" = TRUE
-    ),
-    "nonexistant_not_required" = list(
-        "column_required" = FALSE
-    ),
-    "blanks_in_wrong_place" = list(
-        "blanks_allowed" = FALSE
-    ),
-    "out_of_range" = list(
-        "accepted_range" = c(1, 7)
-    ),
-    "blanks_not_among_accepted_values" = list(
-        "accepted_values" = c("Value1", "Value2")
-    ),
-    # some real columns from Qualtrics:
-    "race" = list(
-        "datatype" = "character",
-        "accepted_values" = c("White", "Black", "Latino", "Asian", "Other", "Unknown"),
-        "column_required" = FALSE,
-        "blanks_allowed" = TRUE
-    ),
-    "ddowell" = list(
-        "datatype" = "numeric",
-        "accepted_range" = c(1, 7),
-        "blanks_allowed" = TRUE
-    ),
-    # an open response field
-    "dlrn_open" = list(
-        "datatype" = "character",
-        "blanks_allowed" = FALSE
-    )
-)
+# 
+# column_validation <- list(
+#     # some archetype columns
+#     "nonexistant_required" = list(
+#         "column_required" = TRUE
+#     ),
+#     "nonexistant_not_required" = list(
+#         "column_required" = FALSE
+#     ),
+#     "blanks_in_wrong_place" = list(
+#         "blanks_allowed" = FALSE
+#     ),
+#     "out_of_range" = list(
+#         "accepted_range" = c(1, 7)
+#     ),
+#     "blanks_not_among_accepted_values" = list(
+#         "accepted_values" = c("Value1", "Value2")
+#     ),
+#     # some real columns from Qualtrics:
+#     "race" = list(
+#         "datatype" = "character",
+#         "accepted_values" = c("White", "Black", "Latino", "Asian", "Other", "Unknown"),
+#         "column_required" = FALSE,
+#         "blanks_allowed" = TRUE
+#     ),
+#     "ddowell" = list(
+#         "datatype" = "numeric",
+#         "accepted_range" = c(1, 7),
+#         "blanks_allowed" = TRUE
+#     ),
+#     # an open response field
+#     "dlrn_open" = list(
+#         "datatype" = "character",
+#         "blanks_allowed" = FALSE
+#     )
+# )
