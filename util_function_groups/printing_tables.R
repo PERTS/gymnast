@@ -55,7 +55,7 @@ util.html_table_psych_alphas <- function(x){
 util.html_table <- function(x, ...) {
   accepted_models <- c("lmerMod","lm","aov","glm","glmerMod")
   accepted_psych_objects <- c("psych","alpha")
-  accepted_dfs <- c("grouped_df", "tbl_df","data.frame")
+  accepted_dfs <- c("grouped_df", "tbl_df","data.frame","table")
   
   if( any(class(x) %in% accepted_models ) ){
     util.html_table_from_model(x)
