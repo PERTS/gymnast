@@ -52,6 +52,9 @@ STANDARD_SECOND_ROW_QUALTRICS_COLUMNS <- c(
     valid <- !is.na(hidden_column_names)
     best_column_names[valid] <- hidden_column_names[valid]
 
+    # add any necessary _TEXT suffixes
+    best_column_names <- qc.add_TEXT_suffixes(qdf_char, best_column_names)
+
     # throw a warning if the function being used yields column names that are
     # not unique
     if(any(duplicated(best_column_names))){
@@ -101,6 +104,27 @@ STANDARD_SECOND_ROW_QUALTRICS_COLUMNS <- c(
     known_regex <- "^Q[[:digit:]]+_?[[:digit:]]*$|^V[[:digit:]]+$"
     unnamed_columns <- grepl(known_regex, names(qdf_rn))
     return(qdf_rn[, !unnamed_columns])
+  }
+
+  qc.add_TEXT_suffixes <- function(qdf_char, column_names){
+    # Qualtrics has an infrequent question type where you can input an open-
+    # ended response to a multiple-choice question (e.g., "something else
+    # (write here)"). Qualtrics creates TWO columns for such questions, one for
+    # the multiple-choice response, and one for the open-ended response.
+    # Qualtrics distinguishes them in the column names by adding the suffix
+    # "_TEXT". But it doesn't differentiate the question text in the first row.
+    # We need the _TEXT suffix, otherwise qc.extract_hidden_column_names will
+    # produce duplicate columns. So, add the TEXT suffix back.
+
+    # find the _TEXT columns in the original variable names
+    TEXT_suffix_columns <- grepl("_TEXT$", names(qdf_char))
+
+    # add "_TEXT" to column_names wherever this suffix appears in the original
+    # variable names
+    column_names[TEXT_suffix_columns] <- column_names[TEXT_suffix_columns] %+%
+      "_TEXT"
+
+    return(column_names)
   }
 
   # a wrapper function for all the above column-naming procedures:
