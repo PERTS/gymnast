@@ -174,3 +174,18 @@ qc.clean_qualtrics <- function(
   return(qdf_clean)
 }
 
+qc.rbind_inprogress <- function(inprogress_qdf, clean_qdf){
+  # Takes an in-progress Qualtrics dataset (inprogress_qdf), cleans it,
+  # replaces its column names with those of the cleand Qualtrics dataset
+  # (clean_qdf), and rbinds it to the bottom of cleaned_qdf. Note that if you
+  # set remove_unnamed_columns to TRUE when running qc.clean_qualtrics, both
+  # setNames and rbind will throw errors, because both depend on each
+  # data.frame having the same number of columns.
+
+  # note that i have to use nested functions in the line below because if I
+  # pipe something to suppressWarnings, it throws an error.
+
+  suppressWarnings(qc.clean_qualtrics(inprogress_qdf)) %>%
+    setNames(., names(clean_qdf)) %>%
+    rbind(clean_qdf, .)
+}
