@@ -116,10 +116,11 @@ STANDARD_SECOND_ROW_QUALTRICS_COLUMNS <- c(
     # We need the _TEXT suffix, otherwise qc.extract_hidden_column_names will
     # produce duplicate columns. So, add the TEXT suffix back.
 
-    # find the _TEXT columns
+    # find the _TEXT columns in the original variable names
     TEXT_suffix_columns <- grepl("_TEXT$", names(qdf_char))
 
-    # add "_TEXT" to column_names
+    # add "_TEXT" to column_names wherever this suffix appears in the original
+    # variable names
     column_names[TEXT_suffix_columns] <- column_names[TEXT_suffix_columns] %+%
       "_TEXT"
 
