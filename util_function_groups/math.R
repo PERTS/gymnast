@@ -12,14 +12,14 @@ util.row_means <- function(x){
   # like base::rowMeans(x, na.rm=TRUE) 
   # but it returns self if vector instead of issuing an error
   if(is.vector(x)) return(x)
-  rowMeans(x, na.rm = TRUE)
+  return(rowMeans(x, na.rm = TRUE))
 }
 
 util.row_sums <- function(x){
   # like base::rowSums(x, na.rm=TRUE) 
   # but it returns self if vector instead of issuing an error
   if(is.vector(x)) return(x)
-  rowSums(x, na.rm = TRUE)
+  return(rowSums(x, na.rm = TRUE))
 }
 
 # round all numeric columns
