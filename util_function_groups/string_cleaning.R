@@ -22,7 +22,7 @@ util.trim <- function(x){
 }
 
 
-util.to_acsii <- function(x){
+util.strip_non_acsii <- function(x){
     # deletes non-ASCII characters, e.g., ø, ñ, etc.
     # e.g., Ekstrøm becomes Ekstrm
     iconv(x, "latin1", "ASCII", sub="")

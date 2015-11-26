@@ -23,9 +23,9 @@ util.to_stripped_characters <- function(x){
 
 util.to_acsii <- function(x){
   if(class(x) %in% "data.frame"){
-    util.apply_columns(x, util.to_acsii)
+    util.apply_columns(x, util.strip_non_acsii)
   }
-  else{ util.to_acsii(x) }
+  else{ as.util.strip_non_acsii(x) }
 }
 
 # Are all elements of x numbers?
