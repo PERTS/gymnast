@@ -21,6 +21,12 @@ util.to_stripped_characters <- function(x){
   else{ util.strip_special_characters(x) }
 }
 
+util.to_acsii <- function(x){
+  if(class(x) %in% "data.frame"){
+    util.apply_columns(x, util.to_acsii)
+  }
+  else{ util.to_acsii(x) }
+}
 
 # Are all elements of x numbers?
 # (regardless of whether x is numeric)
