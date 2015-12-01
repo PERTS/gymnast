@@ -62,11 +62,10 @@ util.tidy <- function(source = "clipboard") {
 
 util.apply_columns <- function(df, fun, ...){
     # returns a data.frame with fun applied to every column.
-    # stringsAsFactors = FALSE prevents factorizing characters.
-    # check.names = FALSE avoids adding extra characters to colnames
+    # ellipsis args are passed to fun, applied to all columns.
     
-    # Other apply approaches return a matrix or retain factors
-    # e.g., apply() and do.call(cbind, lapply()) retain factors
+    # stringsAsFactors=FALSE prevents factorizing characters.
+    # check.names=FALSE avoids adding extra characters to colnames
     data.frame(
         lapply(df, fun, ...), 
         stringsAsFactors = FALSE, 
@@ -122,6 +121,7 @@ util.strip_non_acsii <- function(x){
 
 
 util.is_blank <- function(x){
+    # true if tab, space, empty space, NA, NaN
     is.na(x) | grepl("^[ \t]*$", x)
 }
 
@@ -333,8 +333,6 @@ util.round_df <- function(DF, digits=2){
     round_if_number <- function(x, digits=digits){
         if(util.is_vector_of_numbers(x)){
             x <- round(x, digits)
-        } else{
-            x <- x
         }
         return(x)
     }
