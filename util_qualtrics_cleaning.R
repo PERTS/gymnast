@@ -1,10 +1,17 @@
-##############################################################################
-########################## Qualtrics Cleaning Functions #####################
-#### Defines functions prefixed qc. for qualtrics cleaning. There's a do-it-all
-# function at the bottom called qc.clean_qualtrics that can be used in the
-# following way: pq.clean_qualtric(raw_qualtrics_dataframe, )
+###############################################################
+###
+###     util_qualtrics_cleaning.R
+###     Used to load and process Qualtrics CSV data files.
+###
+###     The main function call is:
+###     clean_dataframe <- qc.clean_qualtrics(raw_qualtrics_csv)
+###     
+###     Depends on util.R already being loaded.
+###
+###############################################################
 
-source("util.R")
+# util.R should have already been loaded in by the calling script.
+# source("util.R")
 
 STANDARD_SECOND_ROW_QUALTRICS_COLUMNS <- c(
   "ResponseID"
