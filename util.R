@@ -60,7 +60,7 @@ util.tidy <- function(source = "clipboard") {
 "%+%" <- function (x, y) { paste(x, y, sep="") }
 
 
-util.apply_columns <- function(df, fun){
+util.apply_columns <- function(df, fun, ...){
     # returns a data.frame with fun applied to every column.
     # stringsAsFactors = FALSE prevents factorizing characters.
     # check.names = FALSE avoids adding extra characters to colnames
@@ -68,7 +68,7 @@ util.apply_columns <- function(df, fun){
     # Other apply approaches return a matrix or retain factors
     # e.g., apply() and do.call(cbind, lapply()) retain factors
     data.frame(
-        lapply(df, fun), 
+        lapply(df, fun, ...), 
         stringsAsFactors = FALSE, 
         check.names=FALSE
     )
@@ -132,16 +132,6 @@ util.to_character <- function(x){
         util.apply_columns(x, as.character)
     }
     else{ as.character(x) }
-}
-
-
-# todo: Why was this put in data types and why wouldn't
-# we just update to_stripped_characters to allow data frames?
-util.to_stripped_characters <- function(x){
-    if(class(x) %in% "data.frame"){
-        util.apply_columns(x, util.strip_special_characters)
-    }
-    else{ util.strip_special_characters(x) }
 }
 
 util.to_acsii <- function(x){
@@ -338,24 +328,21 @@ util.row_sums <- function(x){
     return(rowSums(x, na.rm = TRUE))
 }
 
-# round all numeric columns
-util.round_df <- function(DF, digits=2, show_caution=TRUE){
-    vec_list <- lapply( DF, function(vec){
-        if( is.numeric(vec) ){
-            vec <- round(vec,digits)
+util.round_df <- function(DF, digits=2){
+    # round all numeric columns    
+    round_if_number <- function(x, digits=digits){
+        if(util.is_vector_of_numbers(x)){
+            x <- round(x, digits)
+        } else{
+            x <- x
         }
-        else{ 
-            if(show_caution){
-                "Any characters make all columns characters." %>%
-                    util.caution()
-            }
-        }
-        return( vec )
-    })
-    do.call( cbind, vec_list ) %>%
-        as.data.frame()
+        return(x)
+    }
+    
+    util.apply_columns( DF,
+                        round_if_number,
+                        digits=digits)
 }
-
 
 
 
