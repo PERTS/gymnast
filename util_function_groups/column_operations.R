@@ -1,9 +1,206 @@
+############################### rename_columns function  #################################################
+
+rename_columns <- function(data, mapping) {
+  # This function takes a data set and a mapping (which can be a list or data frame)
+  # with columns "old_name" and "new_name". It uses util.recode to turn the old names
+  # into the new names, making sure not to break any R name rules.
+  
+  # Patterns for forbidden names
+  whitespace_pattern <- "\\s"
+  starting_w_digit_pattern <- "^\\.?[0-9]"
+  naughty_words <- c("if", "else", "repeat", "while", "function", "for",
+                     "in", "next", "break", "TRUE", "FALSE", "NULL", "Inf",
+                     "NaN", "NA", "NA_integer_", "NA_real_", "NA_complex_", "NA_character_", NA)
+  
+  # if the new names in the mapping match any evil patterns, then complain
+  if(any(mapping$new_name %in% naughty_words) |
+      any(grepl(whitespace_pattern, mapping$new_name)) |
+      any(grepl(starting_w_digit_pattern, mapping$new_name))) {
+    stop("Invalid new names are present among: ", paste(mapping$new_name, collapse =" "))
+  }
+  
+  # if old and new names are not the same length, then complain
+  if(length(mapping$old_name) != length(mapping$new_name)) {
+    stop("Error! Old names and new names are not the same length in your mapping for renaming.")
+  }
+  
+  names(data) <- util.recode(names(data),
+                             mapping$old_name,
+                             mapping$new_name)
+  
+  # if new column names in the final data have duplicates, then complain
+  if (any(duplicated(names(data)))) {
+    stop("Error! Duplicated names in your renamed data. Review your mapping for renaming.")
+  }
+  
+  return(data)
+}
+
+################################ testing for rename_columns  ################################################
+
+######################## TEST 1: handling forbidden names
+
+(function() {
+  
+  my_mapping <- list(
+    old_name = c("foo", "bar", "baz", "blerp"),
+    new_name = c("newfoo", "newbar", "newbaz", NA)
+  )
+  
+  d <- data.frame(
+    foo = c(1,2,3,4,5),
+    bar = c(6,7,8,9,10),
+    baz = c(11,12,13,14,15),
+    blerp = c(16,17,18,19,20)
+  )
+  
+  success <- FALSE
+  
+  # @todo: abstract away this "assert error" tryCatch operation
+  tryCatch(
+    expr = {
+      rename_columns(d, my_mapping)
+    },
+    error = function(e) {
+      success <<- TRUE
+    }
+  )
+  return(success)
+})()
+
+
+######################## TEST 2: handling extra data columns that aren't in mapping
+
+(function() {
+  
+  my_mapping <- list(
+    old_name = c("foo"),
+    new_name = c("newfoo")
+  )
+  
+  d <- data.frame(
+    foo = c(1,2,3,4,5),
+    blerp = c(16,17,18,19,20)
+  )
+  
+  expected_output <- data.frame(
+    newfoo = c(1,2,3,4,5),
+    blerp = c(16,17,18,19,20)
+  )
+  
+  new_d <- rename_columns(d, my_mapping)
+  
+  return(identical(new_d, expected_output))
+  
+})()
+
+
+######################## TEST 3: extra mapping columns aren't present in data
+
+(function() {
+  
+  my_mapping <- list(
+    old_name = c("foo", "bar"),
+    new_name = c("newfoo", "newbar")
+  )
+  
+  d <- data.frame(
+    foo = c(1,2,3,4,5)
+  )
+  
+  expected_output <- data.frame(
+    newfoo = c(1,2,3,4,5)
+  )
+  
+  new_d <- rename_columns(d, my_mapping)
+  
+  return(identical(new_d, expected_output))
+  
+})()
+
+######################## TEST 4: duplicates in names of final data
+
+(function() {
+  my_mapping <- list(
+    old_name = c("foo","bar","baz"),
+    new_name = c("newfoo","newbar","newbar")
+  )
+  
+  d <- data.frame(
+    foo = c(1,2,3,4,5),
+    bar = c(6,7,8,9,10),
+    baz = c(11,12,13,14,15)
+  )
+  
+  function_correctly_stopped <- FALSE
+  tryCatch(
+    expr = {
+      rename_columns(d, my_mapping)
+    },
+    error = function(e) {
+      function_correctly_stopped <<- TRUE
+    }
+  )
+  return(function_correctly_stopped)
+  
+})()
+
+######################## TEST 5: old_name and new_name are different lengths
+
+(function() {
+  my_mapping <- list(
+    old_name = c("foo", "bar", "baz"),
+    new_name = c("newfoo", "newbar")
+  )
+  
+  d <- data.frame(
+    foo = c(1,2,3,4,5),
+    bar = c(6,7,8,9,10)
+  )
+  
+  function_correctly_stopped <- FALSE
+  tryCatch(
+    expr = {
+      rename_columns(d, my_mapping)
+    },
+    error = function(e) {
+      function_correctly_stopped <<- TRUE
+    }
+  )
+  return(function_correctly_stopped)
+  
+})()
+
+######################## TEST 6: basic performance
+
+(function() {
+  
+  my_mapping <- list(
+    old_name = c("foo", "bar", "baz"),
+    new_name = c("newfoo", "newbar", "newbaz")
+  )
+  
+  d <- data.frame(
+    foo = c(1,2,3,4,5),
+    bar = c(6,7,8,9,10),
+    baz = c("a", "b", "c", "d", "e")
+  )
+  
+  expected_output <- data.frame(
+    newfoo = c(1,2,3,4,5),
+    newbar = c(6,7,8,9,10),
+    newbaz = c("a", "b", "c", "d", "e")
+  )
+  
+  new_d <- rename_columns(d, my_mapping)
+  
+  return(identical(new_d, expected_output))
+  
+})()
+
 ################################################################################
 
-source("~/Sites/gymnast/util.R", chdir = FALSE)
-source("~/Sites/gymnast/util_qualtrics_cleaning.R", chdir = FALSE)
-
-validate_columns <- function(df, column_validation){
+util.validate_columns <- function(df, column_validation){
     
     # define custom validation functions for each column attribute
     
@@ -16,47 +213,42 @@ validate_columns <- function(df, column_validation){
                       %+% ". Should be " %+% exp_type 
                       %+% ".")
         }
-        print("Validated datatype")
     }
     
-    validate_accepted_values <- function(column_attributes, x){
-        if(!all(x %in% column_attributes$accepted_values)){
-            util.warn(column_attributes$column %+% " has non-accepted values.")
+    validate_accepted_values <- function(column_attributes, x) {
+        if(!all(x %in% column_attributes$accepted_values)) {
+            util.warn(column_attributes$column %+% " has unaccepted values.")
         }
-        print("Validated accepted values")
     }
     
     validate_accepted_range <- function(column_attributes, x){
-        if(!is.numeric(x)){
+        if(!is.numeric(x)) {
             util.warn(column_attributes$column %+% " is not numeric, but " %+%
                           "you set min and max values for it.")
         }
         x_min <- min(column_attributes$accepted_range)
         x_max <- max(column_attributes$accepted_range)
-        if(!all(x >= x_min & x <= x_max, na.rm = TRUE)){
+        if(!all(x >= x_min & x <= x_max, na.rm = TRUE)) {
             util.warn(column_attributes$column %+%
                           " has out of range values.")
         }
-        print("Validated accepted range")
     }
     
     validate_blanks_allowed <- function(column_attributes, x){
         # if blanks are not allowed and there are any blanks, throw warning
-        if(!column_attributes$blanks_allowed & any(util.is_blank(x))){
+        if(!column_attributes$blanks_allowed & any(util.is_blank(x))) {
             util.warn(column_attributes$column %+% " has blank values, when none are allowed.")
         }
-        print("Validated blanks allowed")
     }
     
     validate_required <- function(column_attributes, df_names){
         # make sure the "column_required" attribute exists
         if(exists("column_attributes$column_required")){
             # if it does, throw a warning if the column is required but it doesn't exist
-            if(column_attributes$column_required & !column_attributes$column %in% df_names){
+            if(column_attributes$column_required & (!column_attributes$column %in% df_names)){
                 util.warn("Required column " %+% column %+% " does not appear in the data.")
             }
         }
-        print("Validated required")
     }
     
     for(column in names(column_validation)){
@@ -84,7 +276,7 @@ validate_columns <- function(df, column_validation){
     }
 }
 
-################################ Unit testing ####################################
+################################ Unit testing for validate_columns ####################################
 
 # @todo - turn into unit tests
 
@@ -97,39 +289,39 @@ validate_columns <- function(df, column_validation){
 #         blanks_not_among_accepted_values = sample(c("Value1", "Value2", NA),
 #                                                   nrow(.), replace = TRUE)
 #     )
-
-column_validation <- list(
-    # some archetype columns
-    "nonexistant_required" = list(
-        "column_required" = TRUE
-    ),
-    "nonexistant_not_required" = list(
-        "column_required" = FALSE
-    ),
-    "blanks_in_wrong_place" = list(
-        "blanks_allowed" = FALSE
-    ),
-    "out_of_range" = list(
-        "accepted_range" = c(1, 7)
-    ),
-    "blanks_not_among_accepted_values" = list(
-        "accepted_values" = c("Value1", "Value2")
-    ),
-    # some real columns from Qualtrics:
-    "race" = list(
-        "datatype" = "character",
-        "accepted_values" = c("White", "Black", "Latino", "Asian", "Other", "Unknown"),
-        "column_required" = FALSE,
-        "blanks_allowed" = TRUE
-    ),
-    "ddowell" = list(
-        "datatype" = "numeric",
-        "accepted_range" = c(1, 7),
-        "blanks_allowed" = TRUE
-    ),
-    # an open response field
-    "dlrn_open" = list(
-        "datatype" = "character",
-        "blanks_allowed" = FALSE
-    )
-)
+# 
+# column_validation <- list(
+#     # some archetype columns
+#     "nonexistant_required" = list(
+#         "column_required" = TRUE
+#     ),
+#     "nonexistant_not_required" = list(
+#         "column_required" = FALSE
+#     ),
+#     "blanks_in_wrong_place" = list(
+#         "blanks_allowed" = FALSE
+#     ),
+#     "out_of_range" = list(
+#         "accepted_range" = c(1, 7)
+#     ),
+#     "blanks_not_among_accepted_values" = list(
+#         "accepted_values" = c("Value1", "Value2")
+#     ),
+#     # some real columns from Qualtrics:
+#     "race" = list(
+#         "datatype" = "character",
+#         "accepted_values" = c("White", "Black", "Latino", "Asian", "Other", "Unknown"),
+#         "column_required" = FALSE,
+#         "blanks_allowed" = TRUE
+#     ),
+#     "ddowell" = list(
+#         "datatype" = "numeric",
+#         "accepted_range" = c(1, 7),
+#         "blanks_allowed" = TRUE
+#     ),
+#     # an open response field
+#     "dlrn_open" = list(
+#         "datatype" = "character",
+#         "blanks_allowed" = FALSE
+#     )
+# )
