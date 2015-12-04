@@ -13,10 +13,10 @@ rename_columns <- function(data, mapping) {
                      "NaN", "NA", "NA_integer_", "NA_real_", "NA_complex_", "NA_character_", NA)
   
   # if the new names in the mapping match any evil patterns, then complain
-  if( any(mapping$new_name %in% naughty_words) |
+  if(any(mapping$new_name %in% naughty_words) |
       any(grepl(whitespace_pattern, mapping$new_name)) |
       any(grepl(starting_w_digit_pattern, mapping$new_name))) {
-    stop("Invalid new names are present among: ",paste(mapping$new_name, collapse =" "))
+    stop("Invalid new names are present among: ", paste(mapping$new_name, collapse =" "))
   }
   
   # if old and new names are not the same length, then complain
@@ -40,11 +40,10 @@ rename_columns <- function(data, mapping) {
 
 ######################## TEST 1: handling forbidden names
 
-
-test_forbidden_names <- function() {
+(function() {
   
   my_mapping <- list(
-    old_name = c("foo", "bar", "baz","blerp"),
+    old_name = c("foo", "bar", "baz", "blerp"),
     new_name = c("newfoo", "newbar", "newbaz", NA)
   )
   
@@ -57,22 +56,22 @@ test_forbidden_names <- function() {
   
   success <- FALSE
   
+  # @todo: abstract away this "assert error" tryCatch operation
   tryCatch(
     expr = {
-      rename_columns(d,my_mapping)
+      rename_columns(d, my_mapping)
     },
     error = function(e) {
       success <<- TRUE
     }
   )
   return(success)
-}
+})()
 
-test_forbidden_names()
 
 ######################## TEST 2: handling extra data columns that aren't in mapping
 
-test_extra_data_columns <- function() {
+(function() {
   
   my_mapping <- list(
     old_name = c("foo"),
@@ -89,21 +88,20 @@ test_extra_data_columns <- function() {
     blerp = c(16,17,18,19,20)
   )
   
-  new_d <- rename_columns(d,my_mapping)
+  new_d <- rename_columns(d, my_mapping)
   
   return(identical(new_d, expected_output))
   
-}
+})()
 
-test_extra_data_columns()
 
 ######################## TEST 3: extra mapping columns aren't present in data
 
-test_extra_mapping_columns <- function() {
+(function() {
   
   my_mapping <- list(
-    old_name = c("foo","bar"),
-    new_name = c("newfoo","newbar")
+    old_name = c("foo", "bar"),
+    new_name = c("newfoo", "newbar")
   )
   
   d <- data.frame(
@@ -114,17 +112,15 @@ test_extra_mapping_columns <- function() {
     newfoo = c(1,2,3,4,5)
   )
   
-  new_d <- rename_columns(d,my_mapping)
+  new_d <- rename_columns(d, my_mapping)
   
   return(identical(new_d, expected_output))
   
-}
-
-test_extra_mapping_columns()
+})()
 
 ######################## TEST 4: duplicates in names of final data
 
-test_new_name_duplicates <- function() {
+(function() {
   my_mapping <- list(
     old_name = c("foo","bar","baz"),
     new_name = c("newfoo","newbar","newbar")
@@ -139,7 +135,7 @@ test_new_name_duplicates <- function() {
   function_correctly_stopped <- FALSE
   tryCatch(
     expr = {
-      rename_columns(d,my_mapping)
+      rename_columns(d, my_mapping)
     },
     error = function(e) {
       function_correctly_stopped <<- TRUE
@@ -147,16 +143,14 @@ test_new_name_duplicates <- function() {
   )
   return(function_correctly_stopped)
   
-}
-
-test_new_name_duplicates()
+})()
 
 ######################## TEST 5: old_name and new_name are different lengths
 
-test_mapping_same_length <- function() {
+(function() {
   my_mapping <- list(
-    old_name = c("foo","bar","baz"),
-    new_name = c("newfoo","newbar")
+    old_name = c("foo", "bar", "baz"),
+    new_name = c("newfoo", "newbar")
   )
   
   d <- data.frame(
@@ -167,7 +161,7 @@ test_mapping_same_length <- function() {
   function_correctly_stopped <- FALSE
   tryCatch(
     expr = {
-      rename_columns(d,my_mapping)
+      rename_columns(d, my_mapping)
     },
     error = function(e) {
       function_correctly_stopped <<- TRUE
@@ -175,38 +169,34 @@ test_mapping_same_length <- function() {
   )
   return(function_correctly_stopped)
   
-}
-
-test_mapping_same_length()
+})()
 
 ######################## TEST 6: basic performance
 
-test_basic_performance <- function() {
+(function() {
   
   my_mapping <- list(
-    old_name = c("foo","bar","baz"),
-    new_name = c("newfoo","newbar","newbaz")
+    old_name = c("foo", "bar", "baz"),
+    new_name = c("newfoo", "newbar", "newbaz")
   )
   
   d <- data.frame(
     foo = c(1,2,3,4,5),
     bar = c(6,7,8,9,10),
-    baz = c("a","b","c","d","e")
+    baz = c("a", "b", "c", "d", "e")
   )
   
   expected_output <- data.frame(
     newfoo = c(1,2,3,4,5),
     newbar = c(6,7,8,9,10),
-    newbaz = c("a","b","c","d","e")
+    newbaz = c("a", "b", "c", "d", "e")
   )
   
-  new_d <- rename_columns(d,my_mapping)
+  new_d <- rename_columns(d, my_mapping)
   
   return(identical(new_d, expected_output))
   
-}
-
-test_basic_performance()
+})()
 
 ################################################################################
 
@@ -225,20 +215,20 @@ util.validate_columns <- function(df, column_validation){
         }
     }
     
-    validate_accepted_values <- function(column_attributes, x){
-        if(!all(x %in% column_attributes$accepted_values)){
+    validate_accepted_values <- function(column_attributes, x) {
+        if(!all(x %in% column_attributes$accepted_values)) {
             util.warn(column_attributes$column %+% " has unaccepted values.")
         }
     }
     
     validate_accepted_range <- function(column_attributes, x){
-        if(!is.numeric(x)){
+        if(!is.numeric(x)) {
             util.warn(column_attributes$column %+% " is not numeric, but " %+%
                           "you set min and max values for it.")
         }
         x_min <- min(column_attributes$accepted_range)
         x_max <- max(column_attributes$accepted_range)
-        if(!all(x >= x_min & x <= x_max, na.rm = TRUE)){
+        if(!all(x >= x_min & x <= x_max, na.rm = TRUE)) {
             util.warn(column_attributes$column %+%
                           " has out of range values.")
         }
@@ -246,7 +236,7 @@ util.validate_columns <- function(df, column_validation){
     
     validate_blanks_allowed <- function(column_attributes, x){
         # if blanks are not allowed and there are any blanks, throw warning
-        if(!column_attributes$blanks_allowed & any(util.is_blank(x))){
+        if(!column_attributes$blanks_allowed & any(util.is_blank(x))) {
             util.warn(column_attributes$column %+% " has blank values, when none are allowed.")
         }
     }
@@ -255,7 +245,7 @@ util.validate_columns <- function(df, column_validation){
         # make sure the "column_required" attribute exists
         if(exists("column_attributes$column_required")){
             # if it does, throw a warning if the column is required but it doesn't exist
-            if(column_attributes$column_required & !column_attributes$column %in% df_names){
+            if(column_attributes$column_required & (!column_attributes$column %in% df_names)){
                 util.warn("Required column " %+% column %+% " does not appear in the data.")
             }
         }
