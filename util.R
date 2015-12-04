@@ -844,7 +844,7 @@ util.reverse_likert <- function(v, scale_levels) {
 ###
 ###############################################################
 
-rename_columns <- function(data, mapping) {
+util.rename_columns <- function(data, mapping) {
   # This function takes a data set and a mapping (which can be a list or data frame)
   # with columns "old_name" and "new_name". It uses util.recode to turn the old names
   # into the new names, making sure not to break any R name rules.
@@ -932,7 +932,7 @@ rename_columns <- function(data, mapping) {
     blerp = c(16,17,18,19,20)
   )
   
-  new_d <- rename_columns(d, my_mapping)
+  new_d <- util.rename_columns(d, my_mapping)
   
   return(identical(new_d, expected_output))
   
@@ -956,7 +956,7 @@ rename_columns <- function(data, mapping) {
     newfoo = c(1,2,3,4,5)
   )
   
-  new_d <- rename_columns(d, my_mapping)
+  new_d <- util.rename_columns(d, my_mapping)
   
   return(identical(new_d, expected_output))
   
@@ -979,7 +979,7 @@ rename_columns <- function(data, mapping) {
   function_correctly_stopped <- FALSE
   tryCatch(
     expr = {
-      rename_columns(d, my_mapping)
+      util.rename_columns(d, my_mapping)
     },
     error = function(e) {
       function_correctly_stopped <<- TRUE
@@ -1005,7 +1005,7 @@ rename_columns <- function(data, mapping) {
   function_correctly_stopped <- FALSE
   tryCatch(
     expr = {
-      rename_columns(d, my_mapping)
+      util.rename_columns(d, my_mapping)
     },
     error = function(e) {
       function_correctly_stopped <<- TRUE
@@ -1036,13 +1036,13 @@ rename_columns <- function(data, mapping) {
     newbaz = c("a", "b", "c", "d", "e")
   )
   
-  new_d <- rename_columns(d, my_mapping)
+  new_d <- util.rename_columns(d, my_mapping)
   
   return(identical(new_d, expected_output))
   
 })()
 
-###### end of tests for rename_columns ######
+###### end of tests for util.rename_columns ######
 
 util.validate_columns <- function(df, column_validation){
   
