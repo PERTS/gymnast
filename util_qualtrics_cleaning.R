@@ -185,6 +185,11 @@ qc.rbind_inprogress <- function(inprogress_qdf, clean_qdf){
   # note that i have to use nested functions in the line below because if I
   # pipe something to suppressWarnings, it throws an error.
 
+  # Finally, note that embedded data fields set via the API will not appear in
+  # Qualtrics partial responses. However, they will appear once the partial
+  # responses are closed and set to complete, and any survey elements that
+  # depend on them (e.g, survey flow) should still work properly.
+
   suppressWarnings(qc.clean_qualtrics(inprogress_qdf)) %>%
     setNames(., names(clean_qdf)) %>%
     rbind(clean_qdf, .)
