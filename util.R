@@ -837,32 +837,6 @@ util.rbind_union <- function(dfs){
 # util.rbind_intersection(dfs)
 
 
-
-###############################################################
-###
-###     Value Replacement
-###     Smartly replacing data values with other values.
-###
-###############################################################
-
-
-util.recode <- function(vector, originals, replacements){
-    # replace appearances of "originals" with "replacements"
-    for(i in 1:length(originals)){
-        vector[vector %in% originals[i] ] <- replacements[i]
-    }
-    vector
-}
-
-
-util.reverse_likert <- function(v, scale_levels) {
-    # Require that responses are numeric so that we can do arithmetic
-    reversed_data <- as.numeric(v)
-    # Change 6's to 1's and 2's to 5's, etc.
-    return(scale_levels - reversed_data + 1)
-}
-
-
 ###############################################################
 ###
 ###     Column Operations
