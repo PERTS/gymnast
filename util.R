@@ -406,16 +406,42 @@ util.rbind_union <- function(dfs){
 
 util.recode <- function(vector, originals, replacements){
     # replace appearances of "originals" with "replacements"
-    for(i in 1:length(originals)){
-        vector[vector %in% originals[i] ] <- replacements[i]
+    if(length(originals) != length(replacements)){
+        "Original and replacement should have equal lenght" %>%
+            util.warn()
     }
-    vector
+    if(any(duplicated(originals))){
+        "Originals should not include duplicate values" %>%
+            util.warn()
+    }
+    
+    new_vec <- vector
+    for(v in originals){
+        new_vec[vector == v] <- replacements[originals == v]
+    }
+    new_vec
 }
 
-# vector <- rep(c("a","b","fefe","C","c"),100000)
-# x <- c("a","b","c")
-# y <- c("A","B","C")
-# system.time(recode <- util.recode(vector,x,y))
+gymnast_test__util.recode <- function(){
+    # basic test
+    test_name <- "basic replacement"
+    vector <- c("a","b","fefe","c")
+    x <- c("a","b","c")
+    y <- c("A","B","C")
+    expectation <- c("A","B","fefe","C")
+    if( !identical(expectation,util.recode(vector,x,y)) ){
+        util.warn("recode fails: " %+% test_name)
+    }
+    
+    test_name <- "multiple replacement includes originals"
+    vector <- c("a","b","fefe","c")
+    x <- c("a","b","c")
+    y <- c("b","c","d")
+    expectation <- c("b","c","fefe","d")
+    if( !identical(expectation,util.recode(vector,x,y))){
+        util.warn("recode fails: " %+% test_name)
+    }
+}
 
 util.reverse_likert <- function(v, scale_levels) {
     # Require that responses are numeric so that we can do arithmetic
@@ -809,32 +835,6 @@ util.rbind_union <- function(dfs){
 # dfs <- list(x,y,z)
 # util.rbind_union(dfs)
 # util.rbind_intersection(dfs)
-
-
-
-###############################################################
-###
-###     Value Replacement
-###     Smartly replacing data values with other values.
-###
-###############################################################
-
-
-util.recode <- function(vector, originals, replacements){
-    # replace appearances of "originals" with "replacements"
-    for(i in 1:length(originals)){
-        vector[vector %in% originals[i] ] <- replacements[i]
-    }
-    vector
-}
-
-
-util.reverse_likert <- function(v, scale_levels) {
-    # Require that responses are numeric so that we can do arithmetic
-    reversed_data <- as.numeric(v)
-    # Change 6's to 1's and 2's to 5's, etc.
-    return(scale_levels - reversed_data + 1)
-}
 
 
 ###############################################################
