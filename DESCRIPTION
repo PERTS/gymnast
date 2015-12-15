@@ -9,7 +9,6 @@ Author: PERTS, including but not limited to Dave Paunesku <dave@perts.net>,
     Macrander <chris@perts.net>
 LazyData: true
 License: CC0, http://r-pkgs.had.co.nz/description.html
-
 Imports_comment: This DESCRIPTION file can specify other packages that are
     required via `Imports:` or that it can optionally use via `Suggests:`.
     Gymnast is opinionated about which packages you should be using, and so
@@ -32,3 +31,4 @@ Imports:
     stargazer,
     stringr,
     xtable
+RoxygenNote: 5.0.1
