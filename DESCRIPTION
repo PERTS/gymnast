@@ -1,3 +1,9 @@
+Description_comment: In order to be installable via devtools, this file must
+    follow a rigid syntax. Although nominally in "Debian Control Format", there
+    are additional restrictions.
+    1) No blank lines
+    2) No comment lines (must use "field: value" lines instead)
+    3) When continuing a field value, indent the next line
 Package: gymnast
 Version_comment: http://r-pkgs.had.co.nz/description.html
 Version: 0.0.0.9000
