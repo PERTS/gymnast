@@ -2,7 +2,7 @@
 title: "Util Graphing Demo"
 author: "Dave Paunesku"
 date: "May 19, 2015"
-output: 
+output:
   html_document:
     fig_caption: no
     toc: yes
@@ -12,28 +12,27 @@ output:
 
 ## Load Util Graphing
 ```{r, message=FALSE}
-setwd("~")
-source("~/Sites/gymnast/util.R", chdir = TRUE)
-getwd()
-
+# Assumes that the working directory is the root of the gymnast package.
+source("R/util.R", chdir = TRUE)
+source("R/util_graphing.R", chdir = TRUE)
 ```
 
 ## Simulate Some Data
 ```{r, message=FALSE}
 
-# 
+#
 gender      <- c("Male","Female")
 condition   <- c("control","treatment")
 outcome     <- rnorm(100)
-d <- expand.grid( gender=gender, 
-                  condition=condition, 
+d <- expand.grid( gender=gender,
+                  condition=condition,
                   outcome=outcome
                   )
 
 # add effects for women and men (bigger for women)
-d$outcome[d$condition %in% "treatment" & d$gender %in% "Female"] <- 
+d$outcome[d$condition %in% "treatment" & d$gender %in% "Female"] <-
   d$outcome[d$condition %in% "treatment" & d$gender %in% "Female"] + .3
-d$outcome[d$condition %in% "treatment" & d$gender %in% "Male"] <- 
+d$outcome[d$condition %in% "treatment" & d$gender %in% "Male"] <-
   d$outcome[d$condition %in% "treatment" & d$gender %in% "Male"] + .15
 
 d$outcome_bin <- ifelse(d$outcome > .5,1,0)
@@ -44,29 +43,29 @@ d$outcome_bin <- ifelse(d$outcome > .5,1,0)
 
 ```{r}
 
-ggplot( d, aes( gender, outcome_bin, fill=condition, 
+ggplot( d, aes( gender, outcome_bin, fill=condition,
                 color=condition # include so border can be set
                 ) ) +
   geom_bar( stat="summary", fun.y="mean", position=ug.dodge) +
   scale_y_continuous( labels=percent ) +
-  ug.se_error_bar + 
-  ylab("Some Outcome") + 
+  ug.se_error_bar +
+  ylab("Some Outcome") +
   xlab("") +
   scale_colour_manual(  # sets bar border to black
     guide="none", # removes the color guide
     values=rep("black",2) # adjust to # of fills
   ) +
   # coord_cartesian(ylim=c(.2,.55)) +  # zoom in on the action
-  scale_fill_manual( 
-    breaks=c("control","treatment"), 
+  scale_fill_manual(
+    breaks=c("control","treatment"),
     label=c("Control","Treatment"), # override condition names
     values=c("#e1e1e1","#666666") ,
-    guide=guide_legend(   
-      title = "Some Condition", 
+    guide=guide_legend(
+      title = "Some Condition",
       label.theme=element_text(size=ug.text_size, face="bold",angle=0)
-    ) 
-  ) + 
-  ug.ht + 
+    )
+  ) +
+  ug.ht +
   theme(
     legend.key=element_rect(color="black",size=.5),
     axis.text=element_text(face="bold"),
