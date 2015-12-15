@@ -3,6 +3,14 @@
 Collection of useful functions for data analysis and visualization.
 When calling util.R or any of the other standalone source files, use source(filename, chrdir=TRUE)
 
+## Install gymnast
+
+    > install.packages("devtools")
+
+Answer "n" if you are asked "Do you want to install from sources the package which needs compilation?"
+
+    > devtools::install_github("PERTS/gymnast")
+
 # Building R packages
 
 ## How to Code a Package
@@ -24,34 +32,25 @@ But the end user will _not_ see it when they require the package:
     > library(gymnast)
     >
 
-An important consequence of this is your required libraries don't carry over to the end user. Any libraries required by the package are loaded when the package is _built_, and can be used throughout the package, and the end user can use the package's functions that depend on those libraries, but the end user _cannot_ use those libraries directly (they have to do the work of requiring them or using double colon syntax).
+### Respecting The End User
 
-So if your package has this source code:
+Certain functions have effects that will probably upset the person who loads your package, e.g. `setwd()`. No one expects the Spanish Inquisition, nor do they expect you to change their working directly for them.
 
-    library(dplyr)
-    gymnast.summarise <- dplyr::summarise
+Similarly, don't use `source()`. Use `devtools::load_all()` instead.
 
-The end user sees:
+Less intuitively, `library()` and `require()` change the end user's system by modifying the search path. Put package dependencies in the `DESCRIPTION` file (see this package's file as an example).
 
-    > library(gymnast)
-    > summarise
-    Error: object 'summarise' not found
-    > gymnast.summarise
-    function (.data, ...)
-    {
-        summarise_(.data, .dots = lazyeval::lazy_dots(...))
-    }
-    <environment: namespace:dplyr>
-
-**In general, do not write top-level code in packages**, because it probably won't do what you want (i.e. have any effect on the end user).
+**In general, do not write top-level code in packages**, because it probably won't do what you want (i.e. have any positive effect on the end user).
 
 ### Namespace: What Can I Reference When?
 
 ?? Something about the NAMESPACE file.
 
-## Installing Necessary Tools
+## Installing Build Tools
 
-Compiling requires XCode, FORTRAN, and a developer's version of R.
+Compiling a package provides a single file which users can download and manually install. It requires XCode, FORTRAN, and a developer's version of R.
+
+**Build tools are not necessary if the goal is to have users install directly from github.** In that case, skip this section.
 
 ### XCode
 

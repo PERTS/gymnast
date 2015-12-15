@@ -12,9 +12,7 @@ output:
 
 ## Load Util Graphing
 ```{r, message=FALSE}
-# Assumes that the working directory is the root of the gymnast package.
-source("R/util.R", chdir = TRUE)
-source("R/util_graphing.R", chdir = TRUE)
+devtools::load_all()
 ```
 
 ## Simulate Some Data

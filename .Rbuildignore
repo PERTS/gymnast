@@ -1,0 +1,18 @@
+# RStudio
+^.*\.Rproj$         # Automatically added by RStudio,
+^\.Rproj\.user$     # used for temporary files.
+
+# R OS X app
+.Rhistory
+.Rapp.history
+
+# Github
+^README\.md$        # A github readme file
+
+# Git
+.git
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+

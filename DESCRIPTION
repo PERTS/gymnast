@@ -16,6 +16,7 @@ Imports_comment: This DESCRIPTION file can specify other packages that are
     it places all dependencies under `Imports:`. This may change in the
     future as the package is more widely adopted.
 Imports:
+    devtools,
     digest,
     dplyr,
     formatR,

@@ -5,13 +5,10 @@
 ###
 ###     The main function call is:
 ###     clean_dataframe <- qc.clean_qualtrics(raw_qualtrics_csv)
-###     
+###
 ###     Depends on util.R already being loaded.
 ###
 ###############################################################
-
-# util.R should have already been loaded in by the calling script.
-# source("util.R")
 
 STANDARD_SECOND_ROW_QUALTRICS_COLUMNS <- c(
   "ResponseID"
