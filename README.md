@@ -10,6 +10,7 @@ When calling util.R or any of the other standalone source files, use source(file
 Answer "n" if you are asked "Do you want to install from sources the package which needs compilation?"
 
     > devtools::install_github("PERTS/gymnast")
+    > library(gymnast)
 
 # Building R packages
 
