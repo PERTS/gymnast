@@ -1,2 +1,33 @@
 Package: gymnast
-Version: 0.01
+Version_comment: http://r-pkgs.had.co.nz/description.html
+Version: 0.0.0.9000
+Date: 2015-12-15
+Title: Gymnast Utilities for R
+Description: Utilities for processing, analyzing, and displaying data.
+Author: PERTS, including but not limited to Dave Paunesku <dave@perts.net>,
+    Sarah Gripshover <sarah@perts.net>, Dan Greene <dan@perts.net>, and Chris
+    Macrander <chris@perts.net>
+LazyData: true
+License: CC0, http://r-pkgs.had.co.nz/description.html
+
+Imports_comment: This DESCRIPTION file can specify other packages that are
+    required via `Imports:` or that it can optionally use via `Suggests:`.
+    Gymnast is opinionated about which packages you should be using, and so
+    it places all dependencies under `Imports:`. This may change in the
+    future as the package is more widely adopted.
+Imports:
+    digest,
+    dplyr,
+    formatR,
+    ggplot2,
+    grid,
+    Hmisc,
+    knitr,
+    lme4,
+    lmerTest,
+    psych,
+    reshape2,
+    scales,
+    stargazer,
+    stringr,
+    xtable

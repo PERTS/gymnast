@@ -5,6 +5,50 @@ When calling util.R or any of the other standalone source files, use source(file
 
 # Building R packages
 
+## How to Code a Package
+
+### Life Cycle: What's Run When?
+
+The code in a package is run when the package is built, which is done by the developer of the package, far away from the end user. The end user receives the objects in memory that are the result of that code running.
+
+That means if you write this line as top-level code in your package ("top-level" means not in any function, just an expression to be executed):
+
+    print("Top level code is being run!")
+
+Then the package developer will see it when they build the source code into a package:
+
+    [1] "Top level code is being run!"
+
+But the end user will _not_ see it when they require the package:
+
+    > library(gymnast)
+    >
+
+An important consequence of this is your required libraries don't carry over to the end user. Any libraries required by the package are loaded when the package is _built_, and can be used throughout the package, and the end user can use the package's functions that depend on those libraries, but the end user _cannot_ use those libraries directly (they have to do the work of requiring them or using double colon syntax).
+
+So if your package has this source code:
+
+    library(dplyr)
+    gymnast.summarise <- dplyr::summarise
+
+The end user sees:
+
+    > library(gymnast)
+    > summarise
+    Error: object 'summarise' not found
+    > gymnast.summarise
+    function (.data, ...)
+    {
+        summarise_(.data, .dots = lazyeval::lazy_dots(...))
+    }
+    <environment: namespace:dplyr>
+
+**In general, do not write top-level code in packages**, because it probably won't do what you want (i.e. have any effect on the end user).
+
+### Namespace: What Can I Reference When?
+
+?? Something about the NAMESPACE file.
+
 ## Installing Necessary Tools
 
 Compiling requires XCode, FORTRAN, and a developer's version of R.
