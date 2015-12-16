@@ -1,18 +1,24 @@
 # gymnast
 
 Collection of useful functions for data analysis and visualization.
-When calling util.R or any of the other standalone source files, use source(filename, chrdir=TRUE)
 
 ## Install gymnast
 
+You only have to do this process once.
+
     > install.packages("devtools")
 
-Answer "n" if you are asked "Do you want to install from sources the package which needs compilation?"
+    (Answer "n" if you are asked "Do you want to install from sources the package which needs compilation?")
 
     > devtools::install_github("PERTS/gymnast")
+
+## Use gymnast
+
+After installing, use just like any other package:
+
     > library(gymnast)
 
-# Building R packages
+# Creating R packages
 
 ## How to Code a Package
 
@@ -46,6 +52,12 @@ Less intuitively, `library()` and `require()` change the end user's system by mo
 ### Namespace: What Can I Reference When?
 
 ?? Something about the NAMESPACE file.
+
+## Synchronizing with github
+
+The default use case for gymnast is installing from github (see the installation section above). PERTS team members can update gymnast by synchronizing with the master branch on github.
+
+**Anyone updating gymnast should immediately attempt to re-install from github to ensure that all tests pass and the installation succeeds.**
 
 ## Installing Build Tools
 
@@ -86,7 +98,9 @@ most appropriate stable download from the "R framework" table.
 
 Install the package. It took some time on my laptop, have patience.
 
-## Preparing The Files
+## Building a Gymnast Bundle
+
+**Not necessary if installing from github.**
 
 Follow [Karl Broman's instructions][4], which basically involve putting your scripts in a `R` subdirectory and adding a `DESCRIPTION` text file. Make sure to use the same name for your package directory as you use in the description file.
 
@@ -102,6 +116,6 @@ So I navigated to the `Sites` directory:
 
     cd ~/Sites
 
-Then run the build:
+Then ran the build:
 
     R CMD build gymnast
