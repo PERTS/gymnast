@@ -1,0 +1,40 @@
+Description_comment: In order to be installable via devtools, this file must
+    follow a rigid syntax. Although nominally in "Debian Control Format", there
+    are additional restrictions. Some come from the R-native `read.dcf()`, and some from Wickham's devtools package itself.
+    1) No blank lines
+    2) No comment lines (must use "field: value" lines instead)
+    3) When continuing a field value, indent the next line
+Package: gymnast
+Version_comment: How to choose a version number? See http://r-pkgs.had.co.nz/description.html#version
+Version: 0.0.0.9000
+Date: 2015-12-15
+Title: Gymnast Utilities for R
+Description: Utilities for processing, analyzing, and displaying data.
+Author: PERTS, including but not limited to Dave Paunesku <dave@perts.net>,
+    Sarah Gripshover <sarah@perts.net>, Dan Greene <dan@perts.net>, and Chris
+    Macrander <chris@perts.net>
+LazyData: true
+License: CC0, http://r-pkgs.had.co.nz/description.html#license
+Imports_comment: This DESCRIPTION file can specify other packages that are
+    required via `Imports:` or that it can optionally use via `Suggests:`.
+    Gymnast is opinionated about which packages you should be using, and so
+    it places all dependencies under `Imports:`. This may change in the
+    future as the package is more widely adopted.
+Imports:
+    devtools,
+    digest,
+    dplyr,
+    formatR,
+    ggplot2,
+    grid,
+    Hmisc,
+    knitr,
+    lme4,
+    lmerTest,
+    psych,
+    reshape2,
+    scales,
+    stargazer,
+    stringr,
+    xtable
+RoxygenNote: 5.0.1

@@ -8,35 +8,7 @@
 
 
 ###############################################################
-### 
-###     Package Installation
 ###
-###############################################################
-
-gymnast_install <- function () {
-    # Load (or install) all packages used by gymnast.
-    dependencies <- c(
-        "digest","dplyr","formatR","ggplot2",
-        "grid","Hmisc","knitr","lme4",
-        "lmerTest","psych","reshape2","scales" ,  
-        "stargazer","stringr","xtable"
-    )
-    for(lib_name in dependencies){
-        message(paste0("Loading... ",lib_name))
-        # Require returns FALSE if packages failed
-        if( !require(lib_name, character.only = TRUE) ){
-            install.packages(lib_name)
-            # library raises error if installation failed
-            library(lib_name, character.only = TRUE)
-        }
-    }
-}
-
-gymnast_install()
-
-
-###############################################################
-### 
 ###     Extended Base
 ###     Improves basic functionality of R.
 ###
@@ -61,18 +33,18 @@ util.tidy <- function(source = "clipboard") {
 util.apply_columns <- function(df, fun, ...){
     # returns a data.frame with fun applied to every column.
     # ellipsis args are passed to fun, applied to all columns.
-    
+
     # stringsAsFactors=FALSE prevents factorizing characters.
     # check.names=FALSE avoids adding extra characters to colnames
     data.frame(
-        lapply(df, fun, ...), 
-        stringsAsFactors = FALSE, 
+        lapply(df, fun, ...),
+        stringsAsFactors = FALSE,
         check.names=FALSE
     )
-} 
+}
 
 ###############################################################
-### 
+###
 ###     String Cleaning
 ###     It's for updating strings.
 ###
@@ -112,7 +84,7 @@ util.strip_non_acsii <- function(x){
 
 
 ###############################################################
-### 
+###
 ###     Data Types
 ###     Checking and coercing data types.
 ###
@@ -147,13 +119,13 @@ util.is_vector_of_numbers <- function(x){
     # (regardless of whether x is numeric)
     # Character vectors sometimes need to be changed to numerics,
     # e.g., when all columns set to character types by default.
-    
+
     # find numeric values
     numeric_values <- grepl("^[[:digit:]]*\\.*[[:digit:]]+$",x)
-    
+
     # find the blank values
     blank_values <- util.is_blank(x)
-    
+
     # Return TRUE if all values are either numeric or blank
     # Return FALSE otherwise
     if(all(numeric_values | blank_values)){
@@ -178,7 +150,7 @@ util.as_numeric_if_number <- function(x){
 
 
 ###############################################################
-### 
+###
 ###     Messages
 ###     Prettier messages that print to consolte or HTML.
 ###
@@ -186,7 +158,7 @@ util.as_numeric_if_number <- function(x){
 
 util.print_pre <- function(x){
     # prints to html as it would to console (preformatted html)
-    if(interactive()) return(x) 
+    if(interactive()) return(x)
     capture.output(print(x)) %>%
         paste(collapse="\n") %>%
         paste("<pre>",.,"</pre>") %>%
@@ -218,10 +190,10 @@ util.passed <- function(message) {
         paste0("<div class='pass'>", message, "</div>") %>%
             cat()
     }
-} 
+}
 
 ###############################################################
-### 
+###
 ###     Table Printing
 ###     Print tables to HTML (or console) reasonably.
 ###
@@ -235,10 +207,10 @@ util.html_table_from_model <- function(model){
     }
     if( ! interactive() ){
         stargazer(
-            model, 
-            type="html", 
+            model,
+            type="html",
             star.cutoffs = c(.05, .01, .001),
-            notes        = "", 
+            notes        = "",
             notes.label = "1 star p<.05; 2 stars p<.01; 3 stars p<.001",
             notes.append = FALSE,
             single.row=TRUE
@@ -255,14 +227,14 @@ util.html_table_data_frame <- function(x){
     if(any(class(x) %in% c("grouped_df", "tbl_df"))){
         x <- data.frame(ungroup(x))
     }
-    
+
     if( ! interactive() ){
-        print(xtable(x), 
+        print(xtable(x),
               type="html",
-              html.table.attributes = 
-                  getOption("xtable.html.table.attributes", 
+              html.table.attributes =
+                  getOption("xtable.html.table.attributes",
                             "border=0, class='xtable'")
-        )  
+        )
     }else{
         return(x)
     }
@@ -272,7 +244,7 @@ util.html_table_psych_alphas <- function(x){
     # psych::alpha object, turn key data into data.frame
     if(! all(class(x) %in% c("psych","alpha"))){
         util.warn("Not a psych::alpha object!")
-    } 
+    }
     # extract the alpha coefficients for printing
     x <- x$total
     util.html_table_data_frame(x)
@@ -282,15 +254,15 @@ util.html_table <- function(x, ...) {
     accepted_models <- c("lmerMod","lm","aov","glm","glmerMod")
     accepted_psych_objects <- c("psych","alpha")
     accepted_dfs <- c("grouped_df", "tbl_df","data.frame","table")
-    
+
     if( any(class(x) %in% accepted_models ) ){
         util.html_table_from_model(x)
     }
-    
+
     if( all( class(x) %in% accepted_psych_objects ) ){
         util.html_table_psych_alphas(x)
     }
-    
+
     if( any(class(x) %in% accepted_dfs ) ){
         util.html_table_data_frame(x)
     }
@@ -298,7 +270,7 @@ util.html_table <- function(x, ...) {
 
 
 ###############################################################
-### 
+###
 ###     Math
 ###     Functions that involve mathematical manipulation.
 ###
@@ -315,28 +287,28 @@ util.z_score <- function(x){
 }
 
 util.row_means <- function(x){
-    # like base::rowMeans(x, na.rm=TRUE) 
+    # like base::rowMeans(x, na.rm=TRUE)
     # but it returns self if vector instead of issuing an error
     if(is.vector(x)) return(x)
     return(rowMeans(x, na.rm = TRUE))
 }
 
 util.row_sums <- function(x){
-    # like base::rowSums(x, na.rm=TRUE) 
+    # like base::rowSums(x, na.rm=TRUE)
     # but it returns self if vector instead of issuing an error
     if(is.vector(x)) return(x)
     return(rowSums(x, na.rm = TRUE))
 }
 
 util.round_df <- function(DF, digits=2){
-    # round all numeric columns    
+    # round all numeric columns
     round_if_number <- function(x, digits=digits){
         if(util.is_vector_of_numbers(x)){
             x <- round(x, digits)
         }
         return(x)
     }
-    
+
     util.apply_columns( DF,
                         round_if_number,
                         digits=digits)
@@ -345,7 +317,7 @@ util.round_df <- function(DF, digits=2){
 
 
 ###############################################################
-### 
+###
 ###     Reshaping
 ###     Manipulating the structure of data.
 ###
@@ -397,7 +369,7 @@ util.rbind_union <- function(dfs){
 
 
 ###############################################################
-### 
+###
 ###     Value Replacement
 ###     Smartly replacing data values with other values.
 ###
@@ -414,7 +386,7 @@ util.recode <- function(vector, originals, replacements){
         "Originals should not include duplicate values" %>%
             util.warn()
     }
-    
+
     new_vec <- vector
     for(v in originals){
         new_vec[vector == v] <- replacements[originals == v]
@@ -432,7 +404,7 @@ gymnast_test__util.recode <- function(){
     if( !identical(expectation,util.recode(vector,x,y)) ){
         util.warn("recode fails: " %+% test_name)
     }
-    
+
     test_name <- "multiple replacement includes originals"
     vector <- c("a","b","fefe","c")
     x <- c("a","b","c")
@@ -848,35 +820,35 @@ util.rename_columns <- function(data, mapping) {
   # This function takes a data set and a mapping (which can be a list or data frame)
   # with columns "old_name" and "new_name". It uses util.recode to turn the old names
   # into the new names, making sure not to break any R name rules.
-  
+
   # Patterns for forbidden names
   whitespace_pattern <- "\\s"
   starting_w_digit_pattern <- "^\\.?[0-9]"
   naughty_words <- c("if", "else", "repeat", "while", "function", "for",
                      "in", "next", "break", "TRUE", "FALSE", "NULL", "Inf",
                      "NaN", "NA", "NA_integer_", "NA_real_", "NA_complex_", "NA_character_", NA)
-  
+
   # if the new names in the mapping match any evil patterns, then complain
   if(any(mapping$new_name %in% naughty_words) |
      any(grepl(whitespace_pattern, mapping$new_name)) |
      any(grepl(starting_w_digit_pattern, mapping$new_name))) {
     stop("Invalid new names are present among: ", paste(mapping$new_name, collapse =" "))
   }
-  
+
   # if old and new names are not the same length, then complain
   if(length(mapping$old_name) != length(mapping$new_name)) {
     stop("Error! Old names and new names are not the same length in your mapping for renaming.")
   }
-  
+
   names(data) <- util.recode(names(data),
                              mapping$old_name,
                              mapping$new_name)
-  
+
   # if new column names in the final data have duplicates, then complain
   if (any(duplicated(names(data)))) {
     stop("Error! Duplicated names in your renamed data. Review your mapping for renaming.")
   }
-  
+
   return(data)
 }
 
@@ -885,21 +857,21 @@ util.rename_columns <- function(data, mapping) {
 ### TEST 1: handling forbidden names
 
 (function() {
-  
+
   my_mapping <- list(
     old_name = c("foo", "bar", "baz", "blerp"),
     new_name = c("newfoo", "newbar", "newbaz", NA)
   )
-  
+
   d <- data.frame(
     foo = c(1,2,3,4,5),
     bar = c(6,7,8,9,10),
     baz = c(11,12,13,14,15),
     blerp = c(16,17,18,19,20)
   )
-  
+
   success <- FALSE
-  
+
   # @todo: abstract away this "assert error" tryCatch operation
   tryCatch(
     expr = {
@@ -916,50 +888,50 @@ util.rename_columns <- function(data, mapping) {
 ### TEST 2: handling extra data columns that aren't in mapping
 
 (function() {
-  
+
   my_mapping <- list(
     old_name = c("foo"),
     new_name = c("newfoo")
   )
-  
+
   d <- data.frame(
     foo = c(1,2,3,4,5),
     blerp = c(16,17,18,19,20)
   )
-  
+
   expected_output <- data.frame(
     newfoo = c(1,2,3,4,5),
     blerp = c(16,17,18,19,20)
   )
-  
+
   new_d <- util.rename_columns(d, my_mapping)
-  
+
   return(identical(new_d, expected_output))
-  
+
 })()
 
 
 ### TEST 3: extra mapping columns aren't present in data
 
 (function() {
-  
+
   my_mapping <- list(
     old_name = c("foo", "bar"),
     new_name = c("newfoo", "newbar")
   )
-  
+
   d <- data.frame(
     foo = c(1,2,3,4,5)
   )
-  
+
   expected_output <- data.frame(
     newfoo = c(1,2,3,4,5)
   )
-  
+
   new_d <- util.rename_columns(d, my_mapping)
-  
+
   return(identical(new_d, expected_output))
-  
+
 })()
 
 ### TEST 4: duplicates in names of final data
@@ -969,13 +941,13 @@ util.rename_columns <- function(data, mapping) {
     old_name = c("foo","bar","baz"),
     new_name = c("newfoo","newbar","newbar")
   )
-  
+
   d <- data.frame(
     foo = c(1,2,3,4,5),
     bar = c(6,7,8,9,10),
     baz = c(11,12,13,14,15)
   )
-  
+
   function_correctly_stopped <- FALSE
   tryCatch(
     expr = {
@@ -986,7 +958,7 @@ util.rename_columns <- function(data, mapping) {
     }
   )
   return(function_correctly_stopped)
-  
+
 })()
 
 ### TEST 5: old_name and new_name are different lengths
@@ -996,12 +968,12 @@ util.rename_columns <- function(data, mapping) {
     old_name = c("foo", "bar", "baz"),
     new_name = c("newfoo", "newbar")
   )
-  
+
   d <- data.frame(
     foo = c(1,2,3,4,5),
     bar = c(6,7,8,9,10)
   )
-  
+
   function_correctly_stopped <- FALSE
   tryCatch(
     expr = {
@@ -1012,59 +984,59 @@ util.rename_columns <- function(data, mapping) {
     }
   )
   return(function_correctly_stopped)
-  
+
 })()
 
 ### TEST 6: basic performance
 
 (function() {
-  
+
   my_mapping <- list(
     old_name = c("foo", "bar", "baz"),
     new_name = c("newfoo", "newbar", "newbaz")
   )
-  
+
   d <- data.frame(
     foo = c(1,2,3,4,5),
     bar = c(6,7,8,9,10),
     baz = c("a", "b", "c", "d", "e")
   )
-  
+
   expected_output <- data.frame(
     newfoo = c(1,2,3,4,5),
     newbar = c(6,7,8,9,10),
     newbaz = c("a", "b", "c", "d", "e")
   )
-  
+
   new_d <- util.rename_columns(d, my_mapping)
-  
+
   return(identical(new_d, expected_output))
-  
+
 })()
 
 ###### end of tests for util.rename_columns ######
 
 util.validate_columns <- function(df, column_validation){
-  
+
   # define custom validation functions for each column attribute
-  
+
   validate_datatype <- function(column_attributes, x){
     exp_type <- column_attributes$datatype
     actual_type <- class(x)
     if(exp_type != actual_type){
-      util.warn(column_attributes$column 
-                %+% " data class is " %+% actual_type 
-                %+% ". Should be " %+% exp_type 
+      util.warn(column_attributes$column
+                %+% " data class is " %+% actual_type
+                %+% ". Should be " %+% exp_type
                 %+% ".")
     }
   }
-  
+
   validate_accepted_values <- function(column_attributes, x) {
     if(!all(x %in% column_attributes$accepted_values)) {
       util.warn(column_attributes$column %+% " has unaccepted values.")
     }
   }
-  
+
   validate_accepted_range <- function(column_attributes, x){
     if(!is.numeric(x)) {
       util.warn(column_attributes$column %+% " is not numeric, but " %+%
@@ -1077,14 +1049,14 @@ util.validate_columns <- function(df, column_validation){
                   " has out of range values.")
     }
   }
-  
+
   validate_blanks_allowed <- function(column_attributes, x){
     # if blanks are not allowed and there are any blanks, throw warning
     if(!column_attributes$blanks_allowed & any(util.is_blank(x))) {
       util.warn(column_attributes$column %+% " has blank values, when none are allowed.")
     }
   }
-  
+
   validate_required <- function(column_attributes, df_names){
     # make sure the "column_required" attribute exists
     if(exists("column_attributes$column_required")){
@@ -1094,15 +1066,15 @@ util.validate_columns <- function(df, column_validation){
       }
     }
   }
-  
+
   for(column in names(column_validation)){
-    
+
     # pick out the attributes of the column in question
     column_attributes <- column_validation[[column]]
-    
+
     # add the column name itself as an attribute of the column
     column_attributes$column <- column
-    
+
     # check whether the column exists
     if(column %in% names(df)){
       values <- df[,column]
@@ -1133,7 +1105,7 @@ util.validate_columns <- function(df, column_validation){
 #         blanks_not_among_accepted_values = sample(c("Value1", "Value2", NA),
 #                                                   nrow(.), replace = TRUE)
 #     )
-# 
+#
 # column_validation <- list(
 #     # some archetype columns
 #     "nonexistant_required" = list(
