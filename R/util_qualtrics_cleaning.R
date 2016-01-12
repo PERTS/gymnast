@@ -180,7 +180,7 @@ qc.clean_qualtrics <- function(
 
 qc.rbind_inprogress <- function(inprogress_qdf, clean_qdf){
   # Takes an in-progress Qualtrics dataset (inprogress_qdf), cleans it,
-  # replaces its column names with those of the cleand Qualtrics dataset
+  # replaces its column names with those of the cleaned Qualtrics dataset
   # (clean_qdf), and rbinds it to the bottom of cleaned_qdf. Note that if you
   # set remove_unnamed_columns to TRUE when running qc.clean_qualtrics, the
   # clean and in-progress dataset will not have the same number of columns, and
@@ -188,8 +188,8 @@ qc.rbind_inprogress <- function(inprogress_qdf, clean_qdf){
   # progress dataset if it has columns that are in any way different than the
   # clean Qualtrics dataset
 
-  # note that i have to use nested functions in the line below because if I
-  # pipe something to suppressWarnings, it throws an error.
+  # note that I (SG) have to use nested functions in the line below because if
+  # I pipe something to suppressWarnings, it throws an error.
 
   # Finally, note that embedded data fields set via the API will not appear in
   # Qualtrics partial responses. However, they will appear once the partial
