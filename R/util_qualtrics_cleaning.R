@@ -199,9 +199,11 @@ qc.rbind_inprogress <- function(inprogress_qdf, clean_qdf){
   # First, just stop if the in-progress qdf and clean qdf have different
   # numbers of columns
   if(ncol(inprogress_qdf) != ncol(clean_qdf)){
-    stop("Your in-progress dataset contains a different number of columns" %+%
-      "than your clean dataset. Please check your Qualtrics data.frames" %+%
-      "and try again.")
+    stop("Your in-progress dataset contains a different number of columns " %+%
+      "than your clean dataset. Please check your Qualtrics data.frames " %+%
+      "and try again. Note that if you set remove_unnamed_columns to " %+%
+      "TRUE when running qc.clean_qualtrics, this will result in " %+%
+      "clean_qdf having a different number of columns than inprogress_qdf.")
   }
   # set column names and rbind
   suppressWarnings(qc.clean_qualtrics(inprogress_qdf)) %>%
