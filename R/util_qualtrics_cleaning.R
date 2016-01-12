@@ -182,9 +182,11 @@ qc.rbind_inprogress <- function(inprogress_qdf, clean_qdf){
   # Takes an in-progress Qualtrics dataset (inprogress_qdf), cleans it,
   # replaces its column names with those of the cleand Qualtrics dataset
   # (clean_qdf), and rbinds it to the bottom of cleaned_qdf. Note that if you
-  # set remove_unnamed_columns to TRUE when running qc.clean_qualtrics, both
-  # setNames and rbind will throw errors, because both depend on each
-  # data.frame having the same number of columns.
+  # set remove_unnamed_columns to TRUE when running qc.clean_qualtrics, the
+  # clean and in-progress dataset will not have the same number of columns, and
+  # the function will give an errror. You would never want to rbind the in-
+  # progress dataset if it has columns that are in any way different than the
+  # clean Qualtrics dataset
 
   # note that i have to use nested functions in the line below because if I
   # pipe something to suppressWarnings, it throws an error.
@@ -194,6 +196,14 @@ qc.rbind_inprogress <- function(inprogress_qdf, clean_qdf){
   # responses are closed and set to complete, and any survey elements that
   # depend on them (e.g, survey flow) should still work properly.
 
+  # First, just stop if the in-progress qdf and clean qdf have different
+  # numbers of columns
+  if(ncol(inprogress_qdf) != ncol(clean_qdf)){
+    stop("Your in-progress dataset contains a different number of columns" %+%
+      "than your clean dataset. Please check your Qualtrics data.frames" %+%
+      "and try again.")
+  }
+  # set column names and rbind
   suppressWarnings(qc.clean_qualtrics(inprogress_qdf)) %>%
     setNames(., names(clean_qdf)) %>%
     rbind(clean_qdf, .)
