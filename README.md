@@ -4,15 +4,32 @@ Collection of useful functions for data analysis and visualization.
 
 ## Install gymnast
 
-You only have to do this process once.
+Make sure you have a current version of R. The most recently tested version is 3.2.3.
+
+Then copy and paste the following code into the top of your R script, or run it in your R console.
+
+```r
+source_urls <- c(
+    "https://raw.githubusercontent.com/PERTS/gymnast/master/R/util.R",
+    "https://raw.githubusercontent.com/PERTS/gymnast/master/R/util_qualtrics_cleaning.R",
+    "https://raw.githubusercontent.com/PERTS/gymnast/master/R/util_graphing.R"
+)
+for (source_url in source_urls) {
+    source(pipe(paste0("curl ", source_url)))
+}
+```
+
+If you are only interested in some gynmast modules, you can modify the list of installed `source_urls`.
+
+## Alternate Installation
+
+This is more like a typical package installation, however you will not get any updates made to gymnast until you re-install.
 
     > install.packages("devtools")
 
     (Answer "n" if you are asked "Do you want to install from sources the package which needs compilation?")
 
     > devtools::install_github("PERTS/gymnast")
-
-## Use gymnast
 
 After installing, use just like any other package:
 
