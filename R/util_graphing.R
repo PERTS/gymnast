@@ -36,5 +36,6 @@ ug.dodge <- position_dodge( width=0.9 )
 # an error bar using bootstrapped confidence intervals, +/- 1 standard error
 ug.se_error_bar <- ug.stat_sum_df( fun="mean_cl_boot", fun.y="mean",
                                 geom="errorbar", width=.3, 
-                                fun.args=list(conf.int=.68), position=ug.dodge) 
+                                fun.args=list(conf.int=.68), 
+                                position=ug.dodge) 
 
