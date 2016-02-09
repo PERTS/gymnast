@@ -455,13 +455,13 @@ util.read_csv_files <- function(path_list, environment = .GlobalEnv, ...){
         }
     for(file_name in names(path_list)){
       # only try to read in files that exist!
-      if(file_name %in% names(found_files[found_files])){
-          read.csv(
-              path_list[[file_name]],
-              stringsAsFactors=FALSE,
-              ...
-              ) %>%
-              assign(file_name, ., environment)
+        if(file_name %in% names(found_files[found_files])){
+            read.csv(
+                path_list[[file_name]],
+                stringsAsFactors=FALSE,
+                ...
+                ) %>%
+            assign(file_name, ., environment)
         }
     }
 }
