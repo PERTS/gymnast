@@ -453,7 +453,6 @@ util.read_csv_files <- function(path_list, environment = .GlobalEnv, ...){
         } else{
             util.passed("All files present!")
         }
-    # Note: I transform the strings "NA", "NULL", "", and " " into NAs when I import.
     for(file_name in names(path_list)){
       # only try to read in files that exist!
       if(file_name %in% names(found_files[found_files])){
