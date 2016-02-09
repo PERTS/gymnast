@@ -462,7 +462,7 @@ util.read_csv_files <- function(path_list, environment = .GlobalEnv, ...){
               stringsAsFactors=FALSE,
               ...
               ) %>%
-              assign(file_name, .)
+              assign(file_name, ., environment)
         }
     }
 }
