@@ -422,7 +422,48 @@ util.reverse_likert <- function(v, scale_levels) {
     return(scale_levels - reversed_data + 1)
 }
 
+###############################################################
+###
+###     Reading and writing files
+###     Read/write files efficiently
+###
+###############################################################
 
+util.read_csv_files <- function(path_list, environment = .GlobalEnv, ...){
+    # path_list is a list object containing paths pointing to the desired .csv files
+    # ... are optional arguments to be passed to read.csv (e.g., na.strings)
+    # function loops through the paths in path_list, reads them into R, and assigns them
+    # to variable names specified in the names() of path_list,
+    # e.g., for path_list <- list("a" = "~Downloads/my_file.csv"), you would get
+    # the contents of my_file.csv saved as object `a` in the environment specified
+    # by environtment (default .GlobalEnv).
+
+    found_files <- sapply(path_list, file.exists)
+
+    # Check for nonexistant files
+    if(any(!found_files)){
+      all_files_present <- FALSE
+      util.warn(
+      "The following files were not found: " %+%
+          names(found_files)[!found_files],
+              collapse=", "
+              )
+        } else{
+            util.passed("All files present!")
+        }
+    # Note: I transform the strings "NA", "NULL", "", and " " into NAs when I import.
+    for(file_name in names(path_list)){
+      # only try to read in files that exist!
+      if(file_name %in% names(found_files[found_files])){
+          read.csv(
+              path_list[[file_name]],
+              stringsAsFactors=FALSE,
+              ...
+              ) %>%
+              assign(file_name, .)
+        }
+    }
+}
 
 ###############################################################
 ###
