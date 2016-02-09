@@ -444,10 +444,12 @@ util.read_csv_files <- function(path_list, environment = .GlobalEnv, ...){
     if(any(!found_files)){
       all_files_present <- FALSE
       util.warn(
-      "The following files were not found: " %+%
-          names(found_files)[!found_files],
+          "The following files were not found: " %+%
+          paste0(
+              names(found_files)[!found_files],
               collapse=", "
               )
+        )
         } else{
             util.passed("All files present!")
         }
