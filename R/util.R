@@ -59,7 +59,7 @@ util.apply_columns <- function(df, fun, col_names = NULL, ...){
 util.mutate_many <- function(df,
     col_names,
     fun,
-    append = TRUE,
+    replace = FALSE,
     newcol_names = NULL,
     ...){
     # imitates the behavior of mutate in that it returns a data.frame of the
@@ -70,20 +70,20 @@ util.mutate_many <- function(df,
     # columns in df
     df_cols_mutated <- util.apply_columns(df, fun, col_names, ...)
 
-    if(append){
-        if(is.null(newcol_names)){
-            # if append is true and there are no new column names set, rename
-            # the mutated columns (to avoid duplicated column names).
-            newcol_names <- paste0(col_names, "_new")
-        }
-    } else{
-        # if append is false, remove the original columns from df before
+    if(replace){
+        # if replace is TRUE, remove the original columns from df before
         # appending the new columns
         df <- df[!names(df) %in% col_names]
         # it's also safe to set the new column names to the old column names if
         # newcol_names are not defined.
         if(is.null(newcol_names)){
             newcol_names <- col_names
+        }
+    } else{
+        if(is.null(newcol_names)){
+            # if append is true and there are no new column names set, rename
+            # the mutated columns (to avoid duplicated column names).
+            newcol_names <- paste0(col_names, "_new")
         }
     }
     # rename the mutated columns
