@@ -30,9 +30,15 @@ util.tidy <- function(source = "clipboard") {
 "%+%" <- function (x, y) { paste(x, y, sep="") }
 
 
-util.apply_columns <- function(df, fun, ...){
-    # returns a data.frame with fun applied to every column.
+util.apply_columns <- function(df, fun, col_names = NULL, ...){
+    # returns a data.frame with fun applied to every column. col_names is an
+    # optional vector of column names. If defined, util.apply_columns will only
+    # apply fun to the columns in col_names, and returns only those modified
+    # columns
     # ellipsis args are passed to fun, applied to all columns.
+    if(!is.null(col_names)){
+        df <- df[col_names]
+    }
 
     # stringsAsFactors=FALSE prevents factorizing characters.
     # check.names=FALSE avoids adding extra characters to colnames
@@ -41,6 +47,50 @@ util.apply_columns <- function(df, fun, ...){
         stringsAsFactors = FALSE,
         check.names=FALSE
     )
+}
+
+###############################################################
+###
+###     dplyr extensions
+###     Improves functionality of dplyr
+###
+###############################################################
+
+util.mutate_many <- function(df,
+    col_names,
+    fun,
+    append = TRUE,
+    newcol_names = NULL,
+    ...){
+    # imitates the behavior of mutate in that it returns a data.frame of the
+    # same format as df, but applies function `fun` to a vector of string
+    # column names, rather than to dplyr hard-coded non-standard evaluation
+    # column names. If append is TRUE, the newly-constructed columns will be
+    # appended to the original data.frame; otherwise, they will replace the old
+    # columns in df
+    df_cols_mutated <- util.apply_columns(df, fun, col_names, ...)
+
+    if(append){
+        if(is.null(newcol_names)){
+            # if append is true and there are no new column names set, rename
+            # the mutated columns (to avoid duplicated column names).
+            newcol_names <- paste0(col_names, "_new")
+        }
+    } else{
+        # if append is false, remove the original columns from df before
+        # appending the new columns
+        df <- df[!names(df) %in% col_names]
+        # it's also safe to set the new column names to the old column names if
+        # newcol_names are not defined.
+        if(is.null(newcol_names)){
+            newcol_names <- col_names
+        }
+    }
+    # rename the mutated columns
+    names(df_cols_mutated) <- newcol_names
+    # combine them
+    df <- data.frame(df, df_cols_mutated)
+    return(df)
 }
 
 ###############################################################
