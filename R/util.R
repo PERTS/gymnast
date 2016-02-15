@@ -467,6 +467,19 @@ util.read_csv_files <- function(path_list, environment = .GlobalEnv, ...){
                 )
         }
     }
+    return(df_list)
+}
+
+assign_list_to_environment <- function(l, environment = .GlobalEnv){
+    # assigns all elements of list l to environment
+    #
+    # Args
+    #   l: list of objects to be assigned, with names(l) corresponding to desired
+    # object names
+    #   environment: environment you want the variables assigned to
+    for(i in 1:length(l)){
+        assign(names(l)[i], l[[i]], environment)
+    }
 }
 
 ###############################################################
