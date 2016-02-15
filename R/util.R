@@ -445,7 +445,6 @@ util.read_csv_files <- function(path_list, environment = .GlobalEnv, ...){
 
     # Check for nonexistant files
     if(any(!found_files)){
-        all_files_present <- FALSE
         util.warn(
             "The following files were not found: " %+%
             paste0(
