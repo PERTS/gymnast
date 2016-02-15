@@ -442,17 +442,17 @@ util.read_csv_files <- function(path_list, environment = .GlobalEnv, ...){
 
     # Check for nonexistant files
     if(any(!found_files)){
-      all_files_present <- FALSE
-      util.warn(
-          "The following files were not found: " %+%
-          paste0(
-              names(found_files)[!found_files],
-              collapse=", "
-              )
+        all_files_present <- FALSE
+        util.warn(
+            "The following files were not found: " %+%
+            paste0(
+                names(found_files)[!found_files],
+                collapse=", "
+            )
         )
-        } else{
-            util.passed("All files present!")
-        }
+    } else{
+        util.passed("All files present!")
+    }
     for(file_name in names(path_list)){
       # only try to read in files that exist!
         if(file_name %in% names(found_files[found_files])){
