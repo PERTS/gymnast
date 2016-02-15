@@ -455,15 +455,16 @@ util.read_csv_files <- function(path_list, environment = .GlobalEnv, ...){
     } else{
         util.passed("All files present!")
     }
+    # Read the new files into df_list()
+    df_list <- list()
     for(file_name in names(path_list)){
       # only try to read in files that exist!
         if(file_name %in% names(found_files[found_files])){
-            read.csv(
+            df_list[[file_name]] <- read.csv(
                 path_list[[file_name]],
                 stringsAsFactors=FALSE,
                 ...
-                ) %>%
-            assign(file_name, ., environment)
+                )
         }
     }
 }
