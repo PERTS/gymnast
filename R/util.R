@@ -470,7 +470,7 @@ util.read_csv_files <- function(path_list, environment = .GlobalEnv, ...){
     return(df_list)
 }
 
-assign_list_to_environment <- function(l, environment = .GlobalEnv){
+util.assign_list_to_environment <- function(l, environment = .GlobalEnv){
     # assigns all elements of list l to environment
     #
     # Args
