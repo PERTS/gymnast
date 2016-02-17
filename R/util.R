@@ -453,7 +453,9 @@ util.read_csv_files <- function(path_list, environment = .GlobalEnv, ...){
             )
         )
     } else{
-        util.passed("All files present!")
+        util.passed("All files present, successfully loaded " %+%
+            length(found_files) %+%
+            " files.")
     }
     # Read the new files into df_list()
     df_list <- list()
