@@ -430,39 +430,57 @@ util.reverse_likert <- function(v, scale_levels) {
 ###############################################################
 
 util.read_csv_files <- function(path_list, environment = .GlobalEnv, ...){
-    # path_list is a list object containing paths pointing to the desired .csv files
-    # ... are optional arguments to be passed to read.csv (e.g., na.strings)
-    # function loops through the paths in path_list, reads them into R, and assigns them
-    # to variable names specified in the names() of path_list,
-    # e.g., for path_list <- list("a" = "~Downloads/my_file.csv"), you would get
-    # the contents of my_file.csv saved as object `a` in the environment specified
-    # by environtment (default .GlobalEnv).
+    # reads a list of .csv file paths and returns a list of data.frames
+    # Args
+    #   path_list: list that contains paths pointing to the desired .csv files
+    #   ... optional arguments to be passed to read.csv (e.g., na.strings)
+    #
+    # Loops through the paths in path_list, reads them into R, and creates
+    # a list of data.frames, e.g., for
+    # path_list <- list("a" = "~Downloads/my_file.csv"), you would get
+    # a one-element list named "a" containing the contents my_file.csv
+    # as a data.frame
 
     found_files <- sapply(path_list, file.exists)
 
     # Check for nonexistant files
     if(any(!found_files)){
-      all_files_present <- FALSE
-      util.warn(
-          "The following files were not found: " %+%
-          paste0(
-              names(found_files)[!found_files],
-              collapse=", "
-              )
+        util.warn(
+            "The following files were not found: " %+%
+            paste0(
+                names(found_files)[!found_files],
+                collapse=", "
+            )
         )
-        } else{
-            util.passed("All files present!")
-        }
+    } else{
+        util.passed("All files present, successfully loaded " %+%
+            length(found_files) %+%
+            " files.")
+    }
+    # Read the new files into df_list()
+    df_list <- list()
     for(file_name in names(path_list)){
       # only try to read in files that exist!
         if(file_name %in% names(found_files[found_files])){
-            read.csv(
+            df_list[[file_name]] <- read.csv(
                 path_list[[file_name]],
                 stringsAsFactors=FALSE,
                 ...
-                ) %>%
-            assign(file_name, ., environment)
+                )
         }
+    }
+    return(df_list)
+}
+
+util.assign_list_to_environment <- function(l, environment = .GlobalEnv){
+    # assigns all elements of list l to environment
+    #
+    # Args
+    #   l: list of objects to be assigned, with names(l) corresponding to desired
+    # object names
+    #   environment: environment you want the variables assigned to
+    for(i in 1:length(l)){
+        assign(names(l)[i], l[[i]], environment)
     }
 }
 
