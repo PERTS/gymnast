@@ -429,9 +429,14 @@ util.reverse_likert <- function(v, scale_levels) {
 ###
 ###############################################################
 
-util.hash_vector <- function(x){
-    # Hashes vector x with SHA-256. Any salting must be done previously, this
-    # function only hashes.
+util.hash_vector <- function(x, salt = NULL){
+    # Hashes vector x with SHA-256, after optionally pasting salt
+
+    # if salt is defined, then salt
+    if(!is.null(salt)){
+        x <- paste0(x, salt)
+    }
+    # hash
     lapply(x, function(x) digest(x, algo="sha256")) %>% unlist
 }
 
