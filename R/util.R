@@ -424,6 +424,19 @@ util.reverse_likert <- function(v, scale_levels) {
 
 ###############################################################
 ###
+###     De-identification
+###     Hash and de-identify variables and data.frames
+###
+###############################################################
+
+util.hash_vector <- function(x){
+    # Hashes vector x with SHA-256. Any salting must be done previously, this
+    # function only hashes.
+    lapply(x, function(x) digest(x, algo="sha256")) %>% unlist
+}
+
+###############################################################
+###
 ###     Reading and writing files
 ###     Read/write files efficiently
 ###
