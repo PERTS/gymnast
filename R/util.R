@@ -43,6 +43,17 @@ util.apply_columns <- function(df, fun, ...){
     )
 }
 
+util.duplicated_all <- function(x) {
+  # Returns a boolean indicating whether each value is
+  # duplicated anywhere in x. This differs from base::duplicated, which
+  # returns FALSE for the first of a set of duplicated values.
+  #
+  # Example: util.duplicated(c(1, 2, 1)) returns c(T, F, T).i
+  duplicated_downward <- duplicated(x)
+  duplicated_upward <- duplicated(x, fromLast=TRUE)
+  return (duplicated_downward | duplicated_upward)
+}
+
 ###############################################################
 ###
 ###     String Cleaning
