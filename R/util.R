@@ -43,6 +43,14 @@ util.apply_columns <- function(df, fun, ...){
     )
 }
 
+util.duplicated <- function(x) {
+  # returns a boolean of length x indicating whether each value in x is
+  # duplicated anywhere in x
+  duplicated_downward <- duplicated(x)
+  duplicated_upward <- duplicated(x, fromLast=TRUE)
+  return (duplicated_downward | duplicated_upward)
+}
+
 ###############################################################
 ###
 ###     String Cleaning
