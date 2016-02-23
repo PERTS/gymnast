@@ -132,7 +132,7 @@ util.is_vector_of_numbers <- function(x){
     # e.g., when all columns set to character types by default.
 
     # find numeric values
-    numeric_values <- grepl("^[[:digit:]]*\\.*[[:digit:]]+$",x)
+    numeric_values <- grepl("^-*[[:digit:]]*\\.*[[:digit:]]+$",x)
 
     # find the blank values
     blank_values <- util.is_blank(x)
