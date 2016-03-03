@@ -213,7 +213,7 @@ util.passed <- function(message) {
 
 util.html_table_from_model <- function(model){
     accepted_models <- c("lmerMod","lm","aov","glm","glmerMod")
-    if( ! any(class(x) %in% accepted_models ) ){
+    if( ! any(class(model) %in% accepted_models ) ){
         util.warn("Unaccepted model supplied!")
     }
     if( ! interactive() ){
