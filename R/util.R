@@ -242,6 +242,7 @@ util.html_table_data_frame <- function(x){
     if( ! interactive() ){
         print(xtable(x),
               type="html",
+              include.rownames = FALSE,
               html.table.attributes =
                   getOption("xtable.html.table.attributes",
                             "border=0, class='xtable'")
