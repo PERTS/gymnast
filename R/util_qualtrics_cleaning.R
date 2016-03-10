@@ -56,8 +56,8 @@ STANDARD_SECOND_ROW_QUALTRICS_COLUMNS <- c(
     valid <- !is.na(hidden_column_names)
     best_column_names[valid] <- hidden_column_names[valid]
 
-    # add any necessary _TEXT suffixes
-    best_column_names <- qc.add_TEXT_suffixes(qdf_char, best_column_names)
+    # add any necessary suffixes
+    best_column_names <- qc.add_suffixes(qdf_char, best_column_names)
 
     # throw a warning if the function being used yields column names that are
     # not unique
@@ -110,23 +110,28 @@ STANDARD_SECOND_ROW_QUALTRICS_COLUMNS <- c(
     return(qdf_rn[, !unnamed_columns])
   }
 
-  qc.add_TEXT_suffixes <- function(qdf_char, column_names){
-    # Qualtrics has an infrequent question type where you can input an open-
+  qc.add_suffixes <- function(qdf_char, column_names){
+    # Qualtrics has infrequent question types where you can input an open-
     # ended response to a multiple-choice question (e.g., "something else
     # (write here)"). Qualtrics creates TWO columns for such questions, one for
     # the multiple-choice response, and one for the open-ended response.
     # Qualtrics distinguishes them in the column names by adding the suffix
     # "_TEXT". But it doesn't differentiate the question text in the first row.
     # We need the _TEXT suffix, otherwise qc.extract_hidden_column_names will
-    # produce duplicate columns. So, add the TEXT suffix back.
+    # produce duplicate columns. Other question types exhibit similar behavior,
+    # with different suffixes (e.g., "_Group" or "_1") So, add the suffixes
+    # back.
 
-    # find the _TEXT columns in the original variable names
-    TEXT_suffix_columns <- grepl("_TEXT$", names(qdf_char))
+    # find the suffix columns in the original variable names
+    is_suffix_column <- grepl("^Q[0-9]+[_.]", names(qdf_char))
 
-    # add "_TEXT" to column_names wherever this suffix appears in the original
+    # extract the suffixes
+    suffixes <- sub("(^Q[0-9]+[_.])", "\\2", names(qdf_char)[is_suffix_column])
+
+    # add suffixes to column_names wherever this suffix appears in the original
     # variable names
-    column_names[TEXT_suffix_columns] <- column_names[TEXT_suffix_columns] %+%
-      "_TEXT"
+    column_names[is_suffix_column] <- column_names[is_suffix_column] %+%
+      "_" %+% suffixes
 
     return(column_names)
   }
