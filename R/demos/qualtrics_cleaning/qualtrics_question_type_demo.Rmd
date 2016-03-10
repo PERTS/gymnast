@@ -64,3 +64,13 @@ data.frame(
     ) %>% 
     util.html_table
 ```
+
+# Note that no column names are duplicated, whereas pdd tags are!
+
+```{r}
+# column names are unique:
+any(util.duplicated_all(names(sclean)))
+
+# pdd tags are duplicated:
+any(util.duplicated_all(pdd_tags))
+```
