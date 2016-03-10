@@ -1,0 +1,66 @@
+---
+title: "Question type demo"
+author: "Sarah Gripshover"
+date: "March 2016"
+output: 
+  html_document:
+    fig_caption: no
+    toc: yes
+    theme: spacelab
+    css: ~/Sites/gymnast/Rmd/RMD_styles.css
+---
+
+# Load gymnast
+```{r message = FALSE}
+source("~/Sites/gymnast/R/util.R")
+source("~/Sites/gymnast/R/util_qualtrics_cleaning.R")
+```
+
+# Load sample data
+
+This data was made with a mock survey (called "question type test" in PERTS 
+Qualtrics) that uses EVERY QUESTION TYPE AVAILABLE in Qualtrics (as of March 10, 
+2016). The goal was to see if there was a question type that could break the 
+Qualtrics cleaning functions.
+
+```{r}
+sraw <- read.csv("~/Sites/gymnast/R/demos/qualtrics_cleaning/question_type_test.csv")
+sraw_inprogress <- read.csv("~/Sites/gymnast/R/demos/qualtrics_cleaning/question_type_test-Responses in Progress.csv")
+```
+
+# Clean sample data & add in-progress data
+
+```{r}
+sclean <- qc.clean_qualtrics(sraw) %>%
+    qc.rbind_inprogress(sraw_inprogress, .)
+```
+
+Visually examine and note that first row of long-form column names was removed
+
+```{r results='asis'}
+sclean %>% head %>% util.print_pre
+```
+
+Note that numeric columns are correctly read as numeric:
+
+```{r}
+is.numeric(sclean$slider_1)
+```
+
+Compare original and cleaned column names:
+
+```{r results='asis'}
+
+pdd_tags <- qc.extract_delimited(
+    as.character(
+        util.to_character(sraw[1,])
+        )
+    )
+
+data.frame(
+    original_col_name = names(sraw),
+    pdd_tags = pdd_tags,
+    new_col_name = names(sclean)
+    ) %>% 
+    util.html_table
+```
