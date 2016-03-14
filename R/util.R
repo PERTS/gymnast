@@ -169,11 +169,14 @@ util.as_numeric_if_number <- function(x){
 
 util.print_pre <- function(x){
     # prints to html as it would to console (preformatted html)
-    if(interactive()) return(x)
-    capture.output(print(x)) %>%
+    if(interactive()){
+        print(x)
+    } else{
+        capture.output(print(x)) %>%
         paste(collapse="\n") %>%
         paste("<pre>",.,"</pre>") %>%
         cat()
+    }
 }
 
 util.warn <- function(message) {
@@ -248,7 +251,7 @@ util.html_table_data_frame <- function(x){
                             "border=0, class='xtable'")
         )
     }else{
-        return(x)
+        print(x)
     }
 }
 
