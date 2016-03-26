@@ -272,16 +272,13 @@ util.html_table <- function(x, ...) {
 
     if( any(class(x) %in% accepted_models ) ){
         util.html_table_from_model(x)
-    }
-
-    if( all( class(x) %in% accepted_psych_objects ) ){
+    } else if( all( class(x) %in% accepted_psych_objects ) ){
         util.html_table_psych_alphas(x)
-    }
-
-    if( any(class(x) %in% accepted_dfs ) ){
+    } else if( any(class(x) %in% accepted_dfs ) ){
         util.html_table_data_frame(x)
     }
 }
+
 
 
 ###############################################################
