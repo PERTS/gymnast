@@ -378,7 +378,7 @@ util.rbind_union <- function(dfs){
 # util.rbind_union(dfs)
 # util.rbind_intersection(dfs)
 
-check_index_is_unique <- function(df, index_cols = NULL){
+util.check_index_is_unique <- function(df, index_cols = NULL){
     # Checks whether the vector of column names index_cols define unique rows
     # in df by comparing the number of rows in the whole df to the number of
     # rows defined by just the unique combinations of the index_cols. Returns
@@ -391,7 +391,7 @@ check_index_is_unique <- function(df, index_cols = NULL){
 
     # Throw an error if df is missing any index_cols
     if(any(!index_cols %in% names(df))){
-        stop("in check_index_is_unique, at least one of your index " %+%
+        stop("in util.check_index_is_unique, at least one of your index " %+%
             "cols does notexist in df.")
     }
 
