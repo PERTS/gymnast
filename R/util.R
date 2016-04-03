@@ -391,7 +391,7 @@ util.rbind_union <- function(dfs){
 util.recode <- function(vector, originals, replacements){
     # replace appearances of "originals" with "replacements"
     if(length(originals) != length(replacements)){
-        "Original and replacement should have equal lenght" %>%
+        "Original and replacement should have equal length" %>%
             util.warn()
     }
     if(any(duplicated(originals))){
