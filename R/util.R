@@ -514,6 +514,107 @@ util.assign_list_to_environment <- function(l, environment = .GlobalEnv){
     }
 }
 
+util.list_files <- function (initial_path, max_depth = 2, current_depth = 0) {
+    # Like base::list.files, but better:
+    # * Lists files, not directories. Because it's called list_files.
+    # * Rather than choosing between no recursion (not very useful) and full
+    #   recursion (potentially very slow for a deep folder tree) you can set a
+    #   max depth. Choose 0 for no recursion.
+    # * Ignores hidden and system files, defined as anything starting with
+    #   '.', '$', or '~'.
+    # * Only works on unix-like systems (no windows)!
+    #
+    # Args:
+    #   initial_path: atomic char, directory to scan for files.
+    #   max_depth: atomic int, default 2, how many subfolders deep to scan for
+    #     files. Zero means enter no subfolders.
+    # current_depth: internal use only, do not specify.
+    #
+    # Returns: char of absolute file paths
+
+    if (.Platform$OS.type != 'unix') {
+        stop("list_files() only supports unix-like systems, not windows.")
+    }
+
+    # List everything within this path, both files and dirs.
+    all_names <- list.files(initial_path, full.names = TRUE)
+
+    # List directories within this path.
+    dirs <- list.dirs(initial_path, recursive = FALSE)
+
+    # Exclude any hidden or system files.
+    ignore_pattern <- '/[\\.\\$~]'
+    all_names <- all_names[!grepl(ignore_pattern, all_names)]
+    dirs <- dirs[!grepl(ignore_pattern, dirs)]
+
+    # Figure out what the real files are by excluding dirs.
+    files <- setdiff(all_names, dirs)
+
+    # If not at max depth, recurse into each found directory.
+    if (current_depth < max_depth) {
+        for (d in dirs) {
+            files <- c(files, list_files(
+                d, max_depth = max_depth, current_depth = current_depth + 1))
+        }
+    }
+    return(files)
+}
+
+util.find_crypt_paths <- function (files_to_load, initial_path = '/Volumes',
+                              max_depth = 2) {
+    # Find the full paths of specified files within any mounted crypts.
+    # Designed to work with util.read_csv_files().
+    #
+    # Example call:
+    # > find_crypt_paths(list(school_a = 'School A/data.csv'))
+    # $school_a
+    # [1] "/Volumes/NO NAME 1/CC 10/School A/data.csv"
+    #
+    # Args:
+    #   file_to_load: list, mapping of arbitrary labels to file names or
+    #     partial file paths, as specific as necessary to find the file. If you
+    #     give 'data.csv' and this function finds several of those within
+    #     mounted crypts, it will stop. The solution is to be more specific,
+    #     e.g. 'CC10-11/data.csv'
+    #   initial_path: atomic char, default '/Volumes', the parent directory
+    #     where crypt files are mounted.
+    #   max_depth: atomic int, default 2, how many subfolders deep to scan for
+    #     files. Zero means enter no subfolders.
+    #
+    # Returns: List with provided labels to absolute file paths.
+
+    all_volume_paths <- list.dirs(initial_path, recursive = FALSE)
+    mount_paths <- all_volume_paths[grepl('/NO NAME', all_volume_paths)]
+
+    # Compile a list of files from each mount path.
+    crypt_files <- c()
+    for (m in mount_paths) {
+        crypt_files <- c(list_files(m), crypt_files)
+    }
+
+    # For each file to load, scan the list of known files for a match.
+    found_paths <- list()
+    for (label in names(files_to_load)) {
+        file_name <- files_to_load[[label]]
+
+        # Make sure the file name starts with a slash so that, when grepping, we
+        # don't match in the middle of a file or folder name.
+        if (substr(file_name, 1, 1) != '/') {
+            file_name <- '/' %+% file_name
+        }
+        match <- crypt_files[grepl(file_name, crypt_files)]
+        if (length(match) > 1) {
+            stop("Multiple matches found for " %+% file_name %+% ": " %+%
+                 match %+% "\n")
+        } else {
+            found_paths[[label]] <- match
+        }
+    }
+
+    return(found_paths)
+}
+
+
 ###############################################################
 ###
 ###     Package Installation
