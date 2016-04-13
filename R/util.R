@@ -533,7 +533,7 @@ util.list_files <- function (initial_path, max_depth = 2, current_depth = 0) {
     # Returns: char of absolute file paths
 
     if (.Platform$OS.type != 'unix') {
-        stop("list_files() only supports unix-like systems, not windows.")
+        stop("util.list_files() only supports unix-like systems, not windows.")
     }
 
     # List everything within this path, both files and dirs.
@@ -553,7 +553,7 @@ util.list_files <- function (initial_path, max_depth = 2, current_depth = 0) {
     # If not at max depth, recurse into each found directory.
     if (current_depth < max_depth) {
         for (d in dirs) {
-            files <- c(files, list_files(
+            files <- c(files, util.list_files(
                 d, max_depth = max_depth, current_depth = current_depth + 1))
         }
     }
@@ -589,7 +589,7 @@ util.find_crypt_paths <- function (files_to_load, initial_path = '/Volumes',
     # Compile a list of files from each mount path.
     crypt_files <- c()
     for (m in mount_paths) {
-        crypt_files <- c(list_files(m), crypt_files)
+        crypt_files <- c(util.list_files(m), crypt_files)
     }
 
     # For each file to load, scan the list of known files for a match.
