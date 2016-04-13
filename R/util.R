@@ -560,8 +560,8 @@ util.list_files <- function (initial_path, max_depth = 2, current_depth = 0) {
     return(files)
 }
 
-util.find_crypt_paths <- function (files_to_load, initial_path = '/Volumes',
-                              max_depth = 2) {
+util.find_crypt_paths <- function (files_to_load, initial_path = NA,
+                                   volume_patterns = NA) {
     # Find the full paths of specified files within any mounted crypts.
     # Designed to work with util.read_csv_files().
     #
@@ -578,13 +578,24 @@ util.find_crypt_paths <- function (files_to_load, initial_path = '/Volumes',
     #     e.g. 'CC10-11/data.csv'
     #   initial_path: atomic char, default '/Volumes', the parent directory
     #     where crypt files are mounted.
+    #   volume_patterns: char, regexes that are expected to match volume names.
+    #     Default matches volumes that start with "NO NAME" or "Untitled".
     #   max_depth: atomic int, default 2, how many subfolders deep to scan for
     #     files. Zero means enter no subfolders.
     #
     # Returns: List with provided labels to absolute file paths.
 
+    if (is.na(initial_path)) {
+        initial_path = '/Volumes'
+    }
+    if (is.na(volume_patterns)) {
+        volume_patterns = c('NO.NAME', 'Untitled')
+    }
+    pattern <- '(' %+% paste(volume_patterns, collapse = '|') %+% ')'
+
     all_volume_paths <- list.dirs(initial_path, recursive = FALSE)
-    mount_paths <- all_volume_paths[grepl('/NO NAME', all_volume_paths)]
+    mount_paths <- all_volume_paths[grepl(
+        pattern, ignore.case = TRUE, all_volume_paths)]
 
     # Compile a list of files from each mount path.
     crypt_files <- c()
