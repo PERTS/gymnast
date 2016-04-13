@@ -608,12 +608,9 @@ util.find_crypt_paths <- function (files_to_load, initial_path = NA,
     for (label in names(files_to_load)) {
         file_name <- files_to_load[[label]]
 
-        # Make sure the file name starts with a slash so that, when grepping, we
-        # don't match in the middle of a file or folder name.
-        if (substr(file_name, 1, 1) != '/') {
-            file_name <- '/' %+% file_name
-        }
-        match <- crypt_files[grepl(file_name, crypt_files)]
+        # fixed = TRUE means interpret the file name as a literal subset to match,
+        # not a regular expression (where characters like . have special meaning).
+        match <- crypt_files[grepl(file_name, crypt_files, fixed = TRUE)]
         if (length(match) > 1) {
             stop("Multiple matches found for " %+% file_name %+% ": " %+%
                  match %+% "\n")
