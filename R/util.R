@@ -531,25 +531,17 @@ util.list_files <- function (initial_path, max_depth = 2, current_depth = 0) {
     # current_depth: internal use only, do not specify.
     #
     # Returns: char of absolute file paths
-
-    if (.Platform$OS.type != 'unix') {
-        stop("util.list_files() only supports unix-like systems, not windows.")
-    }
-
+    
+    
     # List everything within this path, both files and dirs.
-    all_names <- list.files(initial_path, full.names = TRUE)
-
-    # List directories within this path.
-    dirs <- list.dirs(initial_path, recursive = FALSE)
-
-    # Exclude any hidden or system files.
-    ignore_pattern <- '/[\\.\\$~]'
-    all_names <- all_names[!grepl(ignore_pattern, all_names)]
-    dirs <- dirs[!grepl(ignore_pattern, dirs)]
-
-    # Figure out what the real files are by excluding dirs.
-    files <- setdiff(all_names, dirs)
-
+    all_names <- list.files(initial_path, pattern = '^[^\\.\\$~]',
+                            full.names = TRUE)
+    
+    # file.info() returns a data frame, use it to separate files and dirs.
+    info <- file.info(all_names)
+    files <- all_names[!info$isdir]
+    dirs <- all_names[info$isdir]
+    
     # If not at max depth, recurse into each found directory.
     if (current_depth < max_depth) {
         for (d in dirs) {
@@ -585,17 +577,29 @@ util.find_crypt_paths <- function (files_to_load, initial_path = NA,
     #
     # Returns: List with provided labels to absolute file paths.
 
-    if (is.na(initial_path)) {
-        initial_path = '/Volumes'
-    }
-    if (is.na(volume_patterns)) {
-        volume_patterns = c('NO.NAME', 'Untitled')
-    }
-    pattern <- '(' %+% paste(volume_patterns, collapse = '|') %+% ')'
+    if (.Platform$OS.type == 'unix') {
+        # You may want to set this to '/media' if you're using linux.
+        if (is.na(initial_path)) {
+            initial_path <- '/Volumes'
+        }
 
-    all_volume_paths <- list.dirs(initial_path, recursive = FALSE)
-    mount_paths <- all_volume_paths[grepl(
-        pattern, ignore.case = TRUE, all_volume_paths)]
+        if (is.na(volume_patterns)) {
+            volume_patterns <- c('NO.NAME', 'Untitled')
+        }
+
+        pattern <- '(' %+% paste(volume_patterns, collapse = '|') %+% ')'
+
+        all_volume_paths <- list.dirs(initial_path, recursive = FALSE)
+        mount_paths <- all_volume_paths[grepl(
+            pattern, ignore.case = TRUE, all_volume_paths)]
+
+    } else if (.Platform$OS.type == 'windows') {
+        initial_path <- NA
+        # What drive letters exist and are not the operating system?
+        all_drives <- paste0(letters, ':/')
+        is_os <- sapply(all_drives, function (d) 'Windows' %in% list.files(d))
+        mount_paths <- all_drives[file.exists(all_drives) & !os_drive]
+    }
 
     # Compile a list of files from each mount path.
     crypt_files <- c()
@@ -608,8 +612,9 @@ util.find_crypt_paths <- function (files_to_load, initial_path = NA,
     for (label in names(files_to_load)) {
         file_name <- files_to_load[[label]]
 
-        # fixed = TRUE means interpret the file name as a literal subset to match,
-        # not a regular expression (where characters like . have special meaning).
+        # fixed = TRUE means interpret the file name as a literal subset to
+        # match, not a regular expression (where characters like . have special
+        # meaning).
         match <- crypt_files[grepl(file_name, crypt_files, fixed = TRUE)]
         if (length(match) > 1) {
             stop("Multiple matches found for " %+% file_name %+% ": " %+%
