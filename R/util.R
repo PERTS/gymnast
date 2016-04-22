@@ -625,9 +625,9 @@ util.find_crypt_paths <- function (files_to_load, initial_path = NA,
     }
 
     # Compile a list of files from each mount path.
-    crypt_files <- c()
+    crypt_paths <- c()
     for (m in mount_paths) {
-        crypt_files <- c(util.list_files(m), crypt_files)
+        crypt_paths <- c(util.list_all(m), crypt_paths)
     }
 
     # For each file to load, scan the list of known files for a match.
@@ -635,10 +635,14 @@ util.find_crypt_paths <- function (files_to_load, initial_path = NA,
     for (label in names(files_to_load)) {
         file_name <- files_to_load[[label]]
 
-        # fixed = TRUE means interpret the file name as a literal subset to
-        # match, not a regular expression (where characters like . have special
-        # meaning).
-        match <- crypt_files[grepl(file_name, crypt_files, fixed = TRUE)]
+        # We only want to match the end of the path, whether it's a file or a
+        # directory, so trim everything to the length of the file name before
+        # checking for an exact match.
+        p_len <- nchar(file_name)  # pattern length
+        s_len <- nchar(crypt_paths)  # subject length
+        crypt_path_endings <- substr(crypt_paths, s_len - p_len + 1, s_len)
+
+        match <- crypt_paths[crypt_path_endings == file_name]
         if (length(match) > 1) {
             stop("Multiple matches found for " %+% file_name %+% ": " %+%
                  match %+% "\n")
