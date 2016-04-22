@@ -514,42 +514,65 @@ util.assign_list_to_environment <- function(l, environment = .GlobalEnv){
     }
 }
 
-util.list_files <- function (initial_path, max_depth = 2, current_depth = 0) {
+util.list_all <- function (initial_path, max_depth = 2, type = 'all', current_depth = 0) {
     # Like base::list.files, but better:
-    # * Lists files, not directories. Because it's called list_files.
+    # * Can choose to list only files, not directories (type = 'files').
     # * Rather than choosing between no recursion (not very useful) and full
     #   recursion (potentially very slow for a deep folder tree) you can set a
     #   max depth. Choose 0 for no recursion.
     # * Ignores hidden and system files, defined as anything starting with
     #   '.', '$', or '~'.
-    # * Only works on unix-like systems (no windows)!
     #
     # Args:
     #   initial_path: atomic char, directory to scan for files.
     #   max_depth: atomic int, default 2, how many subfolders deep to scan for
     #     files. Zero means enter no subfolders.
-    # current_depth: internal use only, do not specify.
+    #   type: atomic char, default 'all', or choose 'dirs' or 'files'.
+    #   current_depth: internal use only, do not specify.
     #
     # Returns: char of absolute file paths
     
+    # Remove the trailing slash if it exists.
+    len <- nchar(initial_path)
+    if (substr(initial_path, len, len) == '/') {
+        initial_path <- substr(initial_path, 1, len - 1)
+    }
     
     # List everything within this path, both files and dirs.
     all_names <- list.files(initial_path, pattern = '^[^\\.\\$~]',
-                            full.names = TRUE)
+                            full.names = TRUE, recursive = FALSE)
     
     # file.info() returns a data frame, use it to separate files and dirs.
     info <- file.info(all_names)
-    files <- all_names[!info$isdir]
-    dirs <- all_names[info$isdir]
+    dirs <- all_names[info$isdir %in% TRUE]  # careful, isdir can be NA
+    files <- all_names[info$isdir %in% FALSE]
+
+    if (type == 'files') {
+        out <- files
+    } else if (type == 'dirs') {
+        out <- dirs
+    } else {
+        out <- all_names
+    }
     
     # If not at max depth, recurse into each found directory.
     if (current_depth < max_depth) {
         for (d in dirs) {
-            files <- c(files, util.list_files(
-                d, max_depth = max_depth, current_depth = current_depth + 1))
+            out <- c(out, util.list_all(
+                d, max_depth = max_depth, type = type,
+                current_depth = current_depth + 1))
         }
     }
-    return(files)
+
+    return(out)
+}
+
+util.list_files <- function (initial_path, ...) {
+    util.list_all(initial_path, type = 'files', ...)
+}
+
+util.list_dirs <- function (initial_path, ...) {
+    util.list_all(initial_path, type = 'dirs', ...)
 }
 
 util.find_crypt_paths <- function (files_to_load, initial_path = NA,
