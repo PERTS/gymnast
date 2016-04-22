@@ -298,18 +298,18 @@ util.z_score <- function(x){
     else{ ( x - mean(x,na.rm=T) ) / sd(x,na.rm=T) }
 }
 
-util.row_means <- function(x){
+util.row_means <- function(x, ...){
     # like base::rowMeans(x, na.rm=TRUE)
     # but it returns self if vector instead of issuing an error
     if(is.vector(x)) return(x)
-    return(rowMeans(x, na.rm = TRUE))
+    return(rowMeans(x, ...))
 }
 
-util.row_sums <- function(x){
+util.row_sums <- function(x, ...){
     # like base::rowSums(x, na.rm=TRUE)
     # but it returns self if vector instead of issuing an error
     if(is.vector(x)) return(x)
-    return(rowSums(x, na.rm = TRUE))
+    return(rowSums(x, ...))
 }
 
 util.round_df <- function(DF, digits=2){
