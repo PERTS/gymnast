@@ -576,7 +576,7 @@ util.list_dirs <- function (initial_path, ...) {
 }
 
 util.find_crypt_paths <- function (files_to_load, initial_path = NA,
-                                   volume_patterns = NA) {
+                                   volume_patterns = NA, max_depth = 2) {
     # Find the full paths of specified files within any mounted crypts.
     # Designed to work with util.read_csv_files().
     #
@@ -592,9 +592,10 @@ util.find_crypt_paths <- function (files_to_load, initial_path = NA,
     #     mounted crypts, it will stop. The solution is to be more specific,
     #     e.g. 'CC10-11/data.csv'
     #   initial_path: atomic char, default '/Volumes', the parent directory
-    #     where crypt files are mounted.
-    #   volume_patterns: char, regexes that are expected to match volume names.
-    #     Default matches volumes that start with "NO NAME" or "Untitled".
+    #     where crypt files are mounted (not applicable in Windows).
+    #   volume_patterns: char, regexes that are expected to match volume
+    #     names. Default matches volumes that start with "NO NAME" or
+    #     "Untitled".
     #   max_depth: atomic int, default 2, how many subfolders deep to scan for
     #     files. Zero means enter no subfolders.
     #
@@ -621,7 +622,7 @@ util.find_crypt_paths <- function (files_to_load, initial_path = NA,
         # What drive letters exist and are not the operating system?
         all_drives <- paste0(letters, ':/')
         is_os <- sapply(all_drives, function (d) 'Windows' %in% list.files(d))
-        mount_paths <- all_drives[file.exists(all_drives) & !os_drive]
+        mount_paths <- all_drives[file.exists(all_drives) & !is_os]
     }
 
     # Compile a list of files from each mount path.
@@ -637,7 +638,9 @@ util.find_crypt_paths <- function (files_to_load, initial_path = NA,
 
         # We only want to match the end of the path, whether it's a file or a
         # directory, so trim everything to the length of the file name before
-        # checking for an exact match.
+        # checking for an exact match. Avoid regex because escaping any
+        # regex special characters that may be in the user-provided file names
+        # is hard with all the proliferating backslashes.
         p_len <- nchar(file_name)  # pattern length
         s_len <- nchar(crypt_paths)  # subject length
         crypt_path_endings <- substr(crypt_paths, s_len - p_len + 1, s_len)
