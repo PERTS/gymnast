@@ -515,8 +515,8 @@ util.assign_list_to_environment <- function(l, environment = .GlobalEnv){
 }
 
 util.list_all <- function (initial_path, max_depth = 2, type = 'all', current_depth = 0) {
-    # Like base::list.files, but better:
-    # * Can choose to list only files, not directories (type = 'files').
+    # Like base::list.files and base::list.dirs, but better:
+    # * Can choose to list only files, or only directories (specify `type`).
     # * Rather than choosing between no recursion (not very useful) and full
     #   recursion (potentially very slow for a deep folder tree) you can set a
     #   max depth. Choose 0 for no recursion.
@@ -531,17 +531,17 @@ util.list_all <- function (initial_path, max_depth = 2, type = 'all', current_de
     #   current_depth: internal use only, do not specify.
     #
     # Returns: char of absolute file paths
-    
+
     # Remove the trailing slash if it exists.
     len <- nchar(initial_path)
     if (substr(initial_path, len, len) == '/') {
         initial_path <- substr(initial_path, 1, len - 1)
     }
-    
+
     # List everything within this path, both files and dirs.
     all_names <- list.files(initial_path, pattern = '^[^\\.\\$~]',
                             full.names = TRUE, recursive = FALSE)
-    
+
     # file.info() returns a data frame, use it to separate files and dirs.
     info <- file.info(all_names)
     dirs <- all_names[info$isdir %in% TRUE]  # careful, isdir can be NA
@@ -554,7 +554,7 @@ util.list_all <- function (initial_path, max_depth = 2, type = 'all', current_de
     } else {
         out <- all_names
     }
-    
+
     # If not at max depth, recurse into each found directory.
     if (current_depth < max_depth) {
         for (d in dirs) {
@@ -568,10 +568,12 @@ util.list_all <- function (initial_path, max_depth = 2, type = 'all', current_de
 }
 
 util.list_files <- function (initial_path, ...) {
+    # Lists only files, not directories. See util.list_all().
     util.list_all(initial_path, type = 'files', ...)
 }
 
 util.list_dirs <- function (initial_path, ...) {
+    # Lists only directories, not files. See util.list_all().
     util.list_all(initial_path, type = 'dirs', ...)
 }
 
