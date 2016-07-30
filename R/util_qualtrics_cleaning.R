@@ -127,7 +127,9 @@ STANDARD_SECOND_ROW_QUALTRICS_COLUMNS <- c(
     # variable names
     column_names[TEXT_suffix_columns] <- column_names[TEXT_suffix_columns] %+%
       "_TEXT"
-
+    # the scirpt currently doubles "_TEXT" into "_TEXT_TEXT"
+    # Rumen will temporarily repair this with gsub
+    column_names <- gsub("_TEXT_TEXT", "_TEXT", column_names)
     return(column_names)
   }
 
