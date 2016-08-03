@@ -110,28 +110,41 @@ STANDARD_SECOND_ROW_QUALTRICS_COLUMNS <- c(
     return(qdf_rn[, !unnamed_columns])
   }
 
-  qc.add_TEXT_suffixes <- function(qdf_char, column_names){
-    # Qualtrics has an infrequent question type where you can input an open-
-    # ended response to a multiple-choice question (e.g., "something else
-    # (write here)"). Qualtrics creates TWO columns for such questions, one for
-    # the multiple-choice response, and one for the open-ended response.
-    # Qualtrics distinguishes them in the column names by adding the suffix
-    # "_TEXT". But it doesn't differentiate the question text in the first row.
-    # We need the _TEXT suffix, otherwise qc.extract_hidden_column_names will
-    # produce duplicate columns. So, add the TEXT suffix back.
+qc.add_TEXT_suffixes <- function(qdf_char, replacement_column_names){
+  # Qualtrics has an infrequent question type where you can input an open-
+  # ended response to a multiple-choice question (e.g., "something else
+  # (write here)"). Qualtrics creates TWO columns for such questions, one for
+  # the multiple-choice response, and one for the open-ended response.
+  # Qualtrics distinguishes them in the column names by adding the suffix
+  # "_TEXT". But it doesn't differentiate the question text in the first row.
+  # We need the _TEXT suffix, otherwise qc.extract_hidden_column_names will
+  # produce duplicate columns. So, add the TEXT suffix back.
 
-    # find the _TEXT columns in the original variable names
-    TEXT_suffix_columns <- grepl("_TEXT$", names(qdf_char))
+  # find the _TEXT columns in the original variable names
 
-    # add "_TEXT" to column_names wherever this suffix appears in the original
-    # variable names
-    column_names[TEXT_suffix_columns] <- column_names[TEXT_suffix_columns] %+%
-      "_TEXT"
-    # the scirpt currently doubles "_TEXT" into "_TEXT_TEXT"
-    # Rumen will temporarily repair this with gsub
-    column_names <- gsub("_TEXT_TEXT", "_TEXT", column_names)
-    return(column_names)
-  }
+  # replacement_column_names are names we use to replace qualtrics labels
+  # they do not have _TEXT suffixes (that's what this function does)
+
+  # qualtrics labels are the default column names (they have _TEXT suffixes)
+  qualtrics_column_labels <- names(qdf_char)
+
+  # what text columns are actually getting replaced?
+  replaced_columns <- qualtrics_column_labels != replacement_column_names
+  # logical vector which is TRUE if the column name has been replaced
+  # (e.g. comes from the second row)
+  TEXT_suffix_columns <- grepl("_TEXT$", qualtrics_column_labels)
+  # logical vector which is TRUE if old name ends with _TEXT
+
+  columns_missing_TEXT_suffix <- TEXT_suffix_columns & replaced_columns
+  #TRUE if both replaced and old name ends with _TEXT
+
+  # add "_TEXT" to column_names wherever this suffix appears in the original
+  # variable names
+  replacement_column_names[columns_missing_TEXT_suffix] <-
+    replacement_column_names[columns_missing_TEXT_suffix] %+% "_TEXT"
+
+  return(replacement_column_names)
+}
 
   # a wrapper function for all the above column-naming procedures:
   qc.rename_columns <- function( qdf_char,
