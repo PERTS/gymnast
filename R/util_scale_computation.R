@@ -49,25 +49,13 @@ sc.append_scales <- function(
             old_names <- names(survey_df)
             # compute and append row means
             scale_means <- util.row_means(survey_df[survey_scale_column_names])
-            survey_df <- data.frame(
-                survey_df,
-                new_scale = scale_means
-            )
-            # rename the scale variable
-            names(survey_df)[names(survey_df) %in% "new_scale"] <- scale
+            survey_df[[new_scale]] <- scale_means
 
             # optionally compute zscore of rowMeans(), or rowMeans() of the
             # standardized scale items
             if(add_z_score){
                 scale_means_z <- util.z_score(scale_means)
-                survey_df <- data.frame(
-                    survey_df,
-                    new_scale_z = scale_means_z
-                )
-                # rename the zscore scale variable with the suffix "_z"
-                names(survey_df)[
-                    names(survey_df) %in% "new_scale_z"
-                    ] <- scale %+% "_z"
+                survey_df[[scale %+% "_z"]] <- scale_means_z
             }
             # warn if any items in scale_variables_table are missing from survey
             # data
