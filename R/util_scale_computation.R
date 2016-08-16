@@ -38,7 +38,7 @@ sc.append_scales <- function(
 
         missing_items <- scale_items[
                 !scale_items %in% survey_scale_column_names
-            ]
+        ]
 
         # If any scale items are present in survey_df, compute row means and
         # append to survey_df.
