@@ -471,7 +471,9 @@ util.read_csv_files <- function(path_list, environment = .GlobalEnv, ...){
     # a one-element list named "a" containing the contents my_file.csv
     # as a data.frame
 
-    found_files <- sapply(path_list, file.exists)
+    found_files <- sapply(crypt_paths, function(path) {
+        length(path) > 0 && file.exists(path)
+    })
 
     # Check for nonexistant files
     if(any(!found_files)){
