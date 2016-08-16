@@ -23,12 +23,12 @@ sc.append_scales <- function(
 
     scales <- unique(scale_variables_table$scale)
 
-    for(scale in scales){
+    for(scale_name in scales){
 
         # Find all the column names in survey_df corresponding to these
         # var_names
         scale_items <- scale_variables_table$var_name[
-            scale_variables_table$scale %in% scale
+            scale_variables_table$scale %in% scale_name
         ]
 
         # look up the corresponding column names in survey_df
@@ -37,39 +37,36 @@ sc.append_scales <- function(
         ]
 
         missing_items <- scale_items[
-                !scale_items %in% survey_scale_column_names
+            !scale_items %in% survey_scale_column_names
         ]
 
         # If any scale items are present in survey_df, compute row means and
         # append to survey_df.
         # If none are present, throw a warning and do nothing.
         if(length(survey_scale_column_names) > 0){
-            # save the existing column names to use for renaming variables
-            # later
-            old_names <- names(survey_df)
             # compute and append row means
             scale_means <- util.row_means(survey_df[survey_scale_column_names])
-            survey_df[[new_scale]] <- scale_means
-
+            survey_df[[scale_name]] <- scale_means
+            print(scale_name)
             # optionally compute zscore of rowMeans(), or rowMeans() of the
             # standardized scale items
             if(add_z_score){
                 scale_means_z <- util.z_score(scale_means)
-                survey_df[[scale %+% "_z"]] <- scale_means_z
+                survey_df[[scale_name %+% "_z"]] <- scale_means_z
             }
             # warn if any items in scale_variables_table are missing from survey
             # data
             if(length(missing_items) > 0){
                 util.warn("The following items were missing from survey data "
                     %+% "from scale " %+%
-                    scale %+% ": " %+%
+                    scale_name %+% ": " %+%
                     paste0(missing_items, collapse = ", ")
                 )
             }
         # if no items were found in the survey data, throw a warning
         } else{
             util.warn("No items corresponding to " %+%
-                scale %+%
+                scale_name %+%
                 " were found in survey data. No scale was computed."
             )
         }

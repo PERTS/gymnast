@@ -25,7 +25,6 @@ util.print_pre(scale_variables_table)
 
 # observe correct scales computed:
 sc.append_scales(test_df, scale_variables_table) %>%
-    select(matches("gms_"), matches("purpose_")) %>%
     util.print_pre
 
 # There should be a warning for the missing purpose_3 item, 
