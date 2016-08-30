@@ -1,0 +1,103 @@
+---
+title: "Univariate Description Demo"
+author: "Dave Paunesku"
+date: "September, 2016"
+output: 
+  html_document:
+    fig_caption: no
+    toc: yes
+    theme: spacelab
+    css: https://raw.githubusercontent.com/PERTS/gymnast/master/Rmd/rmd_styles.css
+---
+
+
+## Purpose
+
+Models use of the univariate descriptions gymnast module.
+
+
+## Load Gymnast 
+```{r, results='hide', message=FALSE, warning=FALSE}
+
+options(stringsAsFactors = FALSE)
+github_base_path <- "https://raw.githubusercontent.com/PERTS/gymnast/master/"
+
+tryCatch({
+    source("~/Sites/gymnast/R/util.R")
+    source("~/Sites/gymnast/R/util_univariate_descriptives.R")
+}, error = function(e){
+    source(github_base_path %+% "R/util.R")
+    source(github_base_path %+% "R/util_univariate_descriptives.R")
+})
+
+```
+
+## Load Sample Data
+Load a sample data file `data` and an optional codebook file `codebook`.
+
+
+```{r, results='hide', message=FALSE, warning=FALSE}
+
+tryCatch({
+    codebook <- read.csv("~/Sites/gymnast/data/skill-aquirability-variable_key.csv")
+    data <- read.csv("~/Sites/gymnast/data/skill-aquirability.csv")
+}, error = function(e){
+    codebook <- 
+        read.csv( github_base_path %+% "data/skill-aquirability-variable_key.csv")
+    data <- 
+        read.csv( github_base_path %+% "data/skill-aquirability")
+})
+
+```
+
+## Display Data
+To give a flavor of what the codebook and data look like.
+```{r, message=FALSE, warning=FALSE, results='asis'}
+
+data[,1:10] %>% 
+    head() %>%
+    util.html_table()
+
+codebook %>% 
+    head() %>%
+    util.html_table()
+
+```
+
+## Call Univariate Descriptives
+
+### Alone
+```{r, message=FALSE, warning=FALSE, results='asis'}
+
+data[,1:10] %>% 
+    head() %>%
+    util.html_table()
+
+codebook %>% 
+    head() %>%
+    util.html_table()
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,1 @@
+variable_name,variable_label,DV,IV,COV,INTwork_hours,Work Hours per Week,,,1,condition,Condition,,1,,in_school,Enrolled in School,,,1,bls_link,Clicked BLS Link,1,,,male,Is Male,,1,1,skil_aq,Skill Acquirability,,1,,tr_int_ex,Intent to Seek Training - External,1,,,tr_int_in,Intent to Seek Training - Internal,1,,,js_intent,Intent to Look for a Job,1,,,fake_variable,,,,,
