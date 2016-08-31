@@ -87,7 +87,7 @@ util.trim <- function(x){
 }
 
 
-util.strip_non_acsii <- function(x){
+util.strip_non_ascii <- function(x){
     # deletes non-ASCII characters, e.g., ø, ñ, etc.
     # e.g., Ekstrøm becomes Ekstrm
     iconv(x, "latin1", "ASCII", sub="")
@@ -118,11 +118,11 @@ util.to_character <- function(x){
 }
 
 
-util.to_acsii <- function(x){
+util.to_ascii <- function(x){
     if(class(x) %in% "data.frame"){
-        util.apply_columns(x, util.strip_non_acsii)
+        util.apply_columns(x, util.strip_non_ascii)
     }
-    else{ as.util.strip_non_acsii(x) }
+    else{ as.util.strip_non_ascii(x) }
 }
 
 util.is_vector_of_numbers <- function(x){
