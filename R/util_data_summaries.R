@@ -28,7 +28,7 @@ ds.helper <- list(
         }
     }
     ,
-    prop_blank = function(x){
+    pct_blank = function(x){
         mean(util.is_blank(x)) * 100
     }
     ,
@@ -67,7 +67,7 @@ ds.helper <- list(
 # these must be defined outside ds.helper because they reference
 # functions defined in it
 ds.helper$default_col_funcs = list(
-    "pct_NA" = ds.helper$prop_blank,
+    "pct_NA" = ds.helper$pct_blank,
     "mean" = ds.helper$mean,
     "sd" = ds.helper$sd,
     "obs_min" = ds.helper$obs_min,
@@ -75,7 +75,7 @@ ds.helper$default_col_funcs = list(
 )
 
 ds.helper$default_categorical_col_funcs = list(
-    "pct_NA" = ds.helper$prop_blank,
+    "pct_NA" = ds.helper$pct_blank,
     "n_unique" = ds.helper$n_unique
 )   
 
