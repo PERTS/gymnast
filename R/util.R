@@ -163,7 +163,7 @@ util.as_numeric_if_number <- function(x){
 ###############################################################
 ###
 ###     Messages
-###     Prettier messages that print to consolte or HTML.
+###     Prettier messages that print to console or HTML.
 ###
 ###############################################################
 
