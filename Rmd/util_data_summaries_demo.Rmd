@@ -13,7 +13,8 @@ output:
 
 ## Purpose
 
-The data summaries (`ds`) module in gymnast is used to easily generate data summaries. This demo file shows how to use it.
+The data summaries (`ds`) module in gymnast is used to easily summarize data. This demo file shows how to use it.
+
 
 
 ## Load Gymnast 
@@ -65,17 +66,17 @@ codebook %>%
 
 ```
 
-## Using the ds.var_desc function
-The variable description (`ds.var_desc`) function is used to generate
+## Using the ds.summarize_by_column function
+The summarize by column (`ds.summarize_by_column`) function is used to create
 univariate descriptions of data. 
 
 ### Default Behavior
-By default, `ds.var_desc` uses the functions in
-`ds.helper$default_desc_cols` to summarize data.
+By default, `ds.summarize_by_column` uses the functions in
+`ds.helper$default_col_funcs` to summarize data.
 
 ```{r, message=FALSE, warning=FALSE, results='asis'}
 
-ds.var_desc(data) %>% 
+ds.summarize_by_column(data) %>% 
     head() %>%
     util.html_table()
 
@@ -83,7 +84,7 @@ ds.var_desc(data) %>%
 
 ### Append a Codebook
 If you pass a codebook in the `codebook` argument,
-`ds.var_desc` will automatically merge it in on 
+`ds.summarize_by_column` will automatically merge it in on 
 the `variable_name` column. Columns from `data`
 are retained even if they are not matched in the 
 codebook.
@@ -91,21 +92,21 @@ codebook.
 ```{r, message=FALSE, warning=FALSE, results='asis'}
 
 codebook_columns_to_include <- c("variable_name","variable_label")
-ds.var_desc(data, codebook=codebook[, codebook_columns_to_include]) %>% 
+ds.summarize_by_column(data, codebook=codebook[, codebook_columns_to_include]) %>% 
     head() %>%
     util.html_table()
 
 ```
 
 ### Customize Summary Variables
-Supply your own summary functions to `ds.var_desc` via the 
-`descriptives` argument if you want to change the summary.
+Supply your own summary functions to `ds.summarize_by_column` via the 
+`func_list` argument if you want to change the summary.
 For example, here we include the mean, standard deviation,
 and standard error.
 
 ```{r, message=FALSE, warning=FALSE, results='asis'}
 
-custom_descriptives <- list(
+custom_func_list <- list(
     "mean" = ds.helper$mean,
     "sd" = ds.helper$sd,
     "se" = function(x){
@@ -115,8 +116,8 @@ custom_descriptives <- list(
     }
 )
 
-ds.var_desc(data, 
-            descriptives = custom_descriptives,
+ds.summarize_by_column(data, 
+            func_list = custom_func_list,
             codebook=codebook[, codebook_columns_to_include]) %>% 
     head() %>%
     util.html_table()
@@ -125,15 +126,16 @@ ds.var_desc(data,
 
 ### Use Default Categorical Descriptives
 Default description functions for categorical variables are provided in 
-`ds.helper$default_categorical` and can be passed to 
-the `descriptives` argument to summarize categorical data.
+`ds.helper$default_categorical_col_funcs` and can be passed to 
+the `func_list` argument to summarize categorical data.
 
 ```{r, message=FALSE, warning=FALSE, results='asis'}
 
 # select the categorical columns for description
 categorical_columns <- ! util.apply_columns(data, util.is_vector_of_numbers)
-ds.var_desc( data[ , categorical_columns ], 
-             descriptives=ds.helper$default_categorical) %>% 
+ds.summarize_by_column( 
+        data[ , categorical_columns ], 
+        func_list=ds.helper$default_categorical_col_funcs) %>% 
     head() %>%
     util.html_table()
 

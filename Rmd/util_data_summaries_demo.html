@@ -128,7 +128,7 @@ $(document).ready(function () {
 <li><a href="#load-gymnast">Load Gymnast</a></li>
 <li><a href="#load-sample-data">Load Sample Data</a></li>
 <li><a href="#display-data">Display Data</a></li>
-<li><a href="#using-the-ds.var_desc-function">Using the ds.var_desc function</a><ul>
+<li><a href="#using-the-ds.summarize_by_column-function">Using the ds.summarize_by_column function</a><ul>
 <li><a href="#default-behavior">Default Behavior</a></li>
 <li><a href="#append-a-codebook">Append a Codebook</a></li>
 <li><a href="#customize-summary-variables">Customize Summary Variables</a></li>
@@ -139,7 +139,7 @@ $(document).ready(function () {
 
 <div id="purpose" class="section level2">
 <h2>Purpose</h2>
-<p>The data summaries (<code>ds</code>) module in gymnast is used to easily generate data summaries. This demo file shows how to use it.</p>
+<p>The data summaries (<code>ds</code>) module in gymnast is used to easily summarize data. This demo file shows how to use it.</p>
 </div>
 <div id="load-gymnast" class="section level2">
 <h2>Load Gymnast</h2>
@@ -174,7 +174,7 @@ tryCatch({
     head() %&gt;%
     util.html_table()</code></pre>
 <!-- html table generated in R 3.3.1 by xtable 1.8-2 package -->
-<!-- Thu Sep  1 17:50:00 2016 -->
+<!-- Fri Sep  2 09:49:22 2016 -->
 <table border="0," class="xtable">
 <tr>
 <th>
@@ -405,7 +405,7 @@ music
     head() %&gt;%
     util.html_table()</code></pre>
 <!-- html table generated in R 3.3.1 by xtable 1.8-2 package -->
-<!-- Thu Sep  1 17:50:00 2016 -->
+<!-- Fri Sep  2 09:49:22 2016 -->
 <table border="0," class="xtable">
 <tr>
 <th>
@@ -532,17 +532,17 @@ Skill Acquirability
 </tr>
 </table>
 </div>
-<div id="using-the-ds.var_desc-function" class="section level2">
-<h2>Using the ds.var_desc function</h2>
-<p>The variable description (<code>ds.var_desc</code>) function is used to generate univariate descriptions of data.</p>
+<div id="using-the-ds.summarize_by_column-function" class="section level2">
+<h2>Using the ds.summarize_by_column function</h2>
+<p>The summarize by column (<code>ds.summarize_by_column</code>) function is used to create univariate descriptions of data.</p>
 <div id="default-behavior" class="section level3">
 <h3>Default Behavior</h3>
-<p>By default, <code>ds.var_desc</code> uses the functions in <code>ds.helper$default_desc_cols</code> to summarize data.</p>
-<pre class="r"><code>ds.var_desc(data) %&gt;% 
+<p>By default, <code>ds.summarize_by_column</code> uses the functions in <code>ds.helper$default_col_funcs</code> to summarize data.</p>
+<pre class="r"><code>ds.summarize_by_column(data) %&gt;% 
     head() %&gt;%
     util.html_table()</code></pre>
 <!-- html table generated in R 3.3.1 by xtable 1.8-2 package -->
-<!-- Thu Sep  1 17:50:00 2016 -->
+<!-- Fri Sep  2 09:49:23 2016 -->
 <table border="0," class="xtable">
 <tr>
 <th>
@@ -680,13 +680,13 @@ job_satis
 </div>
 <div id="append-a-codebook" class="section level3">
 <h3>Append a Codebook</h3>
-<p>If you pass a codebook in the <code>codebook</code> argument, <code>ds.var_desc</code> will automatically merge it in on the <code>variable_name</code> column. Columns from <code>data</code> are retained even if they are not matched in the codebook.</p>
+<p>If you pass a codebook in the <code>codebook</code> argument, <code>ds.summarize_by_column</code> will automatically merge it in on the <code>variable_name</code> column. Columns from <code>data</code> are retained even if they are not matched in the codebook.</p>
 <pre class="r"><code>codebook_columns_to_include &lt;- c(&quot;variable_name&quot;,&quot;variable_label&quot;)
-ds.var_desc(data, codebook=codebook[, codebook_columns_to_include]) %&gt;% 
+ds.summarize_by_column(data, codebook=codebook[, codebook_columns_to_include]) %&gt;% 
     head() %&gt;%
     util.html_table()</code></pre>
 <!-- html table generated in R 3.3.1 by xtable 1.8-2 package -->
-<!-- Thu Sep  1 17:50:00 2016 -->
+<!-- Fri Sep  2 09:49:23 2016 -->
 <table border="0," class="xtable">
 <tr>
 <th>
@@ -845,8 +845,8 @@ Unique Participant ID
 </div>
 <div id="customize-summary-variables" class="section level3">
 <h3>Customize Summary Variables</h3>
-<p>Supply your own summary functions to <code>ds.var_desc</code> via the <code>descriptives</code> argument if you want to change the summary. For example, here we include the mean, standard deviation, and standard error.</p>
-<pre class="r"><code>custom_descriptives &lt;- list(
+<p>Supply your own summary functions to <code>ds.summarize_by_column</code> via the <code>func_list</code> argument if you want to change the summary. For example, here we include the mean, standard deviation, and standard error.</p>
+<pre class="r"><code>custom_func_list &lt;- list(
     &quot;mean&quot; = ds.helper$mean,
     &quot;sd&quot; = ds.helper$sd,
     &quot;se&quot; = function(x){
@@ -856,13 +856,13 @@ Unique Participant ID
     }
 )
 
-ds.var_desc(data, 
-            descriptives = custom_descriptives,
+ds.summarize_by_column(data, 
+            func_list = custom_func_list,
             codebook=codebook[, codebook_columns_to_include]) %&gt;% 
     head() %&gt;%
     util.html_table()</code></pre>
 <!-- html table generated in R 3.3.1 by xtable 1.8-2 package -->
-<!-- Thu Sep  1 17:50:00 2016 -->
+<!-- Fri Sep  2 09:49:23 2016 -->
 <table border="0," class="xtable">
 <tr>
 <th>
@@ -981,15 +981,16 @@ Unique Participant ID
 </div>
 <div id="use-default-categorical-descriptives" class="section level3">
 <h3>Use Default Categorical Descriptives</h3>
-<p>Default description functions for categorical variables are provided in <code>ds.helper$default_categorical</code> and can be passed to the <code>descriptives</code> argument to summarize categorical data.</p>
+<p>Default description functions for categorical variables are provided in <code>ds.helper$default_categorical_col_funcs</code> and can be passed to the <code>func_list</code> argument to summarize categorical data.</p>
 <pre class="r"><code># select the categorical columns for description
 categorical_columns &lt;- ! util.apply_columns(data, util.is_vector_of_numbers)
-ds.var_desc( data[ , categorical_columns ], 
-             descriptives=ds.helper$default_categorical) %&gt;% 
+ds.summarize_by_column( 
+        data[ , categorical_columns ], 
+        func_list=ds.helper$default_categorical_col_funcs) %&gt;% 
     head() %&gt;%
     util.html_table()</code></pre>
 <!-- html table generated in R 3.3.1 by xtable 1.8-2 package -->
-<!-- Thu Sep  1 17:50:00 2016 -->
+<!-- Fri Sep  2 09:49:23 2016 -->
 <table border="0," class="xtable">
 <tr>
 <th>

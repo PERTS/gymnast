@@ -3,9 +3,10 @@
 ###     util_data_summaries.R
 ###     Used to summarize data.
 ###
-###     To summarize individual variables, the call is:
-###     ds.var_desc(    data , 
-###                     [descriptives] , 
+###     To summarize individual variable, call:
+###
+###     ds.summarize_by_column(    data , 
+###                     [func_list] , 
 ###                     [codebook] 
 ###                 )     
 ###
@@ -65,7 +66,7 @@ ds.helper <- list(
 
 # these must be defined outside ds.helper because they reference
 # functions defined in it
-ds.helper$default_desc_cols = list(
+ds.helper$default_col_funcs = list(
     "pct_NA" = ds.helper$prop_blank,
     "mean" = ds.helper$mean,
     "sd" = ds.helper$sd,
@@ -73,15 +74,18 @@ ds.helper$default_desc_cols = list(
     "obs_max" = ds.helper$obs_max
 )
 
-ds.helper$default_categorical = list(
+ds.helper$default_categorical_col_funcs = list(
     "pct_NA" = ds.helper$prop_blank,
     "n_unique" = ds.helper$n_unique
 )   
 
 
-ds.var_desc <- function(
+# ds.summarize_by_column_group - to generate scales, etc.
+
+
+ds.summarize_by_column <- function(
     data,                             # the dataset to describe
-    descriptives=ds.helper$default_desc_cols,  # lists descriptives functions to run
+    func_list=ds.helper$default_col_funcs,  # lists func_list functions to run
     codebook=NULL,                     # data.frame merged on "variable_name" col
     digits=2                          # round descriptions to 2 digits
 ){
@@ -90,10 +94,10 @@ ds.var_desc <- function(
     # columns include: 
     #   * "variable_name" containing name of each variable from "data"
     #   * all codebook columns merged on "variable_name" column
-    #   * each names(descriptives) containing value returned by descriptives function
+    #   * each names(func_list) containing value returned by func_list function
     
-    # make univariate descriptives (ud) data.frame to load with descriptives
-    ud_columns <- c("variable_name", names(descriptives) )
+    # make univariate func_list (ud) data.frame to load with func_list
+    ud_columns <- c("variable_name", names(func_list) )
     ud <- data.frame(matrix(NA, nrow = ncol(data), ncol = length(ud_columns))) 
     names(ud) <- ud_columns
     ud$variable_name <- names(data)
@@ -102,8 +106,8 @@ ds.var_desc <- function(
     data <- util.apply_columns(data, ds.helper$logical_to_numeric )
     
     # apply each descriptive function to each column
-    for( calc_func_name in names(descriptives) ){
-        ud[,calc_func_name] <- sapply(data, descriptives[[calc_func_name]])
+    for( calc_func_name in names(func_list) ){
+        ud[,calc_func_name] <- sapply(data, func_list[[calc_func_name]])
     }
     
     # append codebook by variable_name (if it exists)
