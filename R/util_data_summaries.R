@@ -1,14 +1,16 @@
 ###############################################################
 ###
-###     util_univariate_descriptives.R
-###     Used to generate descriptions of variables.
+###     util_data_summaries.R
+###     Used to summarize data.
 ###
-###     The main call is:
+###     To summarize individual variables, the call is:
 ###     ds.var_desc(    data , 
 ###                     [descriptives] , 
 ###                     [codebook] 
 ###                 )     
 ###
+###     It is anticipated that other data summary functions
+###     will be added later.
 ###
 ###     Depends on util.R
 ###
