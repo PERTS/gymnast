@@ -123,3 +123,75 @@ ds.summarize_by_column <- function(
         return()
 }
 
+ds.build_formulas <- function(
+    meta_formula = NULL, # @todo: enable specification through formula 
+    dvs = c(),           # dependent variables each run independently
+    ivs = c(),           # independent variables each run independently
+    mods = c(""),        # moderators each run independently, default no mod
+    covs = c(),          # covariates included all together or none
+    cov_groups = list(), # custom cov groups instead of default all or none
+    variable_vectors = NULL # @todo: meta_formula can reference named vectors
+){
+    # build vector of model formulas for each unique combination of 
+    # dv x iv x mod x cov_group
+    # if covs supplied, cov_group gets one entry for no covs (unadjusted) 
+    # and one for all covs supplied in covs argument (adjusted)
+    
+    if( length(dvs) == 0 | length(ivs) == 0 ){
+        util.warn("dvs and ivs must both be")
+    }
+    
+    if( length(covs) > 0 ){
+        # if covs is supplied, use it to define adjusted and unadjusted
+        # covariate groups with all and none of the covs, respectively
+        cov_groups <- list()
+        cov_groups[["Unadusted"]] <- ""
+        cov_groups[["Adjusted"]] <- covs
+    } else if( length(cov_groups) == 0){
+        cov_groups <- list( Unadjusted = "" )
+    }
+    
+    # build a vector of strings for each kind of variable
+    # in prep for stringing together into a forumla string
+    # i.e., append operators to non-empty entries
+    dv_strs  <- dvs %+% " ~ "
+    iv_strs  <- ivs
+    mod_strs <- ifelse( mods %in% "" , "", " * " %+% mods)
+    
+    # turn covariate list into a vector of formula strings
+    # this is more complicated because covariates get grouped
+    cov_groups_strs <- lapply(cov_groups, function(cov_vec){
+        if( identical(cov_vec,"") ){
+            # there is an empty (unadjusted) cov_group
+            return("")
+        } else{
+            return( " + " %+% paste(cov_vec, collapse=" + ") )
+        }
+    }) %>% unlist()
+    
+    # build the formula data frame (fdf) as each combination of
+    # variable strings
+    fdf <- expand.grid(
+        cov_str = cov_groups_strs,
+        mod_str = mod_strs,
+        iv_str  = iv_strs,
+        dv_str  = dv_strs
+    )
+
+    # assemble the formula grid into 
+    formula_vec <- fdf$dv_str %+% fdf$iv_str %+% fdf$mod_str %+% fdf$cov_str
+    return(formula_vec)
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
