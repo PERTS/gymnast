@@ -18,54 +18,51 @@
 ###############################################################
 
 # wrap ds.helper functions in an object to protect the namespace
-ds.helper <- list(
-    
-    mean = function(x){
-        if( util.is_vector_of_numbers(x) ){
-            return(mean(as.numeric(x), na.rm=TRUE))
-        }else{
-            return(NA)
-        }
-    }
-    ,
-    pct_blank = function(x){
-        mean(util.is_blank(x)) * 100
-    }
-    ,
-    sd = function(x){
-        sd(x, na.rm=TRUE)
-    }
-    ,
-    obs_min = function(x){
-        if( util.is_vector_of_numbers(x) ){
-            return(min(as.numeric(x),na.rm=T))
-        }else{
-            return(NA)   
-        }
-    }
-    ,
-    obs_max = function(x){
-        if( util.is_vector_of_numbers(x) ){
-            return(max(as.numeric(x),na.rm=T))
-        }else{
-            return(NA)   
-        }
-    }
-    ,
-    logical_to_numeric = function(x){
-        # if a value is logical (boolean), convert to numeric for calculation
-        if(class(x) %in% "logical"){ x <- as.numeric(x) }
-        return(x)
-    }
-    ,
-    n_unique = function(x){
-        # includes NA
-        length(unique(x))
-    }
-)
+ds.helper <- list()
 
-# these must be defined outside ds.helper because they reference
-# functions defined in it
+ds.helper$mean <- function(x){
+    if( util.is_vector_of_numbers(x) ){
+        return(mean(as.numeric(x), na.rm=TRUE))
+    }else{
+        return(NA)
+    }
+}
+    
+ds.helper$pct_blank = function(x){
+    mean(util.is_blank(x)) * 100
+}
+
+ds.helper$sd = function(x){
+    sd(x, na.rm=TRUE)
+}
+
+ds.helper$obs_min = function(x){
+    if( util.is_vector_of_numbers(x) ){
+        return(min(as.numeric(x),na.rm=T))
+    }else{
+        return(NA)   
+    }
+}
+
+ds.helper$obs_max = function(x){
+    if( util.is_vector_of_numbers(x) ){
+        return(max(as.numeric(x),na.rm=T))
+    }else{
+        return(NA)   
+    }
+}
+
+ds.helper$logical_to_numeric = function(x){
+    # if a value is logical (boolean), convert to numeric for calculation
+    if(class(x) %in% "logical"){ x <- as.numeric(x) }
+    return(x)
+}
+
+ds.helper$n_unique = function(x){
+    # includes NA
+    length(unique(x))
+}
+
 ds.helper$default_col_funcs = list(
     "pct_NA" = ds.helper$pct_blank,
     "mean" = ds.helper$mean,
