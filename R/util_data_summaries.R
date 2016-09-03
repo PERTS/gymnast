@@ -125,17 +125,29 @@ ds.summarize_by_column <- function(
 
 ds.build_formulas <- function(
     meta_formula = NULL, # @todo: enable specification through formula 
+    variable_vectors = NULL, # @todo: meta_formula can reference named vectors
+    
     dvs = c(),           # dependent variables each run independently
     ivs = c(),           # independent variables each run independently
     mods = c(""),        # moderators each run independently, default no mod
     covs = c(),          # covariates included all together or none
-    cov_groups = list(), # custom cov groups instead of default all or none
-    variable_vectors = NULL # @todo: meta_formula can reference named vectors
+    cov_groups = list() # customize cov groups instead of default all or none
+
 ){
     # build vector of model formulas for each unique combination of 
     # dv x iv x mod x cov_group
     # if covs supplied, cov_group gets one entry for no covs (unadjusted) 
     # and one for all covs supplied in covs argument (adjusted)
+    
+    # @todo: to support meta_formula, make a new function to turn
+    # meta formulas into variable vectors and call on self
+    if( ! is.null(meta_formula) ){
+        util.warn("meta_formulas are not yet supported :-(")
+        # variable_list <- ds.meta_formula_to_variable_list(meta_formula)
+        # do.call(ds.build_formulas, variable_list) %>%
+        #   return()
+    } 
+    #
     
     if( length(dvs) == 0 | length(ivs) == 0 ){
         util.warn("dvs and ivs must both be")
