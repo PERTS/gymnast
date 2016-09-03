@@ -163,7 +163,7 @@ util.as_numeric_if_number <- function(x){
 ###############################################################
 ###
 ###     Messages
-###     Prettier messages that print to consolte or HTML.
+###     Prettier messages that print to console or HTML.
 ###
 ###############################################################
 
@@ -298,18 +298,18 @@ util.z_score <- function(x){
     else{ ( x - mean(x,na.rm=T) ) / sd(x,na.rm=T) }
 }
 
-util.row_means <- function(x){
+util.row_means <- function(x, na.rm = TRUE){
     # like base::rowMeans(x, na.rm=TRUE)
     # but it returns self if vector instead of issuing an error
     if(is.vector(x)) return(x)
-    return(rowMeans(x, na.rm = TRUE))
+    return(rowMeans(x, na.rm = na.rm))
 }
 
-util.row_sums <- function(x){
+util.row_sums <- function(x, na.rm = TRUE){
     # like base::rowSums(x, na.rm=TRUE)
     # but it returns self if vector instead of issuing an error
     if(is.vector(x)) return(x)
-    return(rowSums(x, na.rm = TRUE))
+    return(rowSums(x, na.rm = na.rm))
 }
 
 util.round_df <- function(DF, digits=2){

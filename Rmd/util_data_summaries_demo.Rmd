@@ -1,0 +1,164 @@
+---
+title: "Data Summaries Demo"
+author: "Dave Paunesku"
+date: "September, 2016"
+output: 
+  html_document:
+    fig_caption: no
+    toc: yes
+    theme: spacelab
+    css: https://raw.githubusercontent.com/PERTS/gymnast/master/Rmd/rmd_styles.css
+---
+
+
+## Purpose
+
+The data summaries (`ds`) module in gymnast is used to easily summarize data. This demo file shows how to use it.
+
+
+
+## Load Gymnast 
+```{r, results='hide', message=FALSE, warning=FALSE}
+
+options(stringsAsFactors = FALSE)
+github_base_path <- "https://raw.githubusercontent.com/PERTS/gymnast/master/"
+
+tryCatch({
+    source("~/Sites/gymnast/R/util.R")
+    source("~/Sites/gymnast/R/util_data_summaries.R")
+}, error = function(e){
+    source(github_base_path %+% "R/util.R")
+    source(github_base_path %+% "R/util_data_summaries.R")
+})
+
+```
+
+## Load Sample Data
+Load a sample data file `data` and an optional codebook file `codebook`.
+
+
+```{r, results='hide', message=FALSE, warning=FALSE}
+
+tryCatch({
+    codebook <- read.csv("~/Sites/gymnast/data/skill-aquirability-variable_key.csv")
+    data <- read.csv("~/Sites/gymnast/data/skill-aquirability.csv")
+}, error = function(e){
+    codebook <- 
+        read.csv( github_base_path %+% "data/skill-aquirability-variable_key.csv")
+    data <- 
+        read.csv( github_base_path %+% "data/skill-aquirability")
+})
+
+```
+
+## Display Data
+To give a flavor of what the codebook and data look like.
+
+```{r, message=FALSE, warning=FALSE, results='asis'}
+
+data[,1:10] %>% 
+    head() %>%
+    util.html_table()
+
+codebook %>% 
+    head() %>%
+    util.html_table()
+
+```
+
+## Using the ds.summarize_by_column function
+The summarize by column (`ds.summarize_by_column`) function is used to create
+univariate descriptions of data. 
+
+### Default Behavior
+By default, `ds.summarize_by_column` uses the functions in
+`ds.helper$default_col_funcs` to summarize data.
+
+```{r, message=FALSE, warning=FALSE, results='asis'}
+
+ds.summarize_by_column(data) %>% 
+    head() %>%
+    util.html_table()
+
+```
+
+### Append a Codebook
+If you pass a codebook in the `codebook` argument,
+`ds.summarize_by_column` will automatically merge it in on 
+the `variable_name` column. Columns from `data`
+are retained even if they are not matched in the 
+codebook.
+
+```{r, message=FALSE, warning=FALSE, results='asis'}
+
+codebook_columns_to_include <- c("variable_name","variable_label")
+ds.summarize_by_column(data, codebook=codebook[, codebook_columns_to_include]) %>% 
+    head() %>%
+    util.html_table()
+
+```
+
+### Customize Summary Variables
+Supply your own summary functions to `ds.summarize_by_column` via the 
+`func_list` argument if you want to change the summary.
+For example, here we include the mean, standard deviation,
+and standard error.
+
+```{r, message=FALSE, warning=FALSE, results='asis'}
+
+custom_func_list <- list(
+    "mean" = ds.helper$mean,
+    "sd" = ds.helper$sd,
+    "se" = function(x){
+        # add in the standard error
+        x <- x[!util.is_blank(x)]
+        sd(x)/length(x)**.5
+    }
+)
+
+ds.summarize_by_column(data, 
+            func_list = custom_func_list,
+            codebook=codebook[, codebook_columns_to_include]) %>% 
+    head() %>%
+    util.html_table()
+
+```
+
+### Use Default Categorical Descriptives
+Default description functions for categorical variables are provided in 
+`ds.helper$default_categorical_col_funcs` and can be passed to 
+the `func_list` argument to summarize categorical data.
+
+```{r, message=FALSE, warning=FALSE, results='asis'}
+
+# select the categorical columns for description
+categorical_columns <- ! util.apply_columns(data, util.is_vector_of_numbers)
+ds.summarize_by_column( 
+        data[ , categorical_columns ], 
+        func_list=ds.helper$default_categorical_col_funcs) %>% 
+    head() %>%
+    util.html_table()
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
