@@ -173,7 +173,7 @@ ds.build_formulas <- function(
     # turn covariate list into a vector of formula strings
     # this is more complicated because covariates get grouped
     cov_groups_strs <- lapply(cov_groups, function(cov_vec){
-        if( identical(cov_vec,"") ){
+        if( is.null(cov_vec) | identical(cov_vec,"") ){
             # there is an empty (unadjusted) cov_group
             return("")
         } else{
@@ -196,7 +196,65 @@ ds.build_formulas <- function(
 
 }
 
+ds.helper$variable_type <- function(x){
+    # return variable type as
+    # (Note that NAs are ignored)
+    #  boolean - x contains exactly c(0,1) or c(TRUE,FALSE)
+    #  numeric - x is numbers 
+    #  categorical - x is a string or factor with up to 20 levels
+    #  multitudinous - x is string or factor with > 20 levels
+    #  invariant - only 0 or 1 values, not counting NAs
 
+    boolean <- all( x %in% c(0,1,NA) ) & all( c(0,1) %in% x )
+    
+    if( boolean ){
+        return("boolean")
+    } else if( util.is_vector_of_numbers(x) ){
+        return("numeric")
+    }
+    
+    n_unique <- x[!util.is_blank(x)] %>%
+        unique() %>%
+        length()
+    
+    if(n_unique < 2){
+        return("invariant")
+    } else if( n_unique > 20){
+        return("multitudinous")
+    } else{
+        return("categorical")
+    }
+}
+
+# examples
+ds.helper$variable_type(c("dog","dog","dog"))
+ds.helper$variable_type(c(1,"dog","cat"))
+ds.helper$variable_type(c(1,0,0))
+ds.helper$variable_type(c(1,TRUE,0))
+ds.helper$variable_type(c(1,0,20))
+ds.helper$variable_type(c("cat1","cat2","cat3"))
+ds.helper$variable_type("cat" %+% rep(1:21))
+
+ds.helper$extract_formula_dv <- function(formula){
+    str_split(formula,"[ ]*~[ ]*")[[1]][1]
+}
+
+ds.glm <- function( formula, data, family=NULL ){
+    # run the appropriate model, unless family override is supplied
+    dv_variable <- ds.helper$extract_formula_dv(formula)
+    dv_var_type <- ds.helper$variable_type(data[,dv_variable])
+    
+    switch( dv_var_type ,
+        "numeric" = lm(formula=formula, data=data)
+            
+    )
+}
+
+ds.glms <- function( formulas, data, families=NULL ){
+    # run each formula on data.frame(s) supplied in data argument
+    # use the outcome type to select the model, or 
+    
+}
 
 
 

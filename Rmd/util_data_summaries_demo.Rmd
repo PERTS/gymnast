@@ -141,8 +141,52 @@ ds.summarize_by_column(
 
 ```
 
+## Building Models
+The `ds` module creates and runs models based on desired
+outcomes and predictors.
+
+### Build Formulas with ds.build_formulas()
+`ds.build_formulas()` builds a vector of model formulas for 
+each unique combination of the `dv` x `iv` x `mod` x `cov_group`. 
+If `covs` is supplied, cov_group gets one entry for no covs (unadjusted) 
+and one for all covs supplied in covs argument (adjusted).
+
+```{r, message=FALSE, warning=FALSE, results='asis'}
+dvs = c("sksh_post","bls_link") # dependent variables each run independently
+ivs = c("condition","skil_aq_1") # independent variables each run independently
+mods = c("","in_job_satis")  # moderators each run independently
+cov_groups = list(
+    "unadjusted" = c(),
+    "demographic_adjustment" = c("age","male","race"),
+    "demog_and_sksh_pre" = c("sksh_pre","age","male","race")
+)  # vectors of covariates to run together
+# covs = c()         # covariates included all together or none
+                     # here, we use cov_groups instead for more flexibility
+
+ds.build_formulas( dvs=dvs, ivs=ivs, mods=mods, cov_groups = cov_groups)
+
+```
+
+### Run GLMs with ds.glms()
 
 
+```{r, message=FALSE, warning=FALSE, results='asis'}
+
+dvs = c("sksh_post") # dependent variables each run independently
+ivs = c("condition") # independent variables each run independently
+mods = c("","in_job_satis")  # moderators each run independently, default no mod
+cov_groups = list(
+    "unadjusted" = c(),
+    "demographic_adjustment" = c("age","male","race")
+)  # vectors of covariates to run together
+# covs = c()         # covariates included all together or none
+                     # here, we use cov_groups instead for more flexibility
+
+
+formulas <- ds.build_formulas( dvs=dvs, ivs=ivs, mods=mods, cov_groups = cov_groups)
+
+
+```
 
 
 
