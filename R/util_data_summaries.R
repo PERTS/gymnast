@@ -227,17 +227,129 @@ ds.helper$variable_type <- function(x){
 }
 
 # examples
-ds.helper$variable_type(c("dog","dog","dog"))
-ds.helper$variable_type(c(1,"dog","cat"))
-ds.helper$variable_type(c(1,0,0))
-ds.helper$variable_type(c(1,TRUE,0))
-ds.helper$variable_type(c(1,0,20))
-ds.helper$variable_type(c("cat1","cat2","cat3"))
-ds.helper$variable_type("cat" %+% rep(1:21))
+# ds.helper$variable_type(c("dog","dog","dog"))
+# ds.helper$variable_type(c(1,"dog","cat"))
+# ds.helper$variable_type(c(1,0,0))
+# ds.helper$variable_type(c(1,TRUE,0))
+# ds.helper$variable_type(c(1,0,20))
+# ds.helper$variable_type(c("cat1","cat2","cat3"))
+# ds.helper$variable_type("cat" %+% rep(1:21))
 
-ds.helper$extract_formula_dv <- function(formula){
-    str_split(formula,"[ ]*~[ ]*")[[1]][1]
+ds.helper$glm_formula_to_varlist <- function(formula){
+    # provided with a canonical ds-style glm formula
+    # it extracts a ds-style glm variable list
+    # canonical ds-style glm formulas:
+    #   dv ~ iv [ * mod ] [ + cov1 + cov2 + ... ]
+    #   details: 
+        #   iv is first predictor
+        #   if moderator present, it is second predictor 
+        #   and "*" separates iv and moderator 
+        #   covs are any predictors following moderator
+        #   "*" interactions are not supported outside moderator
+        #   to use interactions in covariates, create manually
+    
+    varlist <- list( dv=NULL, iv=NULL, mod=NULL, covs=NULL )
+    split_on_tilde <- str_split(formula,"[ ]*~[ ]*")[[1]]
+    
+    # check if formula has dvs and predictors
+    if( length(split_on_tilde) != 2){
+        stop("invalid ds.glm formula provided: " %+% formula)
+    } else if(nchar(split_on_tilde[1]) == 0 | 
+              nchar(split_on_tilde[2]) == 0 ){
+        stop("invalid ds.glm formula provided: " %+% formula)
+    }
+    
+    varlist$dv <- split_on_tilde[1]
+    predictor_str <- split_on_tilde[2]
+    
+    # this block finds the iv and moderator
+    # there are moderators if there is a star and
+    # it comes before any pluses, if pluses are present
+    split_at_star <- str_split(predictor_str,"[ ]*\\*[ ]*")[[1]]
+    if( length(split_at_star) > 1){
+        # there might be a moderator (because there's a star)
+        # but it might also be a non-canonical ds.glm formula
+        pre_star  <- split_at_star[1]
+        post_star <- split_at_star[2]
+        if( length(split_at_star) > 2 | grepl( "\\+", pre_star) ){
+            "ds.glm supports [0,1] stars" %+%
+                " and only between the 1st and 2nd predictor," %+%
+                " but this formula was provided: " %+% formula %>%
+                stop()
+        }
+        # mod is 1st term post_star and before + or end
+        varlist$iv  <- pre_star
+        varlist$mod <- str_split(post_star,"[ ]*\\+[ ]*")[[1]][1]
+    } else{
+        # there was no moderator, so the iv is the first predictor
+        # before a plus or before the end of the predictors string
+        varlist$iv <- str_split(predictor_str,"[ ]*\\+[ ]*")[[1]][1]
+    }
+    
+    # find any covariate(s)
+    match_plus_or_star <- "[ ]*\\+[ ]*|[ ]*\\*[ ]*"
+    predictors <- str_split( predictor_str, match_plus_or_star)[[1]]
+    if( sum( ! predictors %in% varlist ) > 0){
+        varlist$covs <- predictors[ ! predictors %in% varlist ]
+    }
+    
+    return(varlist)
 }
+
+ds.helper.unit_test <- function(){
+
+    test_glm_formula_to_varlist <- function(){
+        good_formula_map <- list(
+            "dv ~ iv" = list(dv="dv", iv="iv", mod=NULL, covs=NULL),
+            "dv ~ iv + cov1 + cov2" = list(
+                dv="dv", iv="iv", mod=NULL, covs=c("cov1","cov2")
+            ),
+            "dv ~ iv * mod" = list(
+                dv="dv", iv="iv", mod="mod", covs=NULL
+            ),
+            "dv ~ iv * mod + cov1 + cov2" = list(
+                dv="dv", iv="iv", mod="mod", covs=c("cov1","cov2")
+            ),
+            "dv~iv*mod+cov1+cov2" = list(
+                dv="dv", iv="iv", mod="mod", covs=c("cov1","cov2")
+            )
+        )
+        
+        bad_formulas <- c("dv ~ iv * mod * cov1 + cov2",
+                          "dv ~ iv + mod + cov1 * cov2",
+                           "dv",
+                           "dv ~ "
+                          )
+        
+        for( glm_formula in names(good_formula_map) ){
+            returned_list <- ds.helper$glm_formula_to_varlist(glm_formula)
+            expected_list <- formula_to_varlist_map[[glm_formula]]
+            if( ! identical( returned_list , expected_list ) ) {
+                "ds.helper$glm_formula_to_varlist unit test failed with " %+%
+                    "formula: " %+%
+                    glm_formula %>%
+                    stop()
+            }
+        }
+        for( glm_formula in bad_formulas ){
+            success <- tryCatch(
+                returned_list <- ds.helper$glm_formula_to_varlist(glm_formula),
+                error = function(e){ simpleError("invalid formula") }
+            )
+            if( ! any(class(success) %in% "simpleError") ){
+                "ds.helper$glm_formula_to_varlist failed to raise error " %+%
+                    "when provided with formula: " %+%
+                    glm_formula %>%
+                    stop()
+            }
+        }
+    }
+ 
+    test_glm_formula_to_varlist()   
+}
+ds.helper.unit_test()
+
+
 
 ds.helper$map_dv_to_glm_family <- list(
     numeric = "gaussian",
@@ -246,7 +358,7 @@ ds.helper$map_dv_to_glm_family <- list(
 
 ds.glm <- function( formula, data, mod_family=NULL ){
     # run the appropriate model, unless mod_family override is supplied
-    dv_variable <- ds.helper$extract_formula_dv(formula)
+    dv_variable <- ds.helper$glm_formula_to_varlist(formula)[["dv"]]
     if( is.null(mod_family) ){
         dv_var_type <- ds.helper$variable_type(data[,dv_variable])
         mod_family  <- util.recode(

@@ -163,7 +163,8 @@ cov_groups = list(
 # covs = c()         # covariates included all together or none
                      # here, we use cov_groups instead for more flexibility
 
-ds.build_formulas( dvs=dvs, ivs=ivs, mods=mods, cov_groups = cov_groups)
+ds.build_formulas( dvs=dvs, ivs=ivs, mods=mods, cov_groups = cov_groups) %>%
+    util.print_pre()
 
 ```
 

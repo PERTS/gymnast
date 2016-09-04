@@ -134,6 +134,10 @@ $(document).ready(function () {
 <li><a href="#customize-summary-variables">Customize Summary Variables</a></li>
 <li><a href="#use-default-categorical-descriptives">Use Default Categorical Descriptives</a></li>
 </ul></li>
+<li><a href="#building-models">Building Models</a><ul>
+<li><a href="#build-formulas-with-ds.build_formulas">Build Formulas with ds.build_formulas()</a></li>
+<li><a href="#run-glms-with-ds.glms">Run GLMs with ds.glms()</a></li>
+</ul></li>
 </ul>
 </div>
 
@@ -174,7 +178,7 @@ tryCatch({
     head() %&gt;%
     util.html_table()</code></pre>
 <!-- html table generated in R 3.3.1 by xtable 1.8-2 package -->
-<!-- Sat Sep  3 08:53:09 2016 -->
+<!-- Sun Sep  4 11:20:07 2016 -->
 <table border="0," class="xtable">
 <tr>
 <th>
@@ -405,7 +409,7 @@ music
     head() %&gt;%
     util.html_table()</code></pre>
 <!-- html table generated in R 3.3.1 by xtable 1.8-2 package -->
-<!-- Sat Sep  3 08:53:09 2016 -->
+<!-- Sun Sep  4 11:20:07 2016 -->
 <table border="0," class="xtable">
 <tr>
 <th>
@@ -542,7 +546,7 @@ Skill Acquirability
     head() %&gt;%
     util.html_table()</code></pre>
 <!-- html table generated in R 3.3.1 by xtable 1.8-2 package -->
-<!-- Sat Sep  3 08:53:09 2016 -->
+<!-- Sun Sep  4 11:20:07 2016 -->
 <table border="0," class="xtable">
 <tr>
 <th>
@@ -686,7 +690,7 @@ ds.summarize_by_column(data, codebook=codebook[, codebook_columns_to_include]) %
     head() %&gt;%
     util.html_table()</code></pre>
 <!-- html table generated in R 3.3.1 by xtable 1.8-2 package -->
-<!-- Sat Sep  3 08:53:09 2016 -->
+<!-- Sun Sep  4 11:20:08 2016 -->
 <table border="0," class="xtable">
 <tr>
 <th>
@@ -862,7 +866,7 @@ ds.summarize_by_column(data,
     head() %&gt;%
     util.html_table()</code></pre>
 <!-- html table generated in R 3.3.1 by xtable 1.8-2 package -->
-<!-- Sat Sep  3 08:53:09 2016 -->
+<!-- Sun Sep  4 11:20:08 2016 -->
 <table border="0," class="xtable">
 <tr>
 <th>
@@ -990,7 +994,7 @@ ds.summarize_by_column(
     head() %&gt;%
     util.html_table()</code></pre>
 <!-- html table generated in R 3.3.1 by xtable 1.8-2 package -->
-<!-- Sat Sep  3 08:53:09 2016 -->
+<!-- Sun Sep  4 11:20:08 2016 -->
 <table border="0," class="xtable">
 <tr>
 <th>
@@ -1037,6 +1041,43 @@ study_ID
 </td>
 </tr>
 </table>
+</div>
+</div>
+<div id="building-models" class="section level2">
+<h2>Building Models</h2>
+<p>The <code>ds</code> module creates and runs models based on desired outcomes and predictors.</p>
+<div id="build-formulas-with-ds.build_formulas" class="section level3">
+<h3>Build Formulas with ds.build_formulas()</h3>
+<p><code>ds.build_formulas()</code> builds a vector of model formulas for each unique combination of the <code>dv</code> x <code>iv</code> x <code>mod</code> x <code>cov_group</code>. If <code>covs</code> is supplied, cov_group gets one entry for no covs (unadjusted) and one for all covs supplied in covs argument (adjusted).</p>
+<pre class="r"><code>dvs = c(&quot;sksh_post&quot;,&quot;bls_link&quot;) # dependent variables each run independently
+ivs = c(&quot;condition&quot;,&quot;skil_aq_1&quot;) # independent variables each run independently
+mods = c(&quot;&quot;,&quot;in_job_satis&quot;)  # moderators each run independently
+cov_groups = list(
+    &quot;unadjusted&quot; = c(),
+    &quot;demographic_adjustment&quot; = c(&quot;age&quot;,&quot;male&quot;,&quot;race&quot;),
+    &quot;demog_and_sksh_pre&quot; = c(&quot;sksh_pre&quot;,&quot;age&quot;,&quot;male&quot;,&quot;race&quot;)
+)  # vectors of covariates to run together
+# covs = c()         # covariates included all together or none
+                     # here, we use cov_groups instead for more flexibility
+
+ds.build_formulas( dvs=dvs, ivs=ivs, mods=mods, cov_groups = cov_groups)</code></pre>
+<p>[1] “sksh_post ~ condition”<br /> [2] “sksh_post ~ condition + age + male + race”<br /> [3] “sksh_post ~ condition + sksh_pre + age + male + race”<br /> [4] “sksh_post ~ condition * in_job_satis”<br /> [5] “sksh_post ~ condition * in_job_satis + age + male + race”<br /> [6] “sksh_post ~ condition * in_job_satis + sksh_pre + age + male + race” [7] “sksh_post ~ skil_aq_1”<br /> [8] “sksh_post ~ skil_aq_1 + age + male + race”<br /> [9] “sksh_post ~ skil_aq_1 + sksh_pre + age + male + race”<br />[10] “sksh_post ~ skil_aq_1 * in_job_satis”<br />[11] “sksh_post ~ skil_aq_1 * in_job_satis + age + male + race”<br />[12] “sksh_post ~ skil_aq_1 * in_job_satis + sksh_pre + age + male + race” [13] “bls_link ~ condition”<br />[14] “bls_link ~ condition + age + male + race”<br />[15] “bls_link ~ condition + sksh_pre + age + male + race”<br />[16] “bls_link ~ condition * in_job_satis”<br />[17] “bls_link ~ condition * in_job_satis + age + male + race”<br />[18] “bls_link ~ condition * in_job_satis + sksh_pre + age + male + race” [19] “bls_link ~ skil_aq_1”<br />[20] “bls_link ~ skil_aq_1 + age + male + race”<br />[21] “bls_link ~ skil_aq_1 + sksh_pre + age + male + race”<br />[22] “bls_link ~ skil_aq_1 * in_job_satis”<br />[23] “bls_link ~ skil_aq_1 * in_job_satis + age + male + race”<br />[24] “bls_link ~ skil_aq_1 * in_job_satis + sksh_pre + age + male + race”</p>
+</div>
+<div id="run-glms-with-ds.glms" class="section level3">
+<h3>Run GLMs with ds.glms()</h3>
+<pre class="r"><code>dvs = c(&quot;sksh_post&quot;) # dependent variables each run independently
+ivs = c(&quot;condition&quot;) # independent variables each run independently
+mods = c(&quot;&quot;,&quot;job_satis&quot;)  # moderators each run independently, default no mod
+cov_groups = list(
+    &quot;unadjusted&quot; = c(),
+    &quot;demographic_adjustment&quot; = c(&quot;age&quot;,&quot;male&quot;,&quot;race&quot;)
+)  # vectors of covariates to run together
+# covs = c()         # covariates included all together or none
+                     # here, we use cov_groups instead for more flexibility
+
+
+formulas &lt;- ds.build_formulas( dvs=dvs, ivs=ivs, mods=mods, cov_groups = cov_groups)
+models   &lt;- ds.glms(formulas, data)</code></pre>
 </div>
 </div>
 
