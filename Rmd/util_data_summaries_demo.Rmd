@@ -174,7 +174,7 @@ ds.build_formulas( dvs=dvs, ivs=ivs, mods=mods, cov_groups = cov_groups)
 
 dvs = c("sksh_post") # dependent variables each run independently
 ivs = c("condition") # independent variables each run independently
-mods = c("","in_job_satis")  # moderators each run independently, default no mod
+mods = c("","job_satis")  # moderators each run independently, default no mod
 cov_groups = list(
     "unadjusted" = c(),
     "demographic_adjustment" = c("age","male","race")
@@ -184,6 +184,7 @@ cov_groups = list(
 
 
 formulas <- ds.build_formulas( dvs=dvs, ivs=ivs, mods=mods, cov_groups = cov_groups)
+models   <- ds.glms(formulas, data)
 
 
 ```

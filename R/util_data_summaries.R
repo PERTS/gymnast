@@ -239,21 +239,65 @@ ds.helper$extract_formula_dv <- function(formula){
     str_split(formula,"[ ]*~[ ]*")[[1]][1]
 }
 
-ds.glm <- function( formula, data, family=NULL ){
-    # run the appropriate model, unless family override is supplied
+ds.helper$map_dv_to_glm_family <- list(
+    numeric = "gaussian",
+    boolean = "binomial"
+)
+
+ds.glm <- function( formula, data, mod_family=NULL ){
+    # run the appropriate model, unless mod_family override is supplied
     dv_variable <- ds.helper$extract_formula_dv(formula)
-    dv_var_type <- ds.helper$variable_type(data[,dv_variable])
-    
-    switch( dv_var_type ,
-        "numeric" = lm(formula=formula, data=data)
-            
-    )
+    if( is.null(mod_family) ){
+        dv_var_type <- ds.helper$variable_type(data[,dv_variable])
+        mod_family  <- util.recode(
+                            dv_var_type,
+                            names(ds.helper$map_dv_to_glm_family),
+                            unlist(ds.helper$map_dv_to_glm_family)
+                        )
+    }
+    if( ! mod_family %in% ds.helper$map_dv_to_glm_family ){
+        util.warn("Unsupported model family requested: " %+% mod_family )
+        mod_obj <- NULL
+    } else{
+        mod_obj <- glm( formula , data, family=mod_family )
+    }
+    return(mod_obj)
 }
 
-ds.glms <- function( formulas, data, families=NULL ){
-    # run each formula on data.frame(s) supplied in data argument
-    # use the outcome type to select the model, or 
+ds.glms <- function( formulas, data, family=NULL ){
+    # run each formula on data.frame supplied in data argument
+    # use the outcome type to select the model, or override with family
+    models <- list()
+    if( is.null( family ) ){
+        for( i in 1:length(formulas)){
+            models[[i]] <- ds.glm( formulas[i], data=data )
+        }        
+    } else{
+        for( i in 1:length(formulas)){
+            models[[i]] <- ds.glm( formulas[i], data=data, family=family )
+        }    
+    }
+    return(models)
+}
+
+ds.glms_table <- function( models ){
+    columns <- c("dv", "dv_mean" , 
+                 "iv", "iv_coef", "iv_p", 
+                 "mod", "mod_coef", "mod_p",
+                 "int", "int_coef", "int_p",
+                 "covs"
+                 )
     
+    glm_table <- data.frame( matrix( data=NA, 
+                                 nrow=length(models), 
+                                 ncol=length(columns) 
+                        ) )
+    names(glm_table) <- columns
+    for( i in 1:length(models) ){
+        model <- models[[1]]
+        
+    } 
+    mod_obj$family$family
 }
 
 
