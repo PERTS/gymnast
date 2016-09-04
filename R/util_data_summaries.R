@@ -226,15 +226,6 @@ ds.helper$variable_type <- function(x){
     }
 }
 
-# examples
-# ds.helper$variable_type(c("dog","dog","dog"))
-# ds.helper$variable_type(c(1,"dog","cat"))
-# ds.helper$variable_type(c(1,0,0))
-# ds.helper$variable_type(c(1,TRUE,0))
-# ds.helper$variable_type(c(1,0,20))
-# ds.helper$variable_type(c("cat1","cat2","cat3"))
-# ds.helper$variable_type("cat" %+% rep(1:21))
-
 ds.helper$glm_formula_to_varlist <- function(formula){
     # provided with a canonical ds-style glm formula
     # it extracts a ds-style glm variable list
@@ -295,61 +286,6 @@ ds.helper$glm_formula_to_varlist <- function(formula){
     
     return(varlist)
 }
-
-ds.helper.unit_test <- function(){
-
-    test_glm_formula_to_varlist <- function(){
-        good_formula_map <- list(
-            "dv ~ iv" = list(dv="dv", iv="iv", mod=NULL, covs=NULL),
-            "dv ~ iv + cov1 + cov2" = list(
-                dv="dv", iv="iv", mod=NULL, covs=c("cov1","cov2")
-            ),
-            "dv ~ iv * mod" = list(
-                dv="dv", iv="iv", mod="mod", covs=NULL
-            ),
-            "dv ~ iv * mod + cov1 + cov2" = list(
-                dv="dv", iv="iv", mod="mod", covs=c("cov1","cov2")
-            ),
-            "dv~iv*mod+cov1+cov2" = list(
-                dv="dv", iv="iv", mod="mod", covs=c("cov1","cov2")
-            )
-        )
-        
-        bad_formulas <- c("dv ~ iv * mod * cov1 + cov2",
-                          "dv ~ iv + mod + cov1 * cov2",
-                           "dv",
-                           "dv ~ "
-                          )
-        
-        for( glm_formula in names(good_formula_map) ){
-            returned_list <- ds.helper$glm_formula_to_varlist(glm_formula)
-            expected_list <- formula_to_varlist_map[[glm_formula]]
-            if( ! identical( returned_list , expected_list ) ) {
-                "ds.helper$glm_formula_to_varlist unit test failed with " %+%
-                    "formula: " %+%
-                    glm_formula %>%
-                    stop()
-            }
-        }
-        for( glm_formula in bad_formulas ){
-            success <- tryCatch(
-                returned_list <- ds.helper$glm_formula_to_varlist(glm_formula),
-                error = function(e){ simpleError("invalid formula") }
-            )
-            if( ! any(class(success) %in% "simpleError") ){
-                "ds.helper$glm_formula_to_varlist failed to raise error " %+%
-                    "when provided with formula: " %+%
-                    glm_formula %>%
-                    stop()
-            }
-        }
-    }
- 
-    test_glm_formula_to_varlist()   
-}
-ds.helper.unit_test()
-
-
 
 ds.helper$map_dv_to_glm_family <- list(
     numeric = "gaussian",
@@ -413,6 +349,152 @@ ds.glms_table <- function( models ){
 }
 
 
+
+
+ds.helper.unit_test <- function(){
+    
+    assert_expected_output <- function( func_name , input, expected_output ){
+        # warn if evaluated func_name(input) != expected_output
+        # errors messages are not compared, but errors can be expected
+        
+        # func_name passed as string rathern than func itself
+        # so the func_name can be included warnings
+        func <- eval(parse(text=func_name))
+        
+        real_output <- tryCatch(
+                            func(input),
+                            error = function(e) e
+                        )
+        
+        both_are_errors <-  any(class(real_output) %in% "error") & 
+                            any(class(expected_output) %in% "error")
+        outputs_identical <- identical(expected_output, real_output)
+        
+        error_message <- ""
+        if("error" %in% class(real_output)){
+            error_message <- "\nError raised in tested function: " %+%
+                real_output$message
+        }
+        
+        if( ! ( both_are_errors | outputs_identical ) ){
+            "assert_expected_output failed in " %+%
+                func_name %+% " when passed '" %+%
+                paste(input,collapse=", ") %+% "'" %+% 
+                ". \n" %+% error_message %>%
+                util.warn()
+        }
+    }
+    
+    test__glm_formula_to_varlist <- function(){
+        
+        input_output_map <- list(
+            list(
+                input  =  "dv ~ iv",
+                output = list(dv="dv", iv="iv", mod=NULL, covs=NULL)
+            ),
+            list(
+                input  = "dv ~ iv + cov1 + cov2",
+                output = list(
+                    dv="dv", iv="iv", mod=NULL, covs=c("cov1","cov2")
+                )
+            ),
+            list(
+                input  =  "dv ~ iv * mod",
+                output = list(
+                    dv="dv", iv="iv", mod="mod", covs=NULL
+                )
+            ),
+            list(
+                input  =  "dv ~ iv * mod + cov1 + cov2",
+                output = list(
+                    dv="dv", iv="iv", mod="mod", covs=c("cov1","cov2")
+                )
+            ),
+            list(
+                input  =  "dv~iv*mod+cov1+cov2",
+                output = list(
+                    dv="dv", iv="iv", mod="mod", covs=c("cov1","cov2")
+                )
+            ),
+            list(
+                input  =  "dv ~ iv * mod * cov1 + cov2",
+                output = simpleError("bad input formula")
+            ),
+            list(
+                input  =  "",
+                output = simpleError("bad input formula")
+            ),
+            list(
+                input  =  "dv ~ iv + mod + cov1 * cov2",
+                output = simpleError("bad input formula")
+            ),
+            list(
+                input  =  "dv ~ ",
+                output = simpleError("bad input formula")
+            ),
+            list(
+                input  =  " ~ a",
+                output = simpleError("bad input formula")
+            )
+        )
+        
+        for( io in input_output_map ){
+            assert_expected_output( 
+                "ds.helper$glm_formula_to_varlist",
+                io$input,
+                io$output
+            )
+        }
+        
+    }
+
+    test__variable_type <- function(){
+        input_output_map <- list(
+            list(
+                input = c("dog","dog","dog"),
+                output = "invariant"
+            ),
+            list(
+                input = c(1,"dog","cat"),
+                output = "categorical"
+            ),
+            list(
+                input = c(1,0,0),
+                output = "boolean"
+            ),
+            list(
+                input = c(1,TRUE,0),
+                output = "boolean"
+            ),
+            list(
+                input = c(1,20,0),
+                output = "numeric"
+            ),
+            list(
+                input = "cat" %+% rep(1:21) ,
+                output = "multitudinous"
+            ),
+            list(
+                input = c("",NA),
+                output = "invariant"
+            )
+        )
+        
+        for( io in input_output_map ){
+            assert_expected_output( 
+                "ds.helper$variable_type",
+                io$input,
+                io$output
+            )
+        }
+    }
+
+
+    test__glm_formula_to_varlist()   
+    test__variable_type()   
+}
+
+ds.helper.unit_test()
 
 
 

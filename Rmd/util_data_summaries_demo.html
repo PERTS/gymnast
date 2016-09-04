@@ -178,7 +178,7 @@ tryCatch({
     head() %&gt;%
     util.html_table()</code></pre>
 <!-- html table generated in R 3.3.1 by xtable 1.8-2 package -->
-<!-- Sun Sep  4 11:20:07 2016 -->
+<!-- Sun Sep  4 14:35:16 2016 -->
 <table border="0," class="xtable">
 <tr>
 <th>
@@ -409,7 +409,7 @@ music
     head() %&gt;%
     util.html_table()</code></pre>
 <!-- html table generated in R 3.3.1 by xtable 1.8-2 package -->
-<!-- Sun Sep  4 11:20:07 2016 -->
+<!-- Sun Sep  4 14:35:16 2016 -->
 <table border="0," class="xtable">
 <tr>
 <th>
@@ -546,7 +546,7 @@ Skill Acquirability
     head() %&gt;%
     util.html_table()</code></pre>
 <!-- html table generated in R 3.3.1 by xtable 1.8-2 package -->
-<!-- Sun Sep  4 11:20:07 2016 -->
+<!-- Sun Sep  4 14:35:16 2016 -->
 <table border="0," class="xtable">
 <tr>
 <th>
@@ -690,7 +690,7 @@ ds.summarize_by_column(data, codebook=codebook[, codebook_columns_to_include]) %
     head() %&gt;%
     util.html_table()</code></pre>
 <!-- html table generated in R 3.3.1 by xtable 1.8-2 package -->
-<!-- Sun Sep  4 11:20:08 2016 -->
+<!-- Sun Sep  4 14:35:16 2016 -->
 <table border="0," class="xtable">
 <tr>
 <th>
@@ -866,7 +866,7 @@ ds.summarize_by_column(data,
     head() %&gt;%
     util.html_table()</code></pre>
 <!-- html table generated in R 3.3.1 by xtable 1.8-2 package -->
-<!-- Sun Sep  4 11:20:08 2016 -->
+<!-- Sun Sep  4 14:35:16 2016 -->
 <table border="0," class="xtable">
 <tr>
 <th>
@@ -994,7 +994,7 @@ ds.summarize_by_column(
     head() %&gt;%
     util.html_table()</code></pre>
 <!-- html table generated in R 3.3.1 by xtable 1.8-2 package -->
-<!-- Sun Sep  4 11:20:08 2016 -->
+<!-- Sun Sep  4 14:35:16 2016 -->
 <table border="0," class="xtable">
 <tr>
 <th>
@@ -1060,8 +1060,32 @@ cov_groups = list(
 # covs = c()         # covariates included all together or none
                      # here, we use cov_groups instead for more flexibility
 
-ds.build_formulas( dvs=dvs, ivs=ivs, mods=mods, cov_groups = cov_groups)</code></pre>
-<p>[1] “sksh_post ~ condition”<br /> [2] “sksh_post ~ condition + age + male + race”<br /> [3] “sksh_post ~ condition + sksh_pre + age + male + race”<br /> [4] “sksh_post ~ condition * in_job_satis”<br /> [5] “sksh_post ~ condition * in_job_satis + age + male + race”<br /> [6] “sksh_post ~ condition * in_job_satis + sksh_pre + age + male + race” [7] “sksh_post ~ skil_aq_1”<br /> [8] “sksh_post ~ skil_aq_1 + age + male + race”<br /> [9] “sksh_post ~ skil_aq_1 + sksh_pre + age + male + race”<br />[10] “sksh_post ~ skil_aq_1 * in_job_satis”<br />[11] “sksh_post ~ skil_aq_1 * in_job_satis + age + male + race”<br />[12] “sksh_post ~ skil_aq_1 * in_job_satis + sksh_pre + age + male + race” [13] “bls_link ~ condition”<br />[14] “bls_link ~ condition + age + male + race”<br />[15] “bls_link ~ condition + sksh_pre + age + male + race”<br />[16] “bls_link ~ condition * in_job_satis”<br />[17] “bls_link ~ condition * in_job_satis + age + male + race”<br />[18] “bls_link ~ condition * in_job_satis + sksh_pre + age + male + race” [19] “bls_link ~ skil_aq_1”<br />[20] “bls_link ~ skil_aq_1 + age + male + race”<br />[21] “bls_link ~ skil_aq_1 + sksh_pre + age + male + race”<br />[22] “bls_link ~ skil_aq_1 * in_job_satis”<br />[23] “bls_link ~ skil_aq_1 * in_job_satis + age + male + race”<br />[24] “bls_link ~ skil_aq_1 * in_job_satis + sksh_pre + age + male + race”</p>
+ds.build_formulas( dvs=dvs, ivs=ivs, mods=mods, cov_groups = cov_groups) %&gt;%
+    util.print_pre()</code></pre>
+<pre>  [1] &quot;sksh_post ~ condition&quot;                                              
+ [2] &quot;sksh_post ~ condition + age + male + race&quot;                          
+ [3] &quot;sksh_post ~ condition + sksh_pre + age + male + race&quot;               
+ [4] &quot;sksh_post ~ condition * in_job_satis&quot;                               
+ [5] &quot;sksh_post ~ condition * in_job_satis + age + male + race&quot;           
+ [6] &quot;sksh_post ~ condition * in_job_satis + sksh_pre + age + male + race&quot;
+ [7] &quot;sksh_post ~ skil_aq_1&quot;                                              
+ [8] &quot;sksh_post ~ skil_aq_1 + age + male + race&quot;                          
+ [9] &quot;sksh_post ~ skil_aq_1 + sksh_pre + age + male + race&quot;               
+[10] &quot;sksh_post ~ skil_aq_1 * in_job_satis&quot;                               
+[11] &quot;sksh_post ~ skil_aq_1 * in_job_satis + age + male + race&quot;           
+[12] &quot;sksh_post ~ skil_aq_1 * in_job_satis + sksh_pre + age + male + race&quot;
+[13] &quot;bls_link ~ condition&quot;                                               
+[14] &quot;bls_link ~ condition + age + male + race&quot;                           
+[15] &quot;bls_link ~ condition + sksh_pre + age + male + race&quot;                
+[16] &quot;bls_link ~ condition * in_job_satis&quot;                                
+[17] &quot;bls_link ~ condition * in_job_satis + age + male + race&quot;            
+[18] &quot;bls_link ~ condition * in_job_satis + sksh_pre + age + male + race&quot; 
+[19] &quot;bls_link ~ skil_aq_1&quot;                                               
+[20] &quot;bls_link ~ skil_aq_1 + age + male + race&quot;                           
+[21] &quot;bls_link ~ skil_aq_1 + sksh_pre + age + male + race&quot;                
+[22] &quot;bls_link ~ skil_aq_1 * in_job_satis&quot;                                
+[23] &quot;bls_link ~ skil_aq_1 * in_job_satis + age + male + race&quot;            
+[24] &quot;bls_link ~ skil_aq_1 * in_job_satis + sksh_pre + age + male + race&quot;  </pre>
 </div>
 <div id="run-glms-with-ds.glms" class="section level3">
 <h3>Run GLMs with ds.glms()</h3>
