@@ -126,7 +126,7 @@ util.to_acsii <- function(x){
 }
 
 util.is_vector_of_numbers <- function(x){
-    # Are all elements of x numbers?
+    # Are all elements of x numbers (permitting blanks)?
     # (regardless of whether x is numeric)
     # Character vectors sometimes need to be changed to numerics,
     # e.g., when all columns set to character types by default.
@@ -138,8 +138,12 @@ util.is_vector_of_numbers <- function(x){
     blank_values <- util.is_blank(x)
 
     # Return TRUE if all values are either numeric or blank
+    # Unless all values are blank, then false
     # Return FALSE otherwise
-    if(all(numeric_values | blank_values)){
+    if( all(blank_values) ){
+        return(FALSE)
+    }
+    else if(all(numeric_values | blank_values)){
         return(TRUE)
     }
     else{
