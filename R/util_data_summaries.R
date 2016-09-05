@@ -477,9 +477,12 @@ ds.glm_table <- function(
             sanitized_fls[[length(sanitized_fls) + 1]] <- fls[[i]]
         }
     }
-    
-    feature_table <- util.rbind_union(sanitized_fls)
-    return(feature_table[,columns])
+    if(length(sanitized_fls) > 0){
+        feature_table <- util.rbind_union(sanitized_fls)
+        return(feature_table[,columns])
+    } else{
+        return(data.frame())
+    }
 }
 
 

@@ -137,6 +137,7 @@ $(document).ready(function () {
 <li><a href="#building-models">Building Models</a><ul>
 <li><a href="#build-formulas-with-ds.build_formulas">Build Formulas with ds.build_formulas()</a></li>
 <li><a href="#run-glms-with-ds.glms-then-print-table-with-ds.glm_table">Run GLMs with ds.glms() then print table with ds.glm_table</a></li>
+<li><a href="#example-of-off-spec-model">Example of off-spec model</a></li>
 </ul></li>
 </ul>
 </div>
@@ -178,7 +179,7 @@ tryCatch({
     head() %&gt;%
     util.html_table()</code></pre>
 <!-- html table generated in R 3.3.1 by xtable 1.8-2 package -->
-<!-- Sun Sep  4 17:47:23 2016 -->
+<!-- Sun Sep  4 18:06:23 2016 -->
 <table border="0," class="xtable">
 <tr>
 <th>
@@ -409,7 +410,7 @@ music
     head() %&gt;%
     util.html_table()</code></pre>
 <!-- html table generated in R 3.3.1 by xtable 1.8-2 package -->
-<!-- Sun Sep  4 17:47:23 2016 -->
+<!-- Sun Sep  4 18:06:23 2016 -->
 <table border="0," class="xtable">
 <tr>
 <th>
@@ -546,7 +547,7 @@ Skill Acquirability
     head() %&gt;%
     util.html_table()</code></pre>
 <!-- html table generated in R 3.3.1 by xtable 1.8-2 package -->
-<!-- Sun Sep  4 17:47:23 2016 -->
+<!-- Sun Sep  4 18:06:23 2016 -->
 <table border="0," class="xtable">
 <tr>
 <th>
@@ -690,7 +691,7 @@ ds.summarize_by_column(data, codebook=codebook[, codebook_columns_to_include]) %
     head() %&gt;%
     util.html_table()</code></pre>
 <!-- html table generated in R 3.3.1 by xtable 1.8-2 package -->
-<!-- Sun Sep  4 17:47:23 2016 -->
+<!-- Sun Sep  4 18:06:23 2016 -->
 <table border="0," class="xtable">
 <tr>
 <th>
@@ -866,7 +867,7 @@ ds.summarize_by_column(data,
     head() %&gt;%
     util.html_table()</code></pre>
 <!-- html table generated in R 3.3.1 by xtable 1.8-2 package -->
-<!-- Sun Sep  4 17:47:23 2016 -->
+<!-- Sun Sep  4 18:06:23 2016 -->
 <table border="0," class="xtable">
 <tr>
 <th>
@@ -994,7 +995,7 @@ ds.summarize_by_column(
     head() %&gt;%
     util.html_table()</code></pre>
 <!-- html table generated in R 3.3.1 by xtable 1.8-2 package -->
-<!-- Sun Sep  4 17:47:23 2016 -->
+<!-- Sun Sep  4 18:06:23 2016 -->
 <table border="0," class="xtable">
 <tr>
 <th>
@@ -1089,9 +1090,13 @@ ds.build_formulas( dvs=dvs, ivs=ivs, mods=mods, cov_groups = cov_groups) %&gt;%
 </div>
 <div id="run-glms-with-ds.glms-then-print-table-with-ds.glm_table" class="section level3">
 <h3>Run GLMs with ds.glms() then print table with ds.glm_table</h3>
-<p>This section models how to use <code>ds.glms()</code> and <code>ds.glms_table</code>.</p>
+<p>This section models how to use <code>ds.glms()</code> and <code>ds.glms_table</code>. Note that ds.glm_table only work with models that meet the ds.glm1 spec:</p>
+<ol style="list-style-type: decimal">
+<li>IVs and moderators must be boolean or numeric</li>
+<li>No more than one interaction via “*“, though you can provide manually</li>
+</ol>
 <pre class="r"><code>dvs = c(&quot;sksh_post&quot;,&quot;bls_link&quot;) # dependent variables each run independently
-ivs = c(&quot;treatment&quot;,&quot;condition&quot;) # independent variables each run independently
+ivs = c(&quot;treatment&quot;) # independent variables each run independently
 mods = c(&quot;&quot;,&quot;job_satis&quot;)  # moderators each run independently, default no mod
 cov_groups = list(
     &quot;unadjusted&quot; = c(),
@@ -1110,32 +1115,8 @@ models   &lt;- ds.glms(formulas, data)
 # create a more concise table with just the apa strings 
 ds.glm_table(models, columns=ds.helper$glm1_features_apa) %&gt;% 
     util.html_table()</code></pre>
-<div class="warning">
-ds.glm1 spec only allows ivs and moderators of type boolean or numeric. Supplied iv is: categorical in formula: sksh_post ~ condition
-</div>
-<div class="warning">
-ds.glm1 spec only allows ivs and moderators of type boolean or numeric. Supplied iv is: categorical in formula: sksh_post ~ condition + age + male + race
-</div>
-<div class="warning">
-ds.glm1 spec only allows ivs and moderators of type boolean or numeric. Supplied iv is: categorical in formula: sksh_post ~ condition * job_satis
-</div>
-<div class="warning">
-ds.glm1 spec only allows ivs and moderators of type boolean or numeric. Supplied iv is: categorical in formula: sksh_post ~ condition * job_satis + age + male + race
-</div>
-<div class="warning">
-ds.glm1 spec only allows ivs and moderators of type boolean or numeric. Supplied iv is: categorical in formula: bls_link ~ condition
-</div>
-<div class="warning">
-ds.glm1 spec only allows ivs and moderators of type boolean or numeric. Supplied iv is: categorical in formula: bls_link ~ condition + age + male + race
-</div>
-<div class="warning">
-ds.glm1 spec only allows ivs and moderators of type boolean or numeric. Supplied iv is: categorical in formula: bls_link ~ condition * job_satis
-</div>
-<div class="warning">
-ds.glm1 spec only allows ivs and moderators of type boolean or numeric. Supplied iv is: categorical in formula: bls_link ~ condition * job_satis + age + male + race
-</div>
 <!-- html table generated in R 3.3.1 by xtable 1.8-2 package -->
-<!-- Sun Sep  4 17:47:23 2016 -->
+<!-- Sun Sep  4 18:06:23 2016 -->
 <table border="0," class="xtable">
 <tr>
 <th>
@@ -1263,32 +1244,8 @@ age, male, race
 <pre class="r"><code># show the full table to see all the reported features
 ds.glm_table(models, columns=ds.helper$glm1_features_full) %&gt;% 
     util.html_table()</code></pre>
-<div class="warning">
-ds.glm1 spec only allows ivs and moderators of type boolean or numeric. Supplied iv is: categorical in formula: sksh_post ~ condition
-</div>
-<div class="warning">
-ds.glm1 spec only allows ivs and moderators of type boolean or numeric. Supplied iv is: categorical in formula: sksh_post ~ condition + age + male + race
-</div>
-<div class="warning">
-ds.glm1 spec only allows ivs and moderators of type boolean or numeric. Supplied iv is: categorical in formula: sksh_post ~ condition * job_satis
-</div>
-<div class="warning">
-ds.glm1 spec only allows ivs and moderators of type boolean or numeric. Supplied iv is: categorical in formula: sksh_post ~ condition * job_satis + age + male + race
-</div>
-<div class="warning">
-ds.glm1 spec only allows ivs and moderators of type boolean or numeric. Supplied iv is: categorical in formula: bls_link ~ condition
-</div>
-<div class="warning">
-ds.glm1 spec only allows ivs and moderators of type boolean or numeric. Supplied iv is: categorical in formula: bls_link ~ condition + age + male + race
-</div>
-<div class="warning">
-ds.glm1 spec only allows ivs and moderators of type boolean or numeric. Supplied iv is: categorical in formula: bls_link ~ condition * job_satis
-</div>
-<div class="warning">
-ds.glm1 spec only allows ivs and moderators of type boolean or numeric. Supplied iv is: categorical in formula: bls_link ~ condition * job_satis + age + male + race
-</div>
 <!-- html table generated in R 3.3.1 by xtable 1.8-2 package -->
-<!-- Sun Sep  4 17:47:24 2016 -->
+<!-- Sun Sep  4 18:06:24 2016 -->
 <table border="0," class="xtable">
 <tr>
 <th>
@@ -1887,6 +1844,78 @@ binomial
 </td>
 <td align="right">
 0.41
+</td>
+</tr>
+</table>
+</div>
+<div id="example-of-off-spec-model" class="section level3">
+<h3>Example of off-spec model</h3>
+<p>When off-spec models are requested, ds.glm_table issues warnings and omits them from the table.</p>
+<pre class="r"><code>dvs = c(&quot;sksh_post&quot;) # dependent variables each run independently
+ivs = c(&quot;condition&quot;,&quot;treatment&quot;) # independent variables each run independently
+mods = c(&quot;&quot;,&quot;job_satis&quot;)  # moderators each run independently, default no mod
+cov_groups = list()  # vectors of covariates to run together
+# covs = c()         # covariates included all together or none
+                     # here, we use cov_groups instead for more flexibility
+data$treatment &lt;- data$condition %in% &quot;treatment&quot;
+
+formulas &lt;- ds.build_formulas( 
+                dvs=dvs, ivs=ivs, mods=mods, cov_groups = cov_groups
+            )
+
+models   &lt;- ds.glms(formulas, data)
+
+# create a more concise table with just the apa strings 
+ds.glm_table(models, columns=ds.helper$glm1_features_apa) %&gt;%
+    util.html_table()</code></pre>
+<div class="warning">
+ds.glm1 spec only allows ivs and moderators of type boolean or numeric. Supplied iv is: categorical in formula: sksh_post ~ condition
+</div>
+<div class="warning">
+ds.glm1 spec only allows ivs and moderators of type boolean or numeric. Supplied iv is: categorical in formula: sksh_post ~ condition * job_satis
+</div>
+<!-- html table generated in R 3.3.1 by xtable 1.8-2 package -->
+<!-- Sun Sep  4 18:06:24 2016 -->
+<table border="0," class="xtable">
+<tr>
+<th>
+dv
+</th>
+<th>
+iv_apa
+</th>
+<th>
+int_apa
+</th>
+<th>
+covs
+</th>
+</tr>
+<tr>
+<td>
+sksh_post
+</td>
+<td>
+treatment, b=1.351, t(1121)=15.027, p&lt;.001
+</td>
+<td>
+</td>
+<td>
+NA
+</td>
+</tr>
+<tr>
+<td>
+sksh_post
+</td>
+<td>
+treatment, b=1.6, t(1119)=6.825, p&lt;.001
+</td>
+<td>
+job_satis x treatment, b=-0.06, t(1119)=-1.15, p=0.25
+</td>
+<td>
+NA
 </td>
 </tr>
 </table>
