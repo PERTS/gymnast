@@ -239,7 +239,7 @@ ds.helper$glm_formula_to_varlist <- function(formula){
         #   "*" interactions are not supported outside moderator
         #   to use interactions in covariates, create manually
     
-    varlist <- list( dv=NULL, iv=NULL, mod=NULL, covs=NULL )
+    varlist <- list( dv=NA, iv=NA, mod=NA, covs=NA )
     split_on_tilde <- str_split(formula,"[ ]*~[ ]*")[[1]]
     
     # check if formula has dvs and predictors
@@ -328,27 +328,159 @@ ds.glms <- function( formulas, data, family=NULL ){
     return(models)
 }
 
-ds.glms_table <- function( models ){
-    columns <- c("dv", "dv_mean" , 
-                 "iv", "iv_coef", "iv_p", 
-                 "mod", "mod_coef", "mod_p",
-                 "int", "int_coef", "int_p",
-                 "covs"
-                 )
+ds.helper$glm1_features_full <- c(
+    "dv", "iv_apa", "int_apa",
+    "iv", "mod", "covs", "aic", "family", "n", "df",
+    "dv_mean" ,
+    "iv_coef", "iv_se", "iv_stat", "iv_p", 
+    "mod_coef", "mod_se", "mod_stat", "mod_p",
+    "int_coef", "int_se", "int_stat", "int_p"
+)
+ds.helper$glm1_features_apa <- c(
+    "dv","iv_apa","int_apa","covs"
+)
+
+
+ds.helper$validate_glm1_model <- function(glm_model){
+    # validate that the model meets the ds.glm1 model spec
+    # ds.glm1 only supports numerical or boolean IVs and MODs
+    # this is simplicity of display
+    varlist <- ds.helper$glm_formula_to_varlist(glm_model$formula)
+    iv <- glm_model$model[,varlist$iv]
+    iv_var_type <- ds.helper$variable_type(iv)
+    is_valid <- FALSE
     
-    glm_table <- data.frame( matrix( data=NA, 
-                                 nrow=length(models), 
-                                 ncol=length(columns) 
-                        ) )
-    names(glm_table) <- columns
-    for( i in 1:length(models) ){
-        model <- models[[1]]
-        
-    } 
-    mod_obj$family$family
+    # check iv suitability
+    if( iv_var_type %in% c("boolean","numeric") ){
+        is_valid <- TRUE
+    } else{
+        "ds.glm1 spec only allows ivs and moderators of type " %+% 
+            "boolean or numeric. Supplied iv is: "  %+% iv_var_type %+%
+            " in formula: " %+% glm_model$formula %>%
+            util.warn()
+    }
+    if( ! is.na(varlist$mod) ){ 
+        mod <- glm_model$model[,varlist$mod]
+        mod_var_type <- ds.helper$variable_type(mod)
+        if( ! mod_var_type %in% c("boolean","numeric") ){
+            "ds.extract_glm1_stats only supports mods of type " %+% 
+                "boolean or numeric. Supplied mod is: " %+% mod_var_type %+%
+                " in formula: " %+% glm_model$formula %>%
+                util.warn()
+            is_valid <- FALSE
+        }
+    }
+    return(is_valid)
 }
 
 
+ds.extract_glm1_stats <- function( glm_model ){
+    # extracts frequently used statistics from glm_model
+    
+    if( ! ds.helper$validate_glm1_model(glm_model)){
+        # glm1 only supports numerical or boolean IVs and MODs
+        # others will issue a warning
+        return(list())
+    }
+    
+    fl <- list()  # fl = "feature list"
+    varlist <- ds.helper$glm_formula_to_varlist(glm_model$formula)
+    
+    # populate the feature list
+    fl$dv     <- varlist$dv
+    fl$family <- glm_model$family$family
+    fl$n   <- sum(!util.is_blank(glm_model$y))    
+    fl$df  <- glm_model$df.residual
+    fl$aic <- glm_model$aic
+    fl$iv     <- varlist$iv
+    fl$mod    <- varlist$mod
+    fl$covs   <- paste(varlist$covs, collapse=", ")
+    fl$dv_mean   <- mean(glm_model$y, na.rm=TRUE)
+    
+    # extract coefficients
+    coefs <- summary(glm_model)$coefficients
+    
+    # use of column and row numbers seems dangerous;
+    # however order should be consistent when 
+    # ds.glm1 spec is used
+    # also, irregularities between different model types
+    # e.g., t vs z for guassian and binomial families
+    # and level is appended to row.names when TRUE/FALSE
+    fl$iv_coef <- coefs[2,1]
+    fl$iv_se <- coefs[2,2]
+    fl$iv_stat <- coefs[2,3]
+    fl$iv_p <- coefs[2,4]
+    
+    # assemble apa string
+    if(fl$family %in% "binomial"){
+        fl$iv_apa <- 
+            fl$iv %+% 
+            ", OR=" %+% round(exp(fl$iv_coef),3) %+%
+            ", z=" %+% round(fl$iv_stat,3) %+%
+            ifelse(fl$iv_p < .001,", p<.001",", p=" %+% round(fl$iv_p,3))
+            
+    } else if(fl$family %in% "gaussian"){
+        fl$iv_apa <- 
+            fl$iv %+% 
+            ", b=" %+% round(fl$iv_coef,3)  %+%
+            ", t(" %+% fl$df %+% ")" %+% "=" %+% round(fl$iv_stat,3) %+%
+           ifelse(fl$iv_p < .001,", p<.001",", p=" %+% round(fl$iv_p,3))
+    }
+    
+    if( !is.na(fl$mod) ){
+        fl$mod_coef <- coefs[3,1]
+        fl$mod_se <- coefs[3,2]
+        fl$mod_stat <- coefs[3,3]
+        fl$mod_p <- coefs[3,4]
+        
+        int_row <- nrow(coefs)
+        
+        fl$int_coef <- coefs[int_row,1]
+        fl$int_se <- coefs[int_row,2]
+        fl$int_stat <- coefs[int_row,3]
+        fl$int_p <- coefs[int_row,4]
+
+        if(fl$family %in% "binomial"){
+            fl$int_apa <- fl$mod %+% " x " %+% fl$iv %+%
+                ", OR=" %+% round(exp(fl$int_coef),2) %+%
+                ", z=" %+% round(fl$int_stat,3) %+%
+                ifelse(fl$int_p < .001,", p<.001",", p=" %+% round(fl$int_p,3))
+            
+        } else if(fl$family %in% "gaussian"){
+            fl$int_apa <- fl$mod %+% " x " %+% fl$iv %+%
+                ", b=" %+% round(fl$int_coef,2)  %+%
+                ", t(" %+% fl$df %+% ")" %+% "=" %+% round(fl$int_stat,3) %+%
+                ifelse(fl$int_p < .001,", p<.001",", p=" %+% round(fl$int_p,3))
+        }
+    } else{
+        fl$int_apa <- ""
+    }
+    
+    return(fl)
+}
+
+ds.glm_table <- function( 
+    models,
+    extraction_func = ds.extract_glm1_stats,  # extracts glm features
+    columns = ds.helper$glm1_features_apa
+){
+    
+    fls <- lapply( models , function(glm_model){
+        as.data.frame(extraction_func(glm_model))
+    })
+    
+    # remove empty feature lists
+    # (may happen if ds.glm1 spec is violated)
+    sanitized_fls <- list()
+    for( i in 1:length(fls) ){
+        if( nrow(fls[[i]]) > 0 ){
+            sanitized_fls[[length(sanitized_fls) + 1]] <- fls[[i]]
+        }
+    }
+    
+    feature_table <- util.rbind_union(sanitized_fls)
+    return(feature_table[,columns])
+}
 
 
 ds.helper.unit_test <- function(){
@@ -390,18 +522,18 @@ ds.helper.unit_test <- function(){
         input_output_map <- list(
             list(
                 input  =  "dv ~ iv",
-                output = list(dv="dv", iv="iv", mod=NULL, covs=NULL)
+                output = list(dv="dv", iv="iv", mod=NA, covs=NA)
             ),
             list(
                 input  = "dv ~ iv + cov1 + cov2",
                 output = list(
-                    dv="dv", iv="iv", mod=NULL, covs=c("cov1","cov2")
+                    dv="dv", iv="iv", mod=NA, covs=c("cov1","cov2")
                 )
             ),
             list(
                 input  =  "dv ~ iv * mod",
                 output = list(
-                    dv="dv", iv="iv", mod="mod", covs=NULL
+                    dv="dv", iv="iv", mod="mod", covs=NA
                 )
             ),
             list(

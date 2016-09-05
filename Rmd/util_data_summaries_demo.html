@@ -136,7 +136,7 @@ $(document).ready(function () {
 </ul></li>
 <li><a href="#building-models">Building Models</a><ul>
 <li><a href="#build-formulas-with-ds.build_formulas">Build Formulas with ds.build_formulas()</a></li>
-<li><a href="#run-glms-with-ds.glms">Run GLMs with ds.glms()</a></li>
+<li><a href="#run-glms-with-ds.glms-then-print-table-with-ds.glm_table">Run GLMs with ds.glms() then print table with ds.glm_table</a></li>
 </ul></li>
 </ul>
 </div>
@@ -178,7 +178,7 @@ tryCatch({
     head() %&gt;%
     util.html_table()</code></pre>
 <!-- html table generated in R 3.3.1 by xtable 1.8-2 package -->
-<!-- Sun Sep  4 14:35:16 2016 -->
+<!-- Sun Sep  4 17:47:23 2016 -->
 <table border="0," class="xtable">
 <tr>
 <th>
@@ -409,7 +409,7 @@ music
     head() %&gt;%
     util.html_table()</code></pre>
 <!-- html table generated in R 3.3.1 by xtable 1.8-2 package -->
-<!-- Sun Sep  4 14:35:16 2016 -->
+<!-- Sun Sep  4 17:47:23 2016 -->
 <table border="0," class="xtable">
 <tr>
 <th>
@@ -546,7 +546,7 @@ Skill Acquirability
     head() %&gt;%
     util.html_table()</code></pre>
 <!-- html table generated in R 3.3.1 by xtable 1.8-2 package -->
-<!-- Sun Sep  4 14:35:16 2016 -->
+<!-- Sun Sep  4 17:47:23 2016 -->
 <table border="0," class="xtable">
 <tr>
 <th>
@@ -690,7 +690,7 @@ ds.summarize_by_column(data, codebook=codebook[, codebook_columns_to_include]) %
     head() %&gt;%
     util.html_table()</code></pre>
 <!-- html table generated in R 3.3.1 by xtable 1.8-2 package -->
-<!-- Sun Sep  4 14:35:16 2016 -->
+<!-- Sun Sep  4 17:47:23 2016 -->
 <table border="0," class="xtable">
 <tr>
 <th>
@@ -866,7 +866,7 @@ ds.summarize_by_column(data,
     head() %&gt;%
     util.html_table()</code></pre>
 <!-- html table generated in R 3.3.1 by xtable 1.8-2 package -->
-<!-- Sun Sep  4 14:35:16 2016 -->
+<!-- Sun Sep  4 17:47:23 2016 -->
 <table border="0," class="xtable">
 <tr>
 <th>
@@ -994,7 +994,7 @@ ds.summarize_by_column(
     head() %&gt;%
     util.html_table()</code></pre>
 <!-- html table generated in R 3.3.1 by xtable 1.8-2 package -->
-<!-- Sun Sep  4 14:35:16 2016 -->
+<!-- Sun Sep  4 17:47:23 2016 -->
 <table border="0," class="xtable">
 <tr>
 <th>
@@ -1087,10 +1087,11 @@ ds.build_formulas( dvs=dvs, ivs=ivs, mods=mods, cov_groups = cov_groups) %&gt;%
 [23] &quot;bls_link ~ skil_aq_1 * in_job_satis + age + male + race&quot;            
 [24] &quot;bls_link ~ skil_aq_1 * in_job_satis + sksh_pre + age + male + race&quot;  </pre>
 </div>
-<div id="run-glms-with-ds.glms" class="section level3">
-<h3>Run GLMs with ds.glms()</h3>
-<pre class="r"><code>dvs = c(&quot;sksh_post&quot;) # dependent variables each run independently
-ivs = c(&quot;condition&quot;) # independent variables each run independently
+<div id="run-glms-with-ds.glms-then-print-table-with-ds.glm_table" class="section level3">
+<h3>Run GLMs with ds.glms() then print table with ds.glm_table</h3>
+<p>This section models how to use <code>ds.glms()</code> and <code>ds.glms_table</code>.</p>
+<pre class="r"><code>dvs = c(&quot;sksh_post&quot;,&quot;bls_link&quot;) # dependent variables each run independently
+ivs = c(&quot;treatment&quot;,&quot;condition&quot;) # independent variables each run independently
 mods = c(&quot;&quot;,&quot;job_satis&quot;)  # moderators each run independently, default no mod
 cov_groups = list(
     &quot;unadjusted&quot; = c(),
@@ -1098,10 +1099,797 @@ cov_groups = list(
 )  # vectors of covariates to run together
 # covs = c()         # covariates included all together or none
                      # here, we use cov_groups instead for more flexibility
+data$treatment &lt;- data$condition %in% &quot;treatment&quot;
 
+formulas &lt;- ds.build_formulas( 
+                dvs=dvs, ivs=ivs, mods=mods, cov_groups = cov_groups
+            )
 
-formulas &lt;- ds.build_formulas( dvs=dvs, ivs=ivs, mods=mods, cov_groups = cov_groups)
-models   &lt;- ds.glms(formulas, data)</code></pre>
+models   &lt;- ds.glms(formulas, data)
+
+# create a more concise table with just the apa strings 
+ds.glm_table(models, columns=ds.helper$glm1_features_apa) %&gt;% 
+    util.html_table()</code></pre>
+<div class="warning">
+ds.glm1 spec only allows ivs and moderators of type boolean or numeric. Supplied iv is: categorical in formula: sksh_post ~ condition
+</div>
+<div class="warning">
+ds.glm1 spec only allows ivs and moderators of type boolean or numeric. Supplied iv is: categorical in formula: sksh_post ~ condition + age + male + race
+</div>
+<div class="warning">
+ds.glm1 spec only allows ivs and moderators of type boolean or numeric. Supplied iv is: categorical in formula: sksh_post ~ condition * job_satis
+</div>
+<div class="warning">
+ds.glm1 spec only allows ivs and moderators of type boolean or numeric. Supplied iv is: categorical in formula: sksh_post ~ condition * job_satis + age + male + race
+</div>
+<div class="warning">
+ds.glm1 spec only allows ivs and moderators of type boolean or numeric. Supplied iv is: categorical in formula: bls_link ~ condition
+</div>
+<div class="warning">
+ds.glm1 spec only allows ivs and moderators of type boolean or numeric. Supplied iv is: categorical in formula: bls_link ~ condition + age + male + race
+</div>
+<div class="warning">
+ds.glm1 spec only allows ivs and moderators of type boolean or numeric. Supplied iv is: categorical in formula: bls_link ~ condition * job_satis
+</div>
+<div class="warning">
+ds.glm1 spec only allows ivs and moderators of type boolean or numeric. Supplied iv is: categorical in formula: bls_link ~ condition * job_satis + age + male + race
+</div>
+<!-- html table generated in R 3.3.1 by xtable 1.8-2 package -->
+<!-- Sun Sep  4 17:47:23 2016 -->
+<table border="0," class="xtable">
+<tr>
+<th>
+dv
+</th>
+<th>
+iv_apa
+</th>
+<th>
+int_apa
+</th>
+<th>
+covs
+</th>
+</tr>
+<tr>
+<td>
+sksh_post
+</td>
+<td>
+treatment, b=1.351, t(1121)=15.027, p&lt;.001
+</td>
+<td>
+</td>
+<td>
+NA
+</td>
+</tr>
+<tr>
+<td>
+sksh_post
+</td>
+<td>
+treatment, b=1.37, t(1116)=15.29, p&lt;.001
+</td>
+<td>
+</td>
+<td>
+age, male, race
+</td>
+</tr>
+<tr>
+<td>
+sksh_post
+</td>
+<td>
+treatment, b=1.6, t(1119)=6.825, p&lt;.001
+</td>
+<td>
+job_satis x treatment, b=-0.06, t(1119)=-1.15, p=0.25
+</td>
+<td>
+NA
+</td>
+</tr>
+<tr>
+<td>
+sksh_post
+</td>
+<td>
+treatment, b=1.607, t(1114)=6.879, p&lt;.001
+</td>
+<td>
+job_satis x treatment, b=-0.06, t(1114)=-1.099, p=0.272
+</td>
+<td>
+age, male, race
+</td>
+</tr>
+<tr>
+<td>
+bls_link
+</td>
+<td>
+treatment, OR=1.367, z=3.451, p&lt;.001
+</td>
+<td>
+</td>
+<td>
+NA
+</td>
+</tr>
+<tr>
+<td>
+bls_link
+</td>
+<td>
+treatment, OR=1.393, z=3.626, p&lt;.001
+</td>
+<td>
+</td>
+<td>
+age, male, race
+</td>
+</tr>
+<tr>
+<td>
+bls_link
+</td>
+<td>
+treatment, OR=1.175, z=0.682, p=0.495
+</td>
+<td>
+job_satis x treatment, OR=1.04, z=0.706, p=0.48
+</td>
+<td>
+NA
+</td>
+</tr>
+<tr>
+<td>
+bls_link
+</td>
+<td>
+treatment, OR=1.166, z=0.644, p=0.519
+</td>
+<td>
+job_satis x treatment, OR=1.04, z=0.823, p=0.411
+</td>
+<td>
+age, male, race
+</td>
+</tr>
+</table>
+<pre class="r"><code># show the full table to see all the reported features
+ds.glm_table(models, columns=ds.helper$glm1_features_full) %&gt;% 
+    util.html_table()</code></pre>
+<div class="warning">
+ds.glm1 spec only allows ivs and moderators of type boolean or numeric. Supplied iv is: categorical in formula: sksh_post ~ condition
+</div>
+<div class="warning">
+ds.glm1 spec only allows ivs and moderators of type boolean or numeric. Supplied iv is: categorical in formula: sksh_post ~ condition + age + male + race
+</div>
+<div class="warning">
+ds.glm1 spec only allows ivs and moderators of type boolean or numeric. Supplied iv is: categorical in formula: sksh_post ~ condition * job_satis
+</div>
+<div class="warning">
+ds.glm1 spec only allows ivs and moderators of type boolean or numeric. Supplied iv is: categorical in formula: sksh_post ~ condition * job_satis + age + male + race
+</div>
+<div class="warning">
+ds.glm1 spec only allows ivs and moderators of type boolean or numeric. Supplied iv is: categorical in formula: bls_link ~ condition
+</div>
+<div class="warning">
+ds.glm1 spec only allows ivs and moderators of type boolean or numeric. Supplied iv is: categorical in formula: bls_link ~ condition + age + male + race
+</div>
+<div class="warning">
+ds.glm1 spec only allows ivs and moderators of type boolean or numeric. Supplied iv is: categorical in formula: bls_link ~ condition * job_satis
+</div>
+<div class="warning">
+ds.glm1 spec only allows ivs and moderators of type boolean or numeric. Supplied iv is: categorical in formula: bls_link ~ condition * job_satis + age + male + race
+</div>
+<!-- html table generated in R 3.3.1 by xtable 1.8-2 package -->
+<!-- Sun Sep  4 17:47:24 2016 -->
+<table border="0," class="xtable">
+<tr>
+<th>
+dv
+</th>
+<th>
+iv_apa
+</th>
+<th>
+int_apa
+</th>
+<th>
+iv
+</th>
+<th>
+mod
+</th>
+<th>
+covs
+</th>
+<th>
+aic
+</th>
+<th>
+family
+</th>
+<th>
+n
+</th>
+<th>
+df
+</th>
+<th>
+dv_mean
+</th>
+<th>
+iv_coef
+</th>
+<th>
+iv_se
+</th>
+<th>
+iv_stat
+</th>
+<th>
+iv_p
+</th>
+<th>
+mod_coef
+</th>
+<th>
+mod_se
+</th>
+<th>
+mod_stat
+</th>
+<th>
+mod_p
+</th>
+<th>
+int_coef
+</th>
+<th>
+int_se
+</th>
+<th>
+int_stat
+</th>
+<th>
+int_p
+</th>
+</tr>
+<tr>
+<td>
+sksh_post
+</td>
+<td>
+treatment, b=1.351, t(1121)=15.027, p&lt;.001
+</td>
+<td>
+</td>
+<td>
+treatment
+</td>
+<td>
+</td>
+<td>
+NA
+</td>
+<td align="right">
+4018.72
+</td>
+<td>
+gaussian
+</td>
+<td align="right">
+1123
+</td>
+<td align="right">
+1121
+</td>
+<td align="right">
+4.49
+</td>
+<td align="right">
+1.35
+</td>
+<td align="right">
+0.09
+</td>
+<td align="right">
+15.03
+</td>
+<td align="right">
+0.00
+</td>
+<td align="right">
+</td>
+<td align="right">
+</td>
+<td align="right">
+</td>
+<td align="right">
+</td>
+<td align="right">
+</td>
+<td align="right">
+</td>
+<td align="right">
+</td>
+<td align="right">
+</td>
+</tr>
+<tr>
+<td>
+sksh_post
+</td>
+<td>
+treatment, b=1.37, t(1116)=15.29, p&lt;.001
+</td>
+<td>
+</td>
+<td>
+treatment
+</td>
+<td>
+</td>
+<td>
+age, male, race
+</td>
+<td align="right">
+4002.78
+</td>
+<td>
+gaussian
+</td>
+<td align="right">
+1121
+</td>
+<td align="right">
+1116
+</td>
+<td align="right">
+4.49
+</td>
+<td align="right">
+1.37
+</td>
+<td align="right">
+0.09
+</td>
+<td align="right">
+15.29
+</td>
+<td align="right">
+0.00
+</td>
+<td align="right">
+</td>
+<td align="right">
+</td>
+<td align="right">
+</td>
+<td align="right">
+</td>
+<td align="right">
+</td>
+<td align="right">
+</td>
+<td align="right">
+</td>
+<td align="right">
+</td>
+</tr>
+<tr>
+<td>
+sksh_post
+</td>
+<td>
+treatment, b=1.6, t(1119)=6.825, p&lt;.001
+</td>
+<td>
+job_satis x treatment, b=-0.06, t(1119)=-1.15, p=0.25
+</td>
+<td>
+treatment
+</td>
+<td>
+job_satis
+</td>
+<td>
+NA
+</td>
+<td align="right">
+4019.32
+</td>
+<td>
+gaussian
+</td>
+<td align="right">
+1123
+</td>
+<td align="right">
+1119
+</td>
+<td align="right">
+4.49
+</td>
+<td align="right">
+1.60
+</td>
+<td align="right">
+0.23
+</td>
+<td align="right">
+6.82
+</td>
+<td align="right">
+0.00
+</td>
+<td align="right">
+0.06
+</td>
+<td align="right">
+0.03
+</td>
+<td align="right">
+1.84
+</td>
+<td align="right">
+0.07
+</td>
+<td align="right">
+-0.06
+</td>
+<td align="right">
+0.05
+</td>
+<td align="right">
+-1.15
+</td>
+<td align="right">
+0.25
+</td>
+</tr>
+<tr>
+<td>
+sksh_post
+</td>
+<td>
+treatment, b=1.607, t(1114)=6.879, p&lt;.001
+</td>
+<td>
+job_satis x treatment, b=-0.06, t(1114)=-1.099, p=0.272
+</td>
+<td>
+treatment
+</td>
+<td>
+job_satis
+</td>
+<td>
+age, male, race
+</td>
+<td align="right">
+4004.32
+</td>
+<td>
+gaussian
+</td>
+<td align="right">
+1121
+</td>
+<td align="right">
+1114
+</td>
+<td align="right">
+4.49
+</td>
+<td align="right">
+1.61
+</td>
+<td align="right">
+0.23
+</td>
+<td align="right">
+6.88
+</td>
+<td align="right">
+0.00
+</td>
+<td align="right">
+0.05
+</td>
+<td align="right">
+0.03
+</td>
+<td align="right">
+1.55
+</td>
+<td align="right">
+0.12
+</td>
+<td align="right">
+-0.06
+</td>
+<td align="right">
+0.05
+</td>
+<td align="right">
+-1.10
+</td>
+<td align="right">
+0.27
+</td>
+</tr>
+<tr>
+<td>
+bls_link
+</td>
+<td>
+treatment, OR=1.367, z=3.451, p&lt;.001
+</td>
+<td>
+</td>
+<td>
+treatment
+</td>
+<td>
+</td>
+<td>
+NA
+</td>
+<td align="right">
+2926.18
+</td>
+<td>
+binomial
+</td>
+<td align="right">
+2154
+</td>
+<td align="right">
+2152
+</td>
+<td align="right">
+0.42
+</td>
+<td align="right">
+0.31
+</td>
+<td align="right">
+0.09
+</td>
+<td align="right">
+3.45
+</td>
+<td align="right">
+0.00
+</td>
+<td align="right">
+</td>
+<td align="right">
+</td>
+<td align="right">
+</td>
+<td align="right">
+</td>
+<td align="right">
+</td>
+<td align="right">
+</td>
+<td align="right">
+</td>
+<td align="right">
+</td>
+</tr>
+<tr>
+<td>
+bls_link
+</td>
+<td>
+treatment, OR=1.393, z=3.626, p&lt;.001
+</td>
+<td>
+</td>
+<td>
+treatment
+</td>
+<td>
+</td>
+<td>
+age, male, race
+</td>
+<td align="right">
+2893.81
+</td>
+<td>
+binomial
+</td>
+<td align="right">
+2143
+</td>
+<td align="right">
+2138
+</td>
+<td align="right">
+0.42
+</td>
+<td align="right">
+0.33
+</td>
+<td align="right">
+0.09
+</td>
+<td align="right">
+3.63
+</td>
+<td align="right">
+0.00
+</td>
+<td align="right">
+</td>
+<td align="right">
+</td>
+<td align="right">
+</td>
+<td align="right">
+</td>
+<td align="right">
+</td>
+<td align="right">
+</td>
+<td align="right">
+</td>
+<td align="right">
+</td>
+</tr>
+<tr>
+<td>
+bls_link
+</td>
+<td>
+treatment, OR=1.175, z=0.682, p=0.495
+</td>
+<td>
+job_satis x treatment, OR=1.04, z=0.706, p=0.48
+</td>
+<td>
+treatment
+</td>
+<td>
+job_satis
+</td>
+<td>
+NA
+</td>
+<td align="right">
+2899.42
+</td>
+<td>
+binomial
+</td>
+<td align="right">
+2153
+</td>
+<td align="right">
+2149
+</td>
+<td align="right">
+0.42
+</td>
+<td align="right">
+0.16
+</td>
+<td align="right">
+0.24
+</td>
+<td align="right">
+0.68
+</td>
+<td align="right">
+0.50
+</td>
+<td align="right">
+-0.15
+</td>
+<td align="right">
+0.03
+</td>
+<td align="right">
+-4.66
+</td>
+<td align="right">
+0.00
+</td>
+<td align="right">
+0.04
+</td>
+<td align="right">
+0.05
+</td>
+<td align="right">
+0.71
+</td>
+<td align="right">
+0.48
+</td>
+</tr>
+<tr>
+<td>
+bls_link
+</td>
+<td>
+treatment, OR=1.166, z=0.644, p=0.519
+</td>
+<td>
+job_satis x treatment, OR=1.04, z=0.823, p=0.411
+</td>
+<td>
+treatment
+</td>
+<td>
+job_satis
+</td>
+<td>
+age, male, race
+</td>
+<td align="right">
+2860.32
+</td>
+<td>
+binomial
+</td>
+<td align="right">
+2142
+</td>
+<td align="right">
+2135
+</td>
+<td align="right">
+0.42
+</td>
+<td align="right">
+0.15
+</td>
+<td align="right">
+0.24
+</td>
+<td align="right">
+0.64
+</td>
+<td align="right">
+0.52
+</td>
+<td align="right">
+-0.17
+</td>
+<td align="right">
+0.03
+</td>
+<td align="right">
+-5.19
+</td>
+<td align="right">
+0.00
+</td>
+<td align="right">
+0.04
+</td>
+<td align="right">
+0.05
+</td>
+<td align="right">
+0.82
+</td>
+<td align="right">
+0.41
+</td>
+</tr>
+</table>
 </div>
 </div>
 

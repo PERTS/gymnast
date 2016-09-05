@@ -168,13 +168,15 @@ ds.build_formulas( dvs=dvs, ivs=ivs, mods=mods, cov_groups = cov_groups) %>%
 
 ```
 
-### Run GLMs with ds.glms()
+### Run GLMs with ds.glms() then print table with ds.glm_table
+This section models how to use `ds.glms()` and `ds.glms_table`.
+
 
 
 ```{r, message=FALSE, warning=FALSE, results='asis'}
 
-dvs = c("sksh_post") # dependent variables each run independently
-ivs = c("condition") # independent variables each run independently
+dvs = c("sksh_post","bls_link") # dependent variables each run independently
+ivs = c("treatment","condition") # independent variables each run independently
 mods = c("","job_satis")  # moderators each run independently, default no mod
 cov_groups = list(
     "unadjusted" = c(),
@@ -182,11 +184,21 @@ cov_groups = list(
 )  # vectors of covariates to run together
 # covs = c()         # covariates included all together or none
                      # here, we use cov_groups instead for more flexibility
+data$treatment <- data$condition %in% "treatment"
 
+formulas <- ds.build_formulas( 
+                dvs=dvs, ivs=ivs, mods=mods, cov_groups = cov_groups
+            )
 
-formulas <- ds.build_formulas( dvs=dvs, ivs=ivs, mods=mods, cov_groups = cov_groups)
 models   <- ds.glms(formulas, data)
 
+# create a more concise table with just the apa strings 
+ds.glm_table(models, columns=ds.helper$glm1_features_apa) %>% 
+    util.html_table()
+
+# show the full table to see all the reported features
+ds.glm_table(models, columns=ds.helper$glm1_features_full) %>% 
+    util.html_table()
 
 ```
 
