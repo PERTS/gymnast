@@ -1,21 +1,16 @@
-###############################################################
+##########################################################################
 ###
 ###     util_data_summaries.R
-###     Used to summarize data.
 ###
-###     To summarize individual variable, call:
+###     The goal of the `ds` module is broadly to:
+###         * Make it fast and easy to build models and summarize data.
+###         * Standardize the data summaries we create for ourselves
+###         for and collaborators. 
 ###
-###     ds.summarize_by_column(    data , 
-###                     [func_list] , 
-###                     [codebook] 
-###                 )     
-###
-###     It is anticipated that other data summary functions
-###     will be added later.
 ###
 ###     Depends on util.R
 ###
-###############################################################
+##########################################################################
 
 # wrap ds.helper functions in an object to protect the namespace
 ds.helper <- list()
@@ -74,17 +69,54 @@ ds.helper$default_col_funcs = list(
 ds.helper$default_categorical_col_funcs = list(
     "pct_NA" = ds.helper$pct_blank,
     "n_unique" = ds.helper$n_unique
-)   
+)  
 
+ds.helper$variable_type <- function(x){
+    # return variable type as
+    # (Note that NAs are ignored)
+    #  boolean - x contains exactly c(0,1) or c(TRUE,FALSE)
+    #  numeric - x is numbers 
+    #  categorical - x is a string or factor with up to 20 levels
+    #  invariant - only 0 or 1 values, not counting NAs
+    
+    boolean <- all( x %in% c(0,1,NA) ) & all( c(0,1) %in% x )
+    
+    if( boolean ){
+        return("boolean")
+    } else if( util.is_vector_of_numbers(x) ){
+        return("numeric")
+    }
+    
+    n_unique <- x[!util.is_blank(x)] %>%
+        unique() %>%
+        length()
+    
+    if(n_unique < 2){
+        return("invariant")
+    } else{
+        return("categorical")
+    }
+}
+
+ds.helper$map_dv_to_glm_family <- list(
+    numeric = "gaussian",
+    boolean = "binomial"
+)
+
+
+#########################################################
+###
+###     Column Summarization Function(s)
+###
+#########################################################
 
 # ds.summarize_by_column_group - to generate scales, etc.
 
-
 ds.summarize_by_column <- function(
-    data,                             # the dataset to describe
-    func_list=ds.helper$default_col_funcs,  # lists func_list functions to run
-    codebook=NULL,                     # data.frame merged on "variable_name" col
-    digits=2                          # round descriptions to 2 digits
+    data,    # the dataset to describe
+    func_list=ds.helper$default_col_funcs,  # functions to run on columns
+    codebook=NULL,    # data.frame merged on "variable_name" col
+    digits=2          # round descriptions to 2 digits by default
 ){
     
     # return data.frame with a row for each column of "data"
@@ -123,6 +155,68 @@ ds.summarize_by_column <- function(
         return()
 }
 
+#########################################################
+###
+###     ds.glm1 Functions
+###
+###     All specific to models that meet ds.glm1 
+###     model specification. See ds.validate_glm1_model()
+###
+#########################################################
+
+
+ds.validate_glm1_model <- function(glm_model){
+    # returns TRUE if model meets ds.glm1 spec, else FALSE
+    
+    #   canonical ds.glm1 formulas follow this pattern:
+    #       dv ~ iv [ * mod ] [ + cov1 + cov2 + ... ]
+    
+    # Why have a ds.glm1 spec?
+    #   The spec increases predictability and restricts
+    #   possible specifications to reduce summary complexity.
+    #   Summaries of multi-level variables and multi-way interactions
+    #   would be (will be) more challenging to code for.
+    
+    # ds.glm1 spec:
+    #   iv is first predictor
+    #   if moderator present, it is second predictor 
+    #       and "*" separates iv and moderator 
+    #   covs start at first "+" after iv
+    #   only 1 contrast per iv and moderator variable, specifically
+    #       iv and moderator vars must be boolean or numeric
+    #   up to 1 2-way interaction between iv and moderator
+    #   no other interaction terms can be specified via "*"
+    #       to use interactions in covariates, create manually
+    
+    varlist <- ds.helper$glm1_formula_to_varlist(glm_model$formula)
+    iv <- glm_model$model[,varlist$iv]
+    iv_var_type <- ds.helper$variable_type(iv)
+    is_valid <- FALSE
+    
+    # check iv suitability
+    if( iv_var_type %in% c("boolean","numeric") ){
+        is_valid <- TRUE
+    } else{
+        "ds.glm1 spec only allows ivs and moderators of type " %+% 
+            "boolean or numeric. Supplied iv is: "  %+% iv_var_type %+%
+            " in formula: " %+% glm_model$formula %>%
+            util.warn()
+    }
+    if( ! is.na(varlist$mod) ){ 
+        mod <- glm_model$model[,varlist$mod]
+        mod_var_type <- ds.helper$variable_type(mod)
+        if( ! mod_var_type %in% c("boolean","numeric") ){
+            "ds.extract_glm1_stats only supports mods of type " %+% 
+                "boolean or numeric. Supplied mod is: " %+% mod_var_type %+%
+                " in formula: " %+% glm_model$formula %>%
+                util.warn()
+            is_valid <- FALSE
+        }
+    }
+    return(is_valid)
+}
+
+
 ds.build_glm1_formulas <- function(
     meta_formula = NULL, # @todo: enable specification through formula 
     variable_vectors = NULL, # @todo: meta_formula can reference named vectors
@@ -132,13 +226,12 @@ ds.build_glm1_formulas <- function(
     mods = c(""),        # moderators each run independently, default no mod
     covs = c(),          # covariates included all together or none
     cov_groups = list() # customize cov groups instead of default all or none
-
+    
 ){
-    # build vector of model formulas that meet the ds.glm1 spec
-    # for each unique combination of 
-    # dv x iv x mod x cov_group
-    # if covs supplied, cov_group gets one entry for no covs (unadjusted) 
-    # and one for all covs supplied in covs argument (adjusted)
+    # Build vector of model formulas that meet the ds.glm1 spec
+    # for each unique combination of dv x iv x mod x cov_group.
+    # If covs supplied, cov_group gets one entry for no covs (unadjusted) 
+    # and one for all covs supplied in covs argument (adjusted).
     
     # @todo: to support meta_formula, make a new function to turn
     # meta formulas into variable vectors and call on self
@@ -148,10 +241,9 @@ ds.build_glm1_formulas <- function(
         # do.call(ds.build_glm1_formulas, variable_list) %>%
         #   return()
     } 
-    #
     
     if( length(dvs) == 0 | length(ivs) == 0 ){
-        util.warn("dvs and ivs must both be")
+        util.warn("dvs and ivs must both be present.")
     }
     
     if( length(covs) > 0 ){
@@ -165,7 +257,7 @@ ds.build_glm1_formulas <- function(
     }
     
     # build a vector of strings for each kind of variable
-    # in prep for stringing together into a forumula string
+    # in prep for concatinating into a forumula string
     # i.e., append operators to non-empty entries
     dv_strs  <- dvs %+% " ~ "
     iv_strs  <- ivs
@@ -190,41 +282,11 @@ ds.build_glm1_formulas <- function(
         iv_str  = iv_strs,
         dv_str  = dv_strs
     )
-
+    
     # assemble the formula grid into 
     formula_vec <- fdf$dv_str %+% fdf$iv_str %+% fdf$mod_str %+% fdf$cov_str
     return(formula_vec)
-
-}
-
-ds.helper$variable_type <- function(x){
-    # return variable type as
-    # (Note that NAs are ignored)
-    #  boolean - x contains exactly c(0,1) or c(TRUE,FALSE)
-    #  numeric - x is numbers 
-    #  categorical - x is a string or factor with up to 20 levels
-    #  multitudinous - x is string or factor with > 20 levels
-    #  invariant - only 0 or 1 values, not counting NAs
-
-    boolean <- all( x %in% c(0,1,NA) ) & all( c(0,1) %in% x )
     
-    if( boolean ){
-        return("boolean")
-    } else if( util.is_vector_of_numbers(x) ){
-        return("numeric")
-    }
-    
-    n_unique <- x[!util.is_blank(x)] %>%
-        unique() %>%
-        length()
-    
-    if(n_unique < 2){
-        return("invariant")
-    } else if( n_unique > 20){
-        return("multitudinous")
-    } else{
-        return("categorical")
-    }
 }
 
 ds.helper$glm1_formula_to_varlist <- function(formula){
@@ -280,10 +342,6 @@ ds.helper$glm1_formula_to_varlist <- function(formula){
     return(varlist)
 }
 
-ds.helper$map_dv_to_glm_family <- list(
-    numeric = "gaussian",
-    boolean = "binomial"
-)
 
 ds.glm1 <- function( formula, data, mod_family=NULL ){
     # run the appropriate model, unless mod_family override is supplied
@@ -320,58 +378,6 @@ ds.glm1s <- function( formulas, data, family=NULL ){
     }
     return(models)
 }
-
-ds.validate_glm1_model <- function(glm_model){
-    # returns TRUE if model meets ds.glm1 spec, else FALSE
-    
-    #   canonical ds.glm1 formulas follow this pattern:
-    #       dv ~ iv [ * mod ] [ + cov1 + cov2 + ... ]
-    
-    # Why have a ds.glm1 spec?
-    #   The spec increases predictability and restricts
-    #   possible specifications to reduce summary complexity.
-    #   Summaries of multi-level variables and multi-way interactions
-    #   would be (will be) more challenging to code for.
-    
-    # ds.glm1 spec:
-    #   iv is first predictor
-    #   if moderator present, it is second predictor 
-    #       and "*" separates iv and moderator 
-    #   covs start at first "+" after iv
-    #   only 1 contrast per iv and moderator variable, specifically
-    #       iv and moderator vars must be boolean or numeric
-    #   up to 1 2-way interaction between iv and moderator
-    #   no other interaction terms can be specified via "*"
-    #       to use interactions in covariates, create manually
-
-    varlist <- ds.helper$glm1_formula_to_varlist(glm_model$formula)
-    iv <- glm_model$model[,varlist$iv]
-    iv_var_type <- ds.helper$variable_type(iv)
-    is_valid <- FALSE
-    
-    # check iv suitability
-    if( iv_var_type %in% c("boolean","numeric") ){
-        is_valid <- TRUE
-    } else{
-        "ds.glm1 spec only allows ivs and moderators of type " %+% 
-            "boolean or numeric. Supplied iv is: "  %+% iv_var_type %+%
-            " in formula: " %+% glm_model$formula %>%
-            util.warn()
-    }
-    if( ! is.na(varlist$mod) ){ 
-        mod <- glm_model$model[,varlist$mod]
-        mod_var_type <- ds.helper$variable_type(mod)
-        if( ! mod_var_type %in% c("boolean","numeric") ){
-            "ds.extract_glm1_stats only supports mods of type " %+% 
-                "boolean or numeric. Supplied mod is: " %+% mod_var_type %+%
-                " in formula: " %+% glm_model$formula %>%
-                util.warn()
-            is_valid <- FALSE
-        }
-    }
-    return(is_valid)
-}
-
 
 ds.summarize_glm1 <- function( glm_model ){
     # extracts frequently used summary statistics from glm_model
@@ -459,6 +465,13 @@ ds.summarize_glm1 <- function( glm_model ){
     return(msl)
 }
 
+#########################################################
+###
+###     General Model Summary Function(s)
+###     Should work on models outside of glm1 spec.
+###
+#########################################################
+
 ds.model_summary_df <- function( 
     models, # list of models
     summary_func = ds.summarize_glm1  # extracts ds.glm1 features
@@ -492,6 +505,13 @@ ds.model_summary_df <- function(
     }
     return(feature_table)
 }
+
+
+#########################################################
+###
+###     Unit Tests
+###
+#########################################################
 
 ds.helper$unit_test <- function(){
     
@@ -611,10 +631,6 @@ ds.helper$unit_test <- function(){
             list(
                 input = c(1,20,0),
                 output = "numeric"
-            ),
-            list(
-                input = "cat" %+% rep(1:21) ,
-                output = "multitudinous"
             ),
             list(
                 input = c("",NA),
