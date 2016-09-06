@@ -62,8 +62,9 @@ STANDARD_SECOND_ROW_QUALTRICS_COLUMNS <- c(
     # throw a warning if the function being used yields column names that are
     # not unique
     if(any(duplicated(best_column_names))){
+      dup_col_names <- unique(best_column_names[duplicated(best_column_names)])
       warning("Your function for pulling column names from the first row " %+%
-        "resulted in duplicate column names.")
+        "resulted in duplicate column names: " %+% dup_col_names)
     }
 
     # add the new column names to the data.frame
