@@ -493,7 +493,7 @@ ds.model_summary_df <- function(
     return(feature_table)
 }
 
-ds.helper.unit_test <- function(){
+ds.helper$unit_test <- function(){
     
     assert_expected_output <- function( func_name , input, expected_output ){
         # warn if evaluated func_name(input) != expected_output
@@ -636,7 +636,7 @@ ds.helper.unit_test <- function(){
     test__variable_type()   
 }
 
-ds.helper.unit_test()
+ds.helper$unit_test()
 
 
 
