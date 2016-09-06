@@ -26,9 +26,11 @@ github_base_path <- "https://raw.githubusercontent.com/PERTS/gymnast/master/"
 tryCatch({
     source("~/Sites/gymnast/R/util.R")
     source("~/Sites/gymnast/R/util_data_summaries.R")
+    source("~/Sites/gymnast/R/util_graphing.R")
 }, error = function(e){
     source(github_base_path %+% "R/util.R")
     source(github_base_path %+% "R/util_data_summaries.R")
+    source(github_base_path %+% "R/util_graphing.R")
 })
 
 ```
@@ -141,12 +143,28 @@ ds.summarize_by_column(
 
 ```
 
-## Building Models
-The `ds` module creates and runs models based on desired
-outcomes and predictors.
+## Build and Summarize Simple GLM Models (glm1s)
+The `ds` module creates and summarizes glm models when supplied with
+outcomes and predictors. It currently only supports models that follow 
+the ds.glm1 spec. Canonical ds.glm1 formulas follow this pattern:
 
-### Build Formulas with ds.build_formulas()
-`ds.build_formulas()` builds a vector of model formulas for 
+```
+dv ~ iv [ * mod ] [ + cov1 + cov2 + ... ]
+``` 
+
+The ds.glm1 spec is intended to increase predictability and reduce 
+summary complexity by restricting certain specifications.
+For example, it does not allow multi-level variables in the iv or mod because 
+that would require another level of nesting within each model summary.
+Only zero or one interactions can be supplied by formula. 
+
+For more on ds.glm1 spec, see comments in `ds.validate_glm1_model()`.
+
+
+
+
+### Build Formulas with ds.build_glm1_formulas()
+`ds.build_glm1_formulas()` builds a vector of model formulas for 
 each unique combination of the `dv` x `iv` x `mod` x `cov_group`. 
 If `covs` is supplied, cov_group gets one entry for no covs (unadjusted) 
 and one for all covs supplied in covs argument (adjusted).
@@ -163,18 +181,13 @@ cov_groups = list(
 # covs = c()         # covariates included all together or none
                      # here, we use cov_groups instead for more flexibility
 
-ds.build_formulas( dvs=dvs, ivs=ivs, mods=mods, cov_groups = cov_groups) %>%
+ds.build_glm1_formulas( dvs=dvs, ivs=ivs, mods=mods, cov_groups = cov_groups) %>%
     util.print_pre()
 
 ```
 
-### Run GLMs with ds.glms() then print table with ds.glm_table
-This section models how to use `ds.glms()` and `ds.glms_table`.
-Note that ds.glm_table only work with models that meet the
-ds.glm1 spec: 
-
-1. IVs and moderators must be boolean or numeric
-2. No more than one interaction via "*", though you can provide manually
+### Run and summarize with ds.glm1s() and ds.model_summary_df
+This section models how to use `ds.glm1s()` and `ds.model_summary_df`.
 
 
 ```{r, message=FALSE, warning=FALSE, results='asis'}
@@ -188,47 +201,68 @@ cov_groups = list(
 )  # vectors of covariates to run together
 # covs = c()         # covariates included all together or none
                      # here, we use cov_groups instead for more flexibility
+
 data$treatment <- data$condition %in% "treatment"
 
-formulas <- ds.build_formulas( 
-                dvs=dvs, ivs=ivs, mods=mods, cov_groups = cov_groups
+formulas <- ds.build_glm1_formulas( 
+                dvs=dvs, ivs=ivs, mods=mods, cov_groups=cov_groups
             )
 
-models   <- ds.glms(formulas, data)
+# run the models
+models     <- ds.glm1s(formulas, data)
 
-# create a more concise table with just the apa strings 
-ds.glm_table(models, columns=ds.helper$glm1_features_apa) %>% 
+# summarize the models into an easy-to-filter df
+summary_df <- ds.model_summary_df(models, summary_func=ds.summarize_glm1)
+# ds.summarize_glm1 extracts many features
+names(summary_df) %>% util.print_pre()
+
+# display desired information by filtering the summary_df
+# e.g., what models have an iv with p<.01?
+# @todo: Create table printing functions with good defaults
+summary_df[ summary_df$iv_p < .01, c("formula","iv_apa","int_apa")] %>%
     util.html_table()
 
-# show the full table to see all the reported features
-ds.glm_table(models, columns=ds.helper$glm1_features_full) %>% 
-    util.html_table()
+# graph the coefficients of the iv with confidence intervals
+ggplot(summary_df, 
+       aes(formula, iv_coef) ) +
+    geom_bar( stat="summary", fun.y="mean", position=ug.dodge) +
+    geom_errorbar( 
+        aes(ymax = iv_coef + 2 * iv_se, ymin=iv_coef - 2 * iv_se), 
+        position=ug.dodge,
+        width=0.2
+        ) +
+    theme_classic() +
+    theme(
+        legend.key=element_rect(color="black",size=.5),
+        axis.text=element_text(face="bold"),
+        axis.title=element_text(face="bold")
+    ) +
+    coord_flip() 
 
 ```
 
 ### Example of off-spec model
-When off-spec models are requested, ds.glm_table issues warnings and 
-omits them from the table.
+Note that `ds.summarize_glm1` only supports models that fit the ds.glm1 spec.
+It will issue warnings if invalid models are provided.
+In this example, condition is an invalid iv because it has multiple levels.
 
 ```{r, message=FALSE, warning=FALSE, results='asis'}
 
-dvs = c("sksh_post") # dependent variables each run independently
-ivs = c("condition","treatment") # independent variables each run independently
+dvs  = c("sksh_post") # dependent variables each run independently
+ivs  = c("condition","treatment") # independent variables each run independently
 mods = c("","job_satis")  # moderators each run independently, default no mod
 cov_groups = list()  # vectors of covariates to run together
 # covs = c()         # covariates included all together or none
                      # here, we use cov_groups instead for more flexibility
-data$treatment <- data$condition %in% "treatment"
 
-formulas <- ds.build_formulas( 
+
+formulas <- ds.build_glm1_formulas( 
                 dvs=dvs, ivs=ivs, mods=mods, cov_groups = cov_groups
             )
 
-models   <- ds.glms(formulas, data)
+models   <- ds.glm1s(formulas, data)
+summary_df <- ds.model_summary_df(models, summary_func=ds.summarize_glm1)
 
-# create a more concise table with just the apa strings 
-ds.glm_table(models, columns=ds.helper$glm1_features_apa) %>%
-    util.html_table()
 
 
 ```

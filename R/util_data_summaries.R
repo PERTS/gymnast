@@ -123,7 +123,7 @@ ds.summarize_by_column <- function(
         return()
 }
 
-ds.build_formulas <- function(
+ds.build_glm1_formulas <- function(
     meta_formula = NULL, # @todo: enable specification through formula 
     variable_vectors = NULL, # @todo: meta_formula can reference named vectors
     
@@ -134,7 +134,8 @@ ds.build_formulas <- function(
     cov_groups = list() # customize cov groups instead of default all or none
 
 ){
-    # build vector of model formulas for each unique combination of 
+    # build vector of model formulas that meet the ds.glm1 spec
+    # for each unique combination of 
     # dv x iv x mod x cov_group
     # if covs supplied, cov_group gets one entry for no covs (unadjusted) 
     # and one for all covs supplied in covs argument (adjusted)
@@ -144,7 +145,7 @@ ds.build_formulas <- function(
     if( ! is.null(meta_formula) ){
         util.warn("meta_formulas are not yet supported :-(")
         # variable_list <- ds.meta_formula_to_variable_list(meta_formula)
-        # do.call(ds.build_formulas, variable_list) %>%
+        # do.call(ds.build_glm1_formulas, variable_list) %>%
         #   return()
     } 
     #
@@ -164,7 +165,7 @@ ds.build_formulas <- function(
     }
     
     # build a vector of strings for each kind of variable
-    # in prep for stringing together into a forumla string
+    # in prep for stringing together into a forumula string
     # i.e., append operators to non-empty entries
     dv_strs  <- dvs %+% " ~ "
     iv_strs  <- ivs
@@ -226,28 +227,20 @@ ds.helper$variable_type <- function(x){
     }
 }
 
-ds.helper$glm_formula_to_varlist <- function(formula){
-    # provided with a canonical ds-style glm formula
-    # it extracts a ds-style glm variable list
-    # canonical ds-style glm formulas:
-    #   dv ~ iv [ * mod ] [ + cov1 + cov2 + ... ]
-    #   details: 
-        #   iv is first predictor
-        #   if moderator present, it is second predictor 
-        #   and "*" separates iv and moderator 
-        #   covs are any predictors following moderator
-        #   "*" interactions are not supported outside moderator
-        #   to use interactions in covariates, create manually
+ds.helper$glm1_formula_to_varlist <- function(formula){
+    # input is a canonical ds.glm1 formula, 
+    # see ds.validate_glm1_model
+    # ouput is ds-style glm1 model variable list
     
     varlist <- list( dv=NA, iv=NA, mod=NA, covs=NA )
     split_on_tilde <- str_split(formula,"[ ]*~[ ]*")[[1]]
     
     # check if formula has dvs and predictors
     if( length(split_on_tilde) != 2){
-        stop("invalid ds.glm formula provided: " %+% formula)
+        stop("invalid ds.glm1 formula provided: " %+% formula)
     } else if(nchar(split_on_tilde[1]) == 0 | 
               nchar(split_on_tilde[2]) == 0 ){
-        stop("invalid ds.glm formula provided: " %+% formula)
+        stop("invalid ds.glm1 formula provided: " %+% formula)
     }
     
     varlist$dv <- split_on_tilde[1]
@@ -263,7 +256,7 @@ ds.helper$glm_formula_to_varlist <- function(formula){
         pre_star  <- split_at_star[1]
         post_star <- split_at_star[2]
         if( length(split_at_star) > 2 | grepl( "\\+", pre_star) ){
-            "ds.glm supports [0,1] stars" %+%
+            "ds.glm1 supports [0,1] stars" %+%
                 " and only between the 1st and 2nd predictor," %+%
                 " but this formula was provided: " %+% formula %>%
                 stop()
@@ -292,9 +285,9 @@ ds.helper$map_dv_to_glm_family <- list(
     boolean = "binomial"
 )
 
-ds.glm <- function( formula, data, mod_family=NULL ){
+ds.glm1 <- function( formula, data, mod_family=NULL ){
     # run the appropriate model, unless mod_family override is supplied
-    dv_variable <- ds.helper$glm_formula_to_varlist(formula)[["dv"]]
+    dv_variable <- ds.helper$glm1_formula_to_varlist(formula)[["dv"]]
     if( is.null(mod_family) ){
         dv_var_type <- ds.helper$variable_type(data[,dv_variable])
         mod_family  <- util.recode(
@@ -312,40 +305,46 @@ ds.glm <- function( formula, data, mod_family=NULL ){
     return(mod_obj)
 }
 
-ds.glms <- function( formulas, data, family=NULL ){
+ds.glm1s <- function( formulas, data, family=NULL ){
     # run each formula on data.frame supplied in data argument
     # use the outcome type to select the model, or override with family
     models <- list()
     if( is.null( family ) ){
         for( i in 1:length(formulas)){
-            models[[i]] <- ds.glm( formulas[i], data=data )
+            models[[i]] <- ds.glm1( formulas[i], data=data )
         }        
     } else{
         for( i in 1:length(formulas)){
-            models[[i]] <- ds.glm( formulas[i], data=data, family=family )
+            models[[i]] <- ds.glm1( formulas[i], data=data, family=family )
         }    
     }
     return(models)
 }
 
-ds.helper$glm1_features_full <- c(
-    "dv", "iv_apa", "int_apa",
-    "iv", "mod", "covs", "aic", "family", "n", "df",
-    "dv_mean" ,
-    "iv_coef", "iv_se", "iv_stat", "iv_p", 
-    "mod_coef", "mod_se", "mod_stat", "mod_p",
-    "int_coef", "int_se", "int_stat", "int_p"
-)
-ds.helper$glm1_features_apa <- c(
-    "dv","iv_apa","int_apa","covs"
-)
+ds.validate_glm1_model <- function(glm_model){
+    # returns TRUE if model meets ds.glm1 spec, else FALSE
+    
+    #   canonical ds.glm1 formulas follow this pattern:
+    #       dv ~ iv [ * mod ] [ + cov1 + cov2 + ... ]
+    
+    # Why have a ds.glm1 spec?
+    #   The spec increases predictability and restricts
+    #   possible specifications to reduce summary complexity.
+    #   Summaries of multi-level variables and multi-way interactions
+    #   would be (will be) more challenging to code for.
+    
+    # ds.glm1 spec:
+    #   iv is first predictor
+    #   if moderator present, it is second predictor 
+    #       and "*" separates iv and moderator 
+    #   covs start at first "+" after iv
+    #   only 1 contrast per iv and moderator variable, specifically
+    #       iv and moderator vars must be boolean or numeric
+    #   up to 1 2-way interaction between iv and moderator
+    #   no other interaction terms can be specified via "*"
+    #       to use interactions in covariates, create manually
 
-
-ds.helper$validate_glm1_model <- function(glm_model){
-    # validate that the model meets the ds.glm1 model spec
-    # ds.glm1 only supports numerical or boolean IVs and MODs
-    # this is simplicity of display
-    varlist <- ds.helper$glm_formula_to_varlist(glm_model$formula)
+    varlist <- ds.helper$glm1_formula_to_varlist(glm_model$formula)
     iv <- glm_model$model[,varlist$iv]
     iv_var_type <- ds.helper$variable_type(iv)
     is_valid <- FALSE
@@ -374,28 +373,31 @@ ds.helper$validate_glm1_model <- function(glm_model){
 }
 
 
-ds.extract_glm1_stats <- function( glm_model ){
-    # extracts frequently used statistics from glm_model
+ds.summarize_glm1 <- function( glm_model ){
+    # extracts frequently used summary statistics from glm_model
+    # glm_model must adhere to ds.glm1 spec, 
+    # see ds.validate_glm1_model
     
-    if( ! ds.helper$validate_glm1_model(glm_model)){
+    if( ! ds.validate_glm1_model(glm_model)){
         # glm1 only supports numerical or boolean IVs and MODs
         # others will issue a warning
         return(list())
     }
     
-    fl <- list()  # fl = "feature list"
-    varlist <- ds.helper$glm_formula_to_varlist(glm_model$formula)
+    msl <- list()  # msl = "model summary list"
+    varlist <- ds.helper$glm1_formula_to_varlist(glm_model$formula)
     
     # populate the feature list
-    fl$dv     <- varlist$dv
-    fl$family <- glm_model$family$family
-    fl$n   <- sum(!util.is_blank(glm_model$y))    
-    fl$df  <- glm_model$df.residual
-    fl$aic <- glm_model$aic
-    fl$iv     <- varlist$iv
-    fl$mod    <- varlist$mod
-    fl$covs   <- paste(varlist$covs, collapse=", ")
-    fl$dv_mean   <- mean(glm_model$y, na.rm=TRUE)
+    msl$formula <- glm_model$formula
+    msl$dv      <- varlist$dv
+    msl$family  <- glm_model$family$family
+    msl$n   <- sum(!util.is_blank(glm_model$y))    
+    msl$df  <- glm_model$df.residual
+    msl$aic <- glm_model$aic
+    msl$iv     <- varlist$iv
+    msl$mod    <- varlist$mod
+    msl$covs   <- paste(varlist$covs, collapse=", ")
+    msl$dv_mean   <- mean(glm_model$y, na.rm=TRUE)
     
     # extract coefficients
     coefs <- summary(glm_model)$coefficients
@@ -406,85 +408,90 @@ ds.extract_glm1_stats <- function( glm_model ){
     # also, irregularities between different model types
     # e.g., t vs z for guassian and binomial families
     # and level is appended to row.names when TRUE/FALSE
-    fl$iv_coef <- coefs[2,1]
-    fl$iv_se <- coefs[2,2]
-    fl$iv_stat <- coefs[2,3]
-    fl$iv_p <- coefs[2,4]
+    msl$iv_coef <- coefs[2,1]
+    msl$iv_se <- coefs[2,2]
+    msl$iv_stat <- coefs[2,3]
+    msl$iv_p <- coefs[2,4]
     
     # assemble apa string
-    if(fl$family %in% "binomial"){
-        fl$iv_apa <- 
-            fl$iv %+% 
-            ", OR=" %+% round(exp(fl$iv_coef),3) %+%
-            ", z=" %+% round(fl$iv_stat,3) %+%
-            ifelse(fl$iv_p < .001,", p<.001",", p=" %+% round(fl$iv_p,3))
+    if(msl$family %in% "binomial"){
+        msl$iv_apa <- "OR=" %+% round(exp(msl$iv_coef),3) %+%
+            ", z=" %+% round(msl$iv_stat,3) %+%
+            ifelse(msl$iv_p < .001,", p<.001",", p=" %+% round(msl$iv_p,3))
             
-    } else if(fl$family %in% "gaussian"){
-        fl$iv_apa <- 
-            fl$iv %+% 
-            ", b=" %+% round(fl$iv_coef,3)  %+%
-            ", t(" %+% fl$df %+% ")" %+% "=" %+% round(fl$iv_stat,3) %+%
-           ifelse(fl$iv_p < .001,", p<.001",", p=" %+% round(fl$iv_p,3))
+    } else if(msl$family %in% "gaussian"){
+        msl$iv_apa <- "b=" %+% round(msl$iv_coef,3)  %+%
+            ", t(" %+% msl$df %+% ")" %+% "=" %+% round(msl$iv_stat,3) %+%
+           ifelse(msl$iv_p < .001,", p<.001",", p=" %+% round(msl$iv_p,3))
     }
     
-    if( !is.na(fl$mod) ){
-        fl$mod_coef <- coefs[3,1]
-        fl$mod_se <- coefs[3,2]
-        fl$mod_stat <- coefs[3,3]
-        fl$mod_p <- coefs[3,4]
+    if( !is.na(msl$mod) ){
+        msl$mod_coef <- coefs[3,1]
+        msl$mod_se <- coefs[3,2]
+        msl$mod_stat <- coefs[3,3]
+        msl$mod_p <- coefs[3,4]
         
         int_row <- nrow(coefs)
         
-        fl$int_coef <- coefs[int_row,1]
-        fl$int_se <- coefs[int_row,2]
-        fl$int_stat <- coefs[int_row,3]
-        fl$int_p <- coefs[int_row,4]
+        msl$int_coef <- coefs[int_row,1]
+        msl$int_se <- coefs[int_row,2]
+        msl$int_stat <- coefs[int_row,3]
+        msl$int_p <- coefs[int_row,4]
 
-        if(fl$family %in% "binomial"){
-            fl$int_apa <- fl$mod %+% " x " %+% fl$iv %+%
-                ", OR=" %+% round(exp(fl$int_coef),2) %+%
-                ", z=" %+% round(fl$int_stat,3) %+%
-                ifelse(fl$int_p < .001,", p<.001",", p=" %+% round(fl$int_p,3))
+        if(msl$family %in% "binomial"){
+            msl$int_apa <- "OR=" %+% round(exp(msl$int_coef),2) %+%
+                ", z=" %+% round(msl$int_stat,3) %+%
+                ifelse(msl$int_p < .001,", p<.001",", p=" %+% round(msl$int_p,3))
             
-        } else if(fl$family %in% "gaussian"){
-            fl$int_apa <- fl$mod %+% " x " %+% fl$iv %+%
-                ", b=" %+% round(fl$int_coef,2)  %+%
-                ", t(" %+% fl$df %+% ")" %+% "=" %+% round(fl$int_stat,3) %+%
-                ifelse(fl$int_p < .001,", p<.001",", p=" %+% round(fl$int_p,3))
+        } else if(msl$family %in% "gaussian"){
+            msl$int_apa <- "b=" %+% round(msl$int_coef,2)  %+%
+                ", t(" %+% msl$df %+% ")" %+% "=" %+% 
+                round(msl$int_stat,3) %+%
+                ifelse(msl$int_p < .001, 
+                       ", p<.001", 
+                       ", p=" %+% round(msl$int_p,3)
+                )
         }
     } else{
-        fl$int_apa <- ""
+        msl$int_apa <- ""
     }
     
-    return(fl)
+    return(msl)
 }
 
-ds.glm_table <- function( 
-    models,
-    extraction_func = ds.extract_glm1_stats,  # extracts glm features
-    columns = ds.helper$glm1_features_apa
+ds.model_summary_df <- function( 
+    models, # list of models
+    summary_func = ds.summarize_glm1  # extracts ds.glm1 features
 ){
+    # returns a data.frame with one row per supplied model
+    # and one column for each list index returned by the
+    # supplied summary_func
+    # example use cases of output:
+    #   sort or filter summary data.frame for specific models
+    #   pass to printing functions to nice summary tables
     
-    fls <- lapply( models , function(glm_model){
-        as.data.frame(extraction_func(glm_model))
+    # msls = model summary lists
+    msls <- lapply( models , function(glm_model){
+        as.data.frame(summary_func(glm_model))
     })
     
     # remove empty feature lists
-    # (may happen if ds.glm1 spec is violated)
-    sanitized_fls <- list()
-    for( i in 1:length(fls) ){
-        if( nrow(fls[[i]]) > 0 ){
-            sanitized_fls[[length(sanitized_fls) + 1]] <- fls[[i]]
+    # (e.g., may happen if ds.glm1 spec is violated)
+    sanitized_msls <- list()
+    for( i in 1:length(msls) ){
+        if( nrow(msls[[i]]) > 0 ){
+            sanitized_msls[[length(sanitized_msls) + 1]] <- msls[[i]]
         }
     }
-    if(length(sanitized_fls) > 0){
-        feature_table <- util.rbind_union(sanitized_fls)
-        return(feature_table[,columns])
+    if(length(sanitized_msls) > 1){
+        feature_table <- util.rbind_union(sanitized_msls)
+    } else if(length(sanitized_msls) == 1){
+        feature_table <- sanitized_msls[[1]]
     } else{
-        return(data.frame())
+        feature_table <- data.frame()
     }
+    return(feature_table)
 }
-
 
 ds.helper.unit_test <- function(){
     
@@ -520,7 +527,7 @@ ds.helper.unit_test <- function(){
         }
     }
     
-    test__glm_formula_to_varlist <- function(){
+    test__glm1_formula_to_varlist <- function(){
         
         input_output_map <- list(
             list(
@@ -575,7 +582,7 @@ ds.helper.unit_test <- function(){
         
         for( io in input_output_map ){
             assert_expected_output( 
-                "ds.helper$glm_formula_to_varlist",
+                "ds.helper$glm1_formula_to_varlist",
                 io$input,
                 io$output
             )
@@ -625,7 +632,7 @@ ds.helper.unit_test <- function(){
     }
 
 
-    test__glm_formula_to_varlist()   
+    test__glm1_formula_to_varlist()   
     test__variable_type()   
 }
 
