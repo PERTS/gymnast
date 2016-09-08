@@ -6,12 +6,20 @@
 *-Ex.R
 
 # RStudio files
+.Rproj.user
 .Rproj.user/
 
 # produced vignettes
 vignettes/*.html
 vignettes/*.pdf
 
+# Sublime Text
 *.sublime-project
 *.sublime-workspace
-.Rproj.user
+
+# OS X
+.DS_Store
+
+# Knitted html
+Rmd/*.html
+
