@@ -459,7 +459,7 @@ util.hash_vector <- function(x, salt = NULL){
 ###
 ###############################################################
 
-util.read_csv_files <- function(path_list, environment = .GlobalEnv, ...){
+util.read_csv_files <- function(path_list, ...) {
     # reads a list of .csv file paths and returns a list of data.frames
     # Args
     #   path_list: list that contains paths pointing to the desired .csv files
@@ -471,7 +471,7 @@ util.read_csv_files <- function(path_list, environment = .GlobalEnv, ...){
     # a one-element list named "a" containing the contents my_file.csv
     # as a data.frame
 
-    found_files <- sapply(crypt_paths, function(path) {
+    found_files <- sapply(path_list, function(path) {
         length(path) > 0 && file.exists(path)
     })
 
