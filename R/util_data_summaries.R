@@ -10,7 +10,6 @@
 ###
 ###     Depends on util.R
 ###
-##########################################################################
 
 # wrap ds.helper functions in an object to protect the namespace
 ds.helper <- list()
@@ -224,8 +223,8 @@ ds.build_glm1_formulas <- function(
     dvs = c(),           # dependent variables each run independently
     ivs = c(),           # independent variables each run independently
     mods = c(""),        # moderators each run independently, default no mod
-    covs = c(),          # covariates included all together or none
-    cov_groups = list() # customize cov groups instead of default all or none
+    cov_groups = list()  # groups of covariates to be run together
+                         # an empty group is added implicitly if it's a vector
     
 ){
     # Build vector of model formulas that meet the ds.glm1 spec
@@ -246,18 +245,20 @@ ds.build_glm1_formulas <- function(
         util.warn("dvs and ivs must both be present.")
     }
     
-    if( length(covs) > 0 ){
-        # if covs is supplied, use it to define adjusted and unadjusted
-        # covariate groups with all and none of the covs, respectively
+    if( class(cov_groups) %in% "character" ){
+        # vector was supplied instead of list
+        # implicitly add an unadjusted
+        # covariate groups with all and none of the covs
+        cov_groups_vector <- cov_groups
         cov_groups <- list()
-        cov_groups[["Unadusted"]] <- ""
-        cov_groups[["Adjusted"]] <- covs
+        cov_groups[[1]] <- ""  # indexes 
+        cov_groups[[2]] <- cov_groups_vector
     } else if( length(cov_groups) == 0){
-        cov_groups <- list( Unadjusted = "" )
+        cov_groups <- list( "" )
     }
     
     # build a vector of strings for each kind of variable
-    # in prep for concatinating into a forumula string
+    # in prep for concatinating into a formula string
     # i.e., append operators to non-empty entries
     dv_strs  <- dvs %+% " ~ "
     iv_strs  <- ivs
