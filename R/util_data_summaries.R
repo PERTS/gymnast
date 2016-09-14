@@ -223,13 +223,13 @@ ds.build_glm1_formulas <- function(
     dvs = c(),           # dependent variables each run independently
     ivs = c(),           # independent variables each run independently
     mods = c(""),        # moderators each run independently, default no mod
-    cov_groups = list()  # groups of covariates to be run together
-                         # an empty group is added implicitly if it's a vector
+    cov_groups = list()  # groups of covariates to be run together if vector 
+                         # instead of list, empty group is added implicitly 
     
 ){
     # Build vector of model formulas that meet the ds.glm1 spec
     # for each unique combination of dv x iv x mod x cov_group.
-    # If covs supplied, cov_group gets one entry for no covs (unadjusted) 
+    # If cov_group is vector, it gets one entry for no covs (unadjusted) 
     # and one for all covs supplied in covs argument (adjusted).
     
     # @todo: to support meta_formula, make a new function to turn
