@@ -181,7 +181,7 @@ tryCatch({
     head() %&gt;%
     util.html_table()</code></pre>
 <!-- html table generated in R 3.3.1 by xtable 1.8-2 package -->
-<!-- Wed Sep 14 08:58:42 2016 -->
+<!-- Wed Sep 14 09:36:06 2016 -->
 <table border="0," class="xtable">
 <tr>
 <th>
@@ -412,7 +412,7 @@ music
     head() %&gt;%
     util.html_table()</code></pre>
 <!-- html table generated in R 3.3.1 by xtable 1.8-2 package -->
-<!-- Wed Sep 14 08:58:42 2016 -->
+<!-- Wed Sep 14 09:36:06 2016 -->
 <table border="0," class="xtable">
 <tr>
 <th>
@@ -549,7 +549,7 @@ Skill Acquirability
     head() %&gt;%
     util.html_table()</code></pre>
 <!-- html table generated in R 3.3.1 by xtable 1.8-2 package -->
-<!-- Wed Sep 14 08:58:42 2016 -->
+<!-- Wed Sep 14 09:36:06 2016 -->
 <table border="0," class="xtable">
 <tr>
 <th>
@@ -693,7 +693,7 @@ ds.summarize_by_column(data, codebook=codebook[, codebook_columns_to_include]) %
     head() %&gt;%
     util.html_table()</code></pre>
 <!-- html table generated in R 3.3.1 by xtable 1.8-2 package -->
-<!-- Wed Sep 14 08:58:43 2016 -->
+<!-- Wed Sep 14 09:36:06 2016 -->
 <table border="0," class="xtable">
 <tr>
 <th>
@@ -869,7 +869,7 @@ ds.summarize_by_column(data,
     head() %&gt;%
     util.html_table()</code></pre>
 <!-- html table generated in R 3.3.1 by xtable 1.8-2 package -->
-<!-- Wed Sep 14 08:58:43 2016 -->
+<!-- Wed Sep 14 09:36:07 2016 -->
 <table border="0," class="xtable">
 <tr>
 <th>
@@ -997,7 +997,7 @@ ds.summarize_by_column(
     head() %&gt;%
     util.html_table()</code></pre>
 <!-- html table generated in R 3.3.1 by xtable 1.8-2 package -->
-<!-- Wed Sep 14 08:58:43 2016 -->
+<!-- Wed Sep 14 09:36:07 2016 -->
 <table border="0," class="xtable">
 <tr>
 <th>
@@ -1100,11 +1100,9 @@ ds.build_glm1_formulas(
 ivs = c(&quot;treatment&quot;) # independent variables each run independently
 mods = c(&quot;&quot;,&quot;job_satis&quot;)  # moderators each run independently, default no mod
 cov_groups = list(
-    &quot;unadjusted&quot; = c(),
-    &quot;demographic_adjustment&quot; = c(&quot;age&quot;,&quot;male&quot;,&quot;race&quot;)
+    c(),
+    c(&quot;age&quot;,&quot;male&quot;,&quot;race&quot;)
 )  # vectors of covariates to run together
-# covs = c()         # covariates included all together or none
-                     # here, we use cov_groups instead for more flexibility
 
 data$treatment &lt;- data$condition %in% &quot;treatment&quot;
 
@@ -1129,7 +1127,7 @@ names(summary_df) %&gt;% util.print_pre()</code></pre>
 summary_df[ summary_df$iv_p &lt; .01, c(&quot;formula&quot;,&quot;iv_apa&quot;,&quot;int_apa&quot;)] %&gt;%
     util.html_table()</code></pre>
 <!-- html table generated in R 3.3.1 by xtable 1.8-2 package -->
-<!-- Wed Sep 14 08:58:43 2016 -->
+<!-- Wed Sep 14 09:36:07 2016 -->
 <table border="0," class="xtable">
 <tr>
 <th>

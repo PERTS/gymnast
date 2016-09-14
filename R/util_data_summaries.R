@@ -370,22 +370,22 @@ ds.helper$glm1_formula_to_varlist <- function(formula) {
 }
 
 
-ds.glm1 <- function( formula, data, mod_family=NULL) {
-    # run the appropriate model, unless mod_family override is supplied
+ds.glm1 <- function( formula, data, family=NULL) {
+    # run the appropriate model, unless family override is supplied
     dv_variable <- ds.helper$glm1_formula_to_varlist(formula)[["dv"]]
-    if (is.null(mod_family)) {
+    if (is.null(family)) {
         dv_var_type <- ds.helper$variable_type(data[,dv_variable])
-        mod_family  <- util.recode(
+        family  <- util.recode(
                             dv_var_type,
                             names(ds.helper$map_dv_to_glm_family),
                             unlist(ds.helper$map_dv_to_glm_family)
                         )
     }
-    if (! mod_family %in% ds.helper$map_dv_to_glm_family) {
-        util.warn("Unsupported model family requested: " %+% mod_family )
+    if (! family %in% ds.helper$map_dv_to_glm_family) {
+        util.warn("Unsupported model family requested: " %+% family )
         mod_obj <- NULL
     } else{
-        mod_obj <- glm( formula , data, family=mod_family )
+        mod_obj <- glm( formula , data, family=family )
     }
     return(mod_obj)
 }
