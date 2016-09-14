@@ -32,7 +32,7 @@ ds.helper$sd = function(x) {
 
 ds.helper$obs_min = function(x) {
     if (util.is_vector_of_numbers(x)) {
-        return(min(as.numeric(x),na.rm=T))
+        return(min(as.numeric(x),na.rm=TRUE))
     }else{
         return(NA)   
     }
@@ -40,7 +40,7 @@ ds.helper$obs_min = function(x) {
 
 ds.helper$obs_max = function(x) {
     if (util.is_vector_of_numbers(x)) {
-        return(max(as.numeric(x),na.rm=T))
+        return(max(as.numeric(x),na.rm=TRUE))
     }else{
         return(NA)   
     }
@@ -75,7 +75,7 @@ ds.helper$variable_type <- function(x) {
     # (Note that NAs are ignored)
     #  boolean - x contains exactly c(0,1) or c(TRUE,FALSE)
     #  numeric - x is numbers 
-    #  categorical - x is a string or factor with up to 20 levels
+    #  categorical - x is a string or factor
     #  invariant - only 0 or 1 values, not counting NAs
     
     boolean <- all( x %in% c(0,1,NA) ) & all( c(0,1) %in% x )
@@ -101,6 +101,29 @@ ds.helper$map_dv_to_glm_family <- list(
     numeric = "gaussian",
     boolean = "binomial"
 )
+
+ds.helper$apa_string <- function(family, coef, stat, df, p){
+    # return an apa string for a glm coefficient
+    
+    if (family %in% "binomial") {
+        apa <-  "OR=" %+% round(exp(coef), 2) %+%
+            ", z=" %+% round(stat, 3) %+%
+            ifelse(p < .001,", p<.001",", p=" %+% round(p, 3))
+    } else if (family %in% "gaussian") {
+        apa <- "b=" %+% round(coef,2)  %+%
+            ", t(" %+% df %+% ")" %+% "=" %+% 
+            round(stat, 3) %+%
+            ifelse(p < .001, 
+                   ", p<.001", 
+                   ", p=" %+% round(p, 3)
+            )
+    } else{
+        stop("apa_string called with unsupported family: " %+% family)
+    }
+    
+    return(apa)
+}
+
 
 
 #########################################################
@@ -227,10 +250,13 @@ ds.build_glm1_formulas <- function(
                          # instead of list, empty group is added implicitly 
     
 ) {
-    # Build vector of model formulas that meet the ds.glm1 spec
-    # for each unique combination of dv x iv x mod x cov_group.
+    # For each unique combination of dv x iv x mod x cov_group,
+    # build vector of model formulas that meet the ds.glm1 spec.
+    # See ds.validate_glm1_model() for more on ds.glm1 spec.
+    # 
     # If cov_group is vector, it gets one entry for no covs (unadjusted) 
     # and one for all covs supplied in covs argument (adjusted).
+  
     
     # @todo: to support meta_formula, make a new function to turn
     # meta formulas into variable vectors and call on self
@@ -409,28 +435,20 @@ ds.summarize_glm1 <- function( glm_model) {
     # extract coefficients
     coefs <- summary(glm_model)$coefficients
     
-    # use of column and row numbers seems dangerous;
-    # however order should be consistent when 
-    # ds.glm1 spec is used
-    # also, irregularities between different model types
-    # e.g., t vs z for guassian and binomial families
-    # and level is appended to row.names when TRUE/FALSE
+    # Use of column and row numbers (instead of names) seems dangerous;
+    # however, order should be consistent when ds.glm1 spec is used.
+    # Also, hard to use row/colnames because of irregularities between models
+    # e.g., t vs z for guassian and binomial families and because 
+    # level is appended to row.names when contrast is not numeric.
     msl$iv_coef <- coefs[2,1]
     msl$iv_se <- coefs[2,2]
     msl$iv_stat <- coefs[2,3]
     msl$iv_p <- coefs[2,4]
     
     # assemble apa string
-    if (msl$family %in% "binomial") {
-        msl$iv_apa <- "OR=" %+% round(exp(msl$iv_coef),3) %+%
-            ", z=" %+% round(msl$iv_stat,3) %+%
-            ifelse(msl$iv_p < .001,", p<.001",", p=" %+% round(msl$iv_p,3))
-            
-    } else if (msl$family %in% "gaussian") {
-        msl$iv_apa <- "b=" %+% round(msl$iv_coef,3)  %+%
-            ", t(" %+% msl$df %+% ")" %+% "=" %+% round(msl$iv_stat,3) %+%
-           ifelse(msl$iv_p < .001,", p<.001",", p=" %+% round(msl$iv_p,3))
-    }
+    msl$iv_apa <- ds.helper$apa_string(
+        msl$family, msl$iv_coef, msl$iv_stat, msl$df, msl$iv_p
+    )
     
     if (!is.na(msl$mod)) {
         msl$mod_coef <- coefs[3,1]
@@ -445,26 +463,16 @@ ds.summarize_glm1 <- function( glm_model) {
         msl$int_stat <- coefs[int_row,3]
         msl$int_p <- coefs[int_row,4]
 
-        if (msl$family %in% "binomial") {
-            msl$int_apa <- "OR=" %+% round(exp(msl$int_coef),2) %+%
-                ", z=" %+% round(msl$int_stat,3) %+%
-                ifelse(msl$int_p < .001,", p<.001",", p=" %+% round(msl$int_p,3))
-            
-        } else if (msl$family %in% "gaussian") {
-            msl$int_apa <- "b=" %+% round(msl$int_coef,2)  %+%
-                ", t(" %+% msl$df %+% ")" %+% "=" %+% 
-                round(msl$int_stat,3) %+%
-                ifelse(msl$int_p < .001, 
-                       ", p<.001", 
-                       ", p=" %+% round(msl$int_p,3)
-                )
-        }
+        msl$int_apa <- ds.helper$apa_string(
+            msl$family, msl$int_coef, msl$int_stat, msl$df, msl$int_p
+        )
     } else{
         msl$int_apa <- ""
     }
     
     return(msl)
 }
+
 
 #########################################################
 ###

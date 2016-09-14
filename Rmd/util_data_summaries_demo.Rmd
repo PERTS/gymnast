@@ -197,11 +197,9 @@ dvs = c("sksh_post","bls_link") # dependent variables each run independently
 ivs = c("treatment") # independent variables each run independently
 mods = c("","job_satis")  # moderators each run independently, default no mod
 cov_groups = list(
-    "unadjusted" = c(),
-    "demographic_adjustment" = c("age","male","race")
+    c(),
+    c("age","male","race")
 )  # vectors of covariates to run together
-# covs = c()         # covariates included all together or none
-                     # here, we use cov_groups instead for more flexibility
 
 data$treatment <- data$condition %in% "treatment"
 
