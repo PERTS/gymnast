@@ -73,28 +73,27 @@ ds.helper$default_categorical_col_funcs = list(
 ds.helper$variable_type <- function(x) {
     # return variable type as
     # (Note that NAs are ignored)
-    #  boolean - x contains exactly c(0,1) or c(TRUE,FALSE)
-    #  numeric - x is numbers 
+    #  invariant - only 0 or 1 unique values, not counting NAs
+    #  boolean - x contains 1+ of each c(0,FALSE) and c(TRUE,1)
+    #  numeric - x is numbers (but is not invariant)
     #  categorical - x is a string or factor
-    #  invariant - only 0 or 1 values, not counting NAs
     
-    boolean <- all( x %in% c(0,1,NA) ) & all( c(0,1) %in% x )
-    
-    if (boolean) {
-        return("boolean")
-    } else if (util.is_vector_of_numbers(x)) {
-        return("numeric")
-    }
-    
+    variable_type <- NULL
     n_unique <- x[!util.is_blank(x)] %>%
         unique() %>%
         length()
-    
+    boolean <- all( x %in% c(0,1,NA) ) & all( c(0,1) %in% x )
+      
     if (n_unique < 2) {
-        return("invariant")
+        variable_type <- "invariant"
+    } else if (boolean) {
+        variable_type <- "boolean"
+    } else if (util.is_vector_of_numbers(x)) {
+        variable_type <- "numeric"
     } else{
-        return("categorical")
+        variable_type <- "categorical"
     }
+    return(variable_type)
 }
 
 ds.helper$map_dv_to_glm_family <- list(
@@ -623,6 +622,14 @@ ds.helper$unit_test <- function() {
         input_output_map <- list(
             list(
                 input = c("dog","dog","dog"),
+                output = "invariant"
+            ),
+            list(
+                input = c(2,2,2),
+                output = "invariant"
+            ),
+            list(
+                input = c(1,1,1),
                 output = "invariant"
             ),
             list(
