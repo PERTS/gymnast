@@ -17,6 +17,8 @@ vignettes/*.pdf
 *.sublime-project
 *.sublime-workspace
 
+.Rproj.user
+
 # OS X
 .DS_Store
 
