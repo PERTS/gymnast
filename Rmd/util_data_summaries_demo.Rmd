@@ -187,8 +187,8 @@ ds.build_glm1_formulas(
 
 ```
 
-### Run and summarize with ds.glm1s() and ds.model_summary_df
-This section models how to use `ds.glm1s()` and `ds.model_summary_df`.
+### Run and summarize with ds.glm1s() and ds.get_model_summary_df
+This section models how to use `ds.glm1s()` and `ds.get_model_summary_df`.
 
 
 ```{r, message=FALSE, warning=FALSE, results='asis'}
@@ -213,7 +213,7 @@ formulas <- ds.build_glm1_formulas(
 models     <- ds.glm1s(formulas, data)
 
 # summarize the models into an easy-to-filter df
-summary_df <- ds.model_summary_df(models, summary_func=ds.summarize_glm1)
+summary_df <- ds.get_model_summary_df(models, summary_func=ds.summarize_glm1)
 # ds.summarize_glm1 extracts many features
 names(summary_df) %>% util.print_pre()
 
@@ -262,7 +262,7 @@ formulas <- ds.build_glm1_formulas(
             )
 
 models   <- ds.glm1s(formulas, data)
-summary_df <- ds.model_summary_df(models, summary_func=ds.summarize_glm1)
+summary_df <- ds.get_model_summary_df(models, summary_func=ds.summarize_glm1)
 
 
 

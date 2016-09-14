@@ -473,7 +473,7 @@ ds.summarize_glm1 <- function( glm_model ){
 ###
 #########################################################
 
-ds.model_summary_df <- function( 
+ds.get_model_summary_df <- function( 
     models, # list of models
     summary_func = ds.summarize_glm1  # extracts ds.glm1 features
 ){

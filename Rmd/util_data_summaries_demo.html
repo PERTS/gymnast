@@ -136,7 +136,7 @@ $(document).ready(function () {
 </ul></li>
 <li><a href="#build-and-summarize-simple-glm-models-glm1s">Build and Summarize Simple GLM Models (glm1s)</a><ul>
 <li><a href="#build-formulas-with-ds.build_glm1_formulas">Build Formulas with ds.build_glm1_formulas()</a></li>
-<li><a href="#run-and-summarize-with-ds.glm1s-and-ds.model_summary_df">Run and summarize with ds.glm1s() and ds.model_summary_df</a></li>
+<li><a href="#run-and-summarize-with-ds.glm1s-and-ds.get_model_summary_df">Run and summarize with ds.glm1s() and ds.get_model_summary_df</a></li>
 <li><a href="#example-of-off-spec-model">Example of off-spec model</a></li>
 </ul></li>
 </ul>
@@ -181,7 +181,7 @@ tryCatch({
     head() %&gt;%
     util.html_table()</code></pre>
 <!-- html table generated in R 3.3.1 by xtable 1.8-2 package -->
-<!-- Mon Sep  5 17:54:43 2016 -->
+<!-- Wed Sep 14 08:20:19 2016 -->
 <table border="0," class="xtable">
 <tr>
 <th>
@@ -412,7 +412,7 @@ music
     head() %&gt;%
     util.html_table()</code></pre>
 <!-- html table generated in R 3.3.1 by xtable 1.8-2 package -->
-<!-- Mon Sep  5 17:54:43 2016 -->
+<!-- Wed Sep 14 08:20:19 2016 -->
 <table border="0," class="xtable">
 <tr>
 <th>
@@ -549,7 +549,7 @@ Skill Acquirability
     head() %&gt;%
     util.html_table()</code></pre>
 <!-- html table generated in R 3.3.1 by xtable 1.8-2 package -->
-<!-- Mon Sep  5 17:54:44 2016 -->
+<!-- Wed Sep 14 08:20:19 2016 -->
 <table border="0," class="xtable">
 <tr>
 <th>
@@ -693,7 +693,7 @@ ds.summarize_by_column(data, codebook=codebook[, codebook_columns_to_include]) %
     head() %&gt;%
     util.html_table()</code></pre>
 <!-- html table generated in R 3.3.1 by xtable 1.8-2 package -->
-<!-- Mon Sep  5 17:54:44 2016 -->
+<!-- Wed Sep 14 08:20:20 2016 -->
 <table border="0," class="xtable">
 <tr>
 <th>
@@ -869,7 +869,7 @@ ds.summarize_by_column(data,
     head() %&gt;%
     util.html_table()</code></pre>
 <!-- html table generated in R 3.3.1 by xtable 1.8-2 package -->
-<!-- Mon Sep  5 17:54:44 2016 -->
+<!-- Wed Sep 14 08:20:20 2016 -->
 <table border="0," class="xtable">
 <tr>
 <th>
@@ -997,7 +997,7 @@ ds.summarize_by_column(
     head() %&gt;%
     util.html_table()</code></pre>
 <!-- html table generated in R 3.3.1 by xtable 1.8-2 package -->
-<!-- Mon Sep  5 17:54:44 2016 -->
+<!-- Wed Sep 14 08:20:20 2016 -->
 <table border="0," class="xtable">
 <tr>
 <th>
@@ -1054,19 +1054,19 @@ study_ID
 <p>For more on ds.glm1 spec, see comments in <code>ds.validate_glm1_model()</code>.</p>
 <div id="build-formulas-with-ds.build_glm1_formulas" class="section level3">
 <h3>Build Formulas with ds.build_glm1_formulas()</h3>
-<p><code>ds.build_glm1_formulas()</code> builds a vector of model formulas for each unique combination of the <code>dv</code> x <code>iv</code> x <code>mod</code> x <code>cov_group</code>. If <code>covs</code> is supplied, cov_group gets one entry for no covs (unadjusted) and one for all covs supplied in covs argument (adjusted).</p>
+<p><code>ds.build_glm1_formulas()</code> builds a vector of model formulas for each unique combination of the <code>dv</code> x <code>iv</code> x <code>mod</code> x <code>cov_group</code>. If <code>cov_group</code> is supplied with vector, cov_group implicitly adds one entry for no covs (unadjusted).</p>
 <pre class="r"><code>dvs = c(&quot;sksh_post&quot;,&quot;bls_link&quot;) # dependent variables each run independently
 ivs = c(&quot;condition&quot;,&quot;skil_aq_1&quot;) # independent variables each run independently
 mods = c(&quot;&quot;,&quot;in_job_satis&quot;)  # moderators each run independently
 cov_groups = list(
-    &quot;unadjusted&quot; = c(),
-    &quot;demographic_adjustment&quot; = c(&quot;age&quot;,&quot;male&quot;,&quot;race&quot;),
-    &quot;demog_and_sksh_pre&quot; = c(&quot;sksh_pre&quot;,&quot;age&quot;,&quot;male&quot;,&quot;race&quot;)
+    c(),  # unadjusted
+    c(&quot;age&quot;,&quot;male&quot;,&quot;race&quot;), # adjust for demographics
+    c(&quot;sksh_pre&quot;,&quot;age&quot;,&quot;male&quot;,&quot;race&quot;) # adjust for demographics + psychometrics
 )  # vectors of covariates to run together
-# covs = c()         # covariates included all together or none
-                     # here, we use cov_groups instead for more flexibility
 
-ds.build_glm1_formulas( dvs=dvs, ivs=ivs, mods=mods, cov_groups = cov_groups) %&gt;%
+ds.build_glm1_formulas( 
+            dvs=dvs, ivs=ivs, mods=mods, cov_groups = cov_groups
+        ) %&gt;%
     util.print_pre()</code></pre>
 <pre>  [1] &quot;sksh_post ~ condition&quot;                                              
  [2] &quot;sksh_post ~ condition + age + male + race&quot;                          
@@ -1093,9 +1093,9 @@ ds.build_glm1_formulas( dvs=dvs, ivs=ivs, mods=mods, cov_groups = cov_groups) %&
 [23] &quot;bls_link ~ skil_aq_1 * in_job_satis + age + male + race&quot;            
 [24] &quot;bls_link ~ skil_aq_1 * in_job_satis + sksh_pre + age + male + race&quot;  </pre>
 </div>
-<div id="run-and-summarize-with-ds.glm1s-and-ds.model_summary_df" class="section level3">
-<h3>Run and summarize with ds.glm1s() and ds.model_summary_df</h3>
-<p>This section models how to use <code>ds.glm1s()</code> and <code>ds.model_summary_df</code>.</p>
+<div id="run-and-summarize-with-ds.glm1s-and-ds.get_model_summary_df" class="section level3">
+<h3>Run and summarize with ds.glm1s() and ds.get_model_summary_df</h3>
+<p>This section models how to use <code>ds.glm1s()</code> and <code>ds.get_model_summary_df</code>.</p>
 <pre class="r"><code>dvs = c(&quot;sksh_post&quot;,&quot;bls_link&quot;) # dependent variables each run independently
 ivs = c(&quot;treatment&quot;) # independent variables each run independently
 mods = c(&quot;&quot;,&quot;job_satis&quot;)  # moderators each run independently, default no mod
@@ -1116,7 +1116,7 @@ formulas &lt;- ds.build_glm1_formulas(
 models     &lt;- ds.glm1s(formulas, data)
 
 # summarize the models into an easy-to-filter df
-summary_df &lt;- ds.model_summary_df(models, summary_func=ds.summarize_glm1)
+summary_df &lt;- ds.get_model_summary_df(models, summary_func=ds.summarize_glm1)
 # ds.summarize_glm1 extracts many features
 names(summary_df) %&gt;% util.print_pre()</code></pre>
 <pre>  [1] &quot;formula&quot;  &quot;dv&quot;       &quot;family&quot;   &quot;n&quot;        &quot;df&quot;       &quot;aic&quot;     
@@ -1129,7 +1129,7 @@ names(summary_df) %&gt;% util.print_pre()</code></pre>
 summary_df[ summary_df$iv_p &lt; .01, c(&quot;formula&quot;,&quot;iv_apa&quot;,&quot;int_apa&quot;)] %&gt;%
     util.html_table()</code></pre>
 <!-- html table generated in R 3.3.1 by xtable 1.8-2 package -->
-<!-- Mon Sep  5 17:54:44 2016 -->
+<!-- Wed Sep 14 08:20:20 2016 -->
 <table border="0," class="xtable">
 <tr>
 <th>
@@ -1239,7 +1239,7 @@ formulas &lt;- ds.build_glm1_formulas(
             )
 
 models   &lt;- ds.glm1s(formulas, data)
-summary_df &lt;- ds.model_summary_df(models, summary_func=ds.summarize_glm1)</code></pre>
+summary_df &lt;- ds.get_model_summary_df(models, summary_func=ds.summarize_glm1)</code></pre>
 <div class="warning">
 ds.glm1 spec only allows ivs and moderators of type boolean or numeric. Supplied iv is: categorical in formula: sksh_post ~ condition
 </div>
