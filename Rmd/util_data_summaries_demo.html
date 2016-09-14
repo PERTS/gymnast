@@ -138,6 +138,7 @@ $(document).ready(function () {
 <li><a href="#build-formulas-with-ds.build_glm1_formulas">Build Formulas with ds.build_glm1_formulas()</a></li>
 <li><a href="#run-and-summarize-with-ds.glm1s-and-ds.get_model_summary_df">Run and summarize with ds.glm1s() and ds.get_model_summary_df</a></li>
 <li><a href="#example-of-off-spec-model">Example of off-spec model</a></li>
+<li><a href="#setting-contrasts">Setting Contrasts</a></li>
 </ul></li>
 </ul>
 </div>
@@ -181,7 +182,7 @@ tryCatch({
     head() %&gt;%
     util.html_table()</code></pre>
 <!-- html table generated in R 3.3.1 by xtable 1.8-2 package -->
-<!-- Wed Sep 14 10:09:01 2016 -->
+<!-- Wed Sep 14 11:23:19 2016 -->
 <table border="0," class="xtable">
 <tr>
 <th>
@@ -412,7 +413,7 @@ music
     head() %&gt;%
     util.html_table()</code></pre>
 <!-- html table generated in R 3.3.1 by xtable 1.8-2 package -->
-<!-- Wed Sep 14 10:09:01 2016 -->
+<!-- Wed Sep 14 11:23:19 2016 -->
 <table border="0," class="xtable">
 <tr>
 <th>
@@ -549,7 +550,7 @@ Skill Acquirability
     head() %&gt;%
     util.html_table()</code></pre>
 <!-- html table generated in R 3.3.1 by xtable 1.8-2 package -->
-<!-- Wed Sep 14 10:09:01 2016 -->
+<!-- Wed Sep 14 11:23:20 2016 -->
 <table border="0," class="xtable">
 <tr>
 <th>
@@ -693,7 +694,7 @@ ds.summarize_by_column(data, codebook=codebook[, codebook_columns_to_include]) %
     head() %&gt;%
     util.html_table()</code></pre>
 <!-- html table generated in R 3.3.1 by xtable 1.8-2 package -->
-<!-- Wed Sep 14 10:09:02 2016 -->
+<!-- Wed Sep 14 11:23:20 2016 -->
 <table border="0," class="xtable">
 <tr>
 <th>
@@ -869,7 +870,7 @@ ds.summarize_by_column(data,
     head() %&gt;%
     util.html_table()</code></pre>
 <!-- html table generated in R 3.3.1 by xtable 1.8-2 package -->
-<!-- Wed Sep 14 10:09:02 2016 -->
+<!-- Wed Sep 14 11:23:20 2016 -->
 <table border="0," class="xtable">
 <tr>
 <th>
@@ -997,7 +998,7 @@ ds.summarize_by_column(
     head() %&gt;%
     util.html_table()</code></pre>
 <!-- html table generated in R 3.3.1 by xtable 1.8-2 package -->
-<!-- Wed Sep 14 10:09:02 2016 -->
+<!-- Wed Sep 14 11:23:20 2016 -->
 <table border="0," class="xtable">
 <tr>
 <th>
@@ -1127,7 +1128,7 @@ names(summary_df) %&gt;% util.print_pre()</code></pre>
 summary_df[ summary_df$iv_p &lt; .01, c(&quot;formula&quot;,&quot;iv_apa&quot;,&quot;int_apa&quot;)] %&gt;%
     util.html_table()</code></pre>
 <!-- html table generated in R 3.3.1 by xtable 1.8-2 package -->
-<!-- Wed Sep 14 10:09:02 2016 -->
+<!-- Wed Sep 14 11:23:20 2016 -->
 <table border="0," class="xtable">
 <tr>
 <th>
@@ -1244,6 +1245,70 @@ ds.glm1 spec only allows ivs and moderators of type boolean or numeric. Supplied
 <div class="warning">
 ds.glm1 spec only allows ivs and moderators of type boolean or numeric. Supplied iv is: categorical in formula: sksh_post ~ condition * job_satis
 </div>
+</div>
+<div id="setting-contrasts" class="section level3">
+<h3>Setting Contrasts</h3>
+<p>ds.glm1 spec only permits one contrast per variable. I.e., multi-level variables are not permitted in the IV or moderator. This choice reflects the desire to keep gymnast simple (for now) and also the desire be disciplined and thoughtful about how we set contrasts.</p>
+<p>Here I show how condition could be coded two different ways to focus on specific contrasts.</p>
+<pre class="r"><code># there are several different conditions
+data$condition %&gt;% table %&gt;% util.print_pre()</code></pre>
+<pre> .
+  control     music    supply treatment 
+      460       339       339       803  </pre>
+<pre class="r"><code># set an overall treatment contrast
+data$treatment_cont &lt;- 0
+data$treatment_cont[data$condition %in% &quot;treatment&quot;] &lt;- .5
+data$treatment_cont[!data$condition %in% &quot;treatment&quot;] &lt;- -.5
+
+# did the &quot;supply&quot; condition (an active control) improve outcomes
+# relative to standard control?
+data$supply_cont &lt;- 0
+data$supply_cont[data$condition %in% &quot;control&quot;] &lt;- -.5
+data$supply_cont[data$condition %in% &quot;supply&quot;] &lt;- .5
+
+table(data$supply_cont, data$condition) %&gt;% util.print_pre()</code></pre>
+<pre>       
+       control music supply treatment
+  -0.5     460     0      0         0
+  0          0   339      0       803
+  0.5        0     0    339         0 </pre>
+<pre class="r"><code>summary_df &lt;- ds.build_glm1_formulas( 
+                    dvs=dvs, ivs=c(&quot;treatment_cont&quot;,&quot;supply_cont&quot;), 
+                    cov_groups = list(&quot;study_ID&quot;)
+                ) %&gt;% 
+                ds.glm1s(data=data) %&gt;%
+                ds.get_model_summary_df()
+
+summary_df[ , c(&quot;formula&quot;,&quot;iv_apa&quot;) ] %&gt;%
+    util.html_table()</code></pre>
+<!-- html table generated in R 3.3.1 by xtable 1.8-2 package -->
+<!-- Wed Sep 14 11:23:21 2016 -->
+<table border="0," class="xtable">
+<tr>
+<th>
+formula
+</th>
+<th>
+iv_apa
+</th>
+</tr>
+<tr>
+<td>
+sksh_post ~ treatment_cont + study_ID
+</td>
+<td>
+b=1.34, t(1119)=14.818, p&lt;.001
+</td>
+</tr>
+<tr>
+<td>
+sksh_post ~ supply_cont + study_ID
+</td>
+<td>
+b=-0.59, t(1119)=-2.997, p=0.003
+</td>
+</tr>
+</table>
 </div>
 </div>
 

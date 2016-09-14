@@ -263,9 +263,49 @@ models   <- ds.glm1s(formulas, data)
 summary_df <- ds.get_model_summary_df(models, summary_func=ds.summarize_glm1)
 
 
-
 ```
 
+
+### Setting Contrasts
+ds.glm1 spec only permits one contrast per variable. I.e., multi-level 
+variables are not permitted in the IV or moderator. This choice 
+reflects the desire to keep gymnast simple (for now) and also the 
+desire be disciplined and thoughtful about how we set contrasts.
+
+Here I show how condition could be coded two different ways to focus on
+specific contrasts.
+
+
+```{r, message=FALSE, warning=FALSE, results='asis'}
+
+# there are several different conditions
+data$condition %>% table %>% util.print_pre()
+
+# set an overall treatment contrast
+data$treatment_cont <- 0
+data$treatment_cont[data$condition %in% "treatment"] <- .5
+data$treatment_cont[!data$condition %in% "treatment"] <- -.5
+
+# did the "supply" condition (an active control) improve outcomes
+# relative to standard control?
+data$supply_cont <- 0
+data$supply_cont[data$condition %in% "control"] <- -.5
+data$supply_cont[data$condition %in% "supply"] <- .5
+
+table(data$supply_cont, data$condition) %>% util.print_pre()
+
+summary_df <- ds.build_glm1_formulas( 
+                    dvs=dvs, ivs=c("treatment_cont","supply_cont"), 
+                    cov_groups = list("study_ID")
+                ) %>% 
+                ds.glm1s(data=data) %>%
+                ds.get_model_summary_df()
+
+summary_df[ , c("formula","iv_apa") ] %>%
+    util.html_table()
+
+
+```
 
 
 
