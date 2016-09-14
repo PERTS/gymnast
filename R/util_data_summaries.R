@@ -14,45 +14,45 @@
 # wrap ds.helper functions in an object to protect the namespace
 ds.helper <- list()
 
-ds.helper$mean <- function(x){
-    if( util.is_vector_of_numbers(x) ){
+ds.helper$mean <- function(x) {
+    if (util.is_vector_of_numbers(x)) {
         return(mean(as.numeric(x), na.rm=TRUE))
     }else{
         return(NA)
     }
 }
     
-ds.helper$pct_blank = function(x){
+ds.helper$pct_blank = function(x) {
     mean(util.is_blank(x)) * 100
 }
 
-ds.helper$sd = function(x){
+ds.helper$sd = function(x) {
     sd(x, na.rm=TRUE)
 }
 
-ds.helper$obs_min = function(x){
-    if( util.is_vector_of_numbers(x) ){
+ds.helper$obs_min = function(x) {
+    if (util.is_vector_of_numbers(x)) {
         return(min(as.numeric(x),na.rm=T))
     }else{
         return(NA)   
     }
 }
 
-ds.helper$obs_max = function(x){
-    if( util.is_vector_of_numbers(x) ){
+ds.helper$obs_max = function(x) {
+    if (util.is_vector_of_numbers(x)) {
         return(max(as.numeric(x),na.rm=T))
     }else{
         return(NA)   
     }
 }
 
-ds.helper$logical_to_numeric = function(x){
+ds.helper$logical_to_numeric = function(x) {
     # if a value is logical (boolean), convert to numeric for calculation
-    if(class(x) %in% "logical"){ x <- as.numeric(x) }
+    if (class(x) %in% "logical") { x <- as.numeric(x) }
     return(x)
 }
 
-ds.helper$n_unique = function(x){
+ds.helper$n_unique = function(x) {
     # includes NA
     length(unique(x))
 }
@@ -70,7 +70,7 @@ ds.helper$default_categorical_col_funcs = list(
     "n_unique" = ds.helper$n_unique
 )  
 
-ds.helper$variable_type <- function(x){
+ds.helper$variable_type <- function(x) {
     # return variable type as
     # (Note that NAs are ignored)
     #  boolean - x contains exactly c(0,1) or c(TRUE,FALSE)
@@ -80,9 +80,9 @@ ds.helper$variable_type <- function(x){
     
     boolean <- all( x %in% c(0,1,NA) ) & all( c(0,1) %in% x )
     
-    if( boolean ){
+    if (boolean) {
         return("boolean")
-    } else if( util.is_vector_of_numbers(x) ){
+    } else if (util.is_vector_of_numbers(x)) {
         return("numeric")
     }
     
@@ -90,7 +90,7 @@ ds.helper$variable_type <- function(x){
         unique() %>%
         length()
     
-    if(n_unique < 2){
+    if (n_unique < 2) {
         return("invariant")
     } else{
         return("categorical")
@@ -116,7 +116,7 @@ ds.summarize_by_column <- function(
     func_list=ds.helper$default_col_funcs,  # functions to run on columns
     codebook=NULL,    # data.frame merged on "variable_name" col
     digits=2          # round descriptions to 2 digits by default
-){
+) {
     
     # return data.frame with a row for each column of "data"
     # columns include: 
@@ -134,13 +134,13 @@ ds.summarize_by_column <- function(
     data <- util.apply_columns(data, ds.helper$logical_to_numeric )
     
     # apply each descriptive function to each column
-    for( calc_func_name in names(func_list) ){
+    for ( calc_func_name in names(func_list)) {
         ud[,calc_func_name] <- sapply(data, func_list[[calc_func_name]])
     }
     
     # append codebook by variable_name (if it exists)
-    if( ! is.null(codebook) ){
-        if( any(duplicated(codebook$variable_name)) ){
+    if (! is.null(codebook)) {
+        if (any(duplicated(codebook$variable_name))) {
             util.warn("Codebook had duplicated variable names! Cannot append.")
         } else{
             ud_with_cb <- merge(codebook, ud, by="variable_name", all.y=TRUE, sort=FALSE)            
@@ -164,7 +164,7 @@ ds.summarize_by_column <- function(
 #########################################################
 
 
-ds.validate_glm1_model <- function(glm_model){
+ds.validate_glm1_model <- function(glm_model) {
     # returns TRUE if model meets ds.glm1 spec, else FALSE
     
     #   canonical ds.glm1 formulas follow this pattern:
@@ -193,7 +193,7 @@ ds.validate_glm1_model <- function(glm_model){
     is_valid <- FALSE
     
     # check iv suitability
-    if( iv_var_type %in% c("boolean","numeric") ){
+    if (iv_var_type %in% c("boolean","numeric")) {
         is_valid <- TRUE
     } else{
         "ds.glm1 spec only allows ivs and moderators of type " %+% 
@@ -201,10 +201,10 @@ ds.validate_glm1_model <- function(glm_model){
             " in formula: " %+% glm_model$formula %>%
             util.warn()
     }
-    if( ! is.na(varlist$mod) ){ 
+    if (! is.na(varlist$mod)) { 
         mod <- glm_model$model[,varlist$mod]
         mod_var_type <- ds.helper$variable_type(mod)
-        if( ! mod_var_type %in% c("boolean","numeric") ){
+        if (! mod_var_type %in% c("boolean","numeric")) {
             "ds.extract_glm1_stats only supports mods of type " %+% 
                 "boolean or numeric. Supplied mod is: " %+% mod_var_type %+%
                 " in formula: " %+% glm_model$formula %>%
@@ -226,7 +226,7 @@ ds.build_glm1_formulas <- function(
     cov_groups = list()  # groups of covariates to be run together if vector 
                          # instead of list, empty group is added implicitly 
     
-){
+) {
     # Build vector of model formulas that meet the ds.glm1 spec
     # for each unique combination of dv x iv x mod x cov_group.
     # If cov_group is vector, it gets one entry for no covs (unadjusted) 
@@ -234,18 +234,18 @@ ds.build_glm1_formulas <- function(
     
     # @todo: to support meta_formula, make a new function to turn
     # meta formulas into variable vectors and call on self
-    if( ! is.null(meta_formula) ){
+    if (! is.null(meta_formula)) {
         util.warn("meta_formulas are not yet supported :-(")
         # variable_list <- ds.meta_formula_to_variable_list(meta_formula)
         # do.call(ds.build_glm1_formulas, variable_list) %>%
         #   return()
     } 
     
-    if( length(dvs) == 0 | length(ivs) == 0 ){
+    if (length(dvs) == 0 | length(ivs) == 0) {
         util.warn("dvs and ivs must both be present.")
     }
     
-    if( class(cov_groups) %in% "character" ){
+    if (class(cov_groups) %in% "character") {
         # vector was supplied instead of list
         # implicitly add an unadjusted
         # covariate groups with all and none of the covs
@@ -253,7 +253,7 @@ ds.build_glm1_formulas <- function(
         cov_groups <- list()
         cov_groups[[1]] <- ""  # indexes 
         cov_groups[[2]] <- cov_groups_vector
-    } else if( length(cov_groups) == 0){
+    } else if (length(cov_groups) == 0) {
         cov_groups <- list( "" )
     }
     
@@ -266,8 +266,8 @@ ds.build_glm1_formulas <- function(
     
     # turn covariate list into a vector of formula strings
     # this is more complicated because covariates get grouped
-    cov_groups_strs <- lapply(cov_groups, function(cov_vec){
-        if( is.null(cov_vec) | identical(cov_vec,"") ){
+    cov_groups_strs <- lapply(cov_groups, function(cov_vec) {
+        if (is.null(cov_vec) | identical(cov_vec,"")) {
             # there is an empty (unadjusted) cov_group
             return("")
         } else{
@@ -290,7 +290,7 @@ ds.build_glm1_formulas <- function(
     
 }
 
-ds.helper$glm1_formula_to_varlist <- function(formula){
+ds.helper$glm1_formula_to_varlist <- function(formula) {
     # input is a canonical ds.glm1 formula, 
     # see ds.validate_glm1_model
     # ouput is ds-style glm1 model variable list
@@ -299,10 +299,10 @@ ds.helper$glm1_formula_to_varlist <- function(formula){
     split_on_tilde <- str_split(formula,"[ ]*~[ ]*")[[1]]
     
     # check if formula has dvs and predictors
-    if( length(split_on_tilde) != 2){
+    if (length(split_on_tilde) != 2) {
         stop("invalid ds.glm1 formula provided: " %+% formula)
-    } else if(nchar(split_on_tilde[1]) == 0 | 
-              nchar(split_on_tilde[2]) == 0 ){
+    } else if (nchar(split_on_tilde[1]) == 0 | 
+              nchar(split_on_tilde[2]) == 0) {
         stop("invalid ds.glm1 formula provided: " %+% formula)
     }
     
@@ -313,12 +313,12 @@ ds.helper$glm1_formula_to_varlist <- function(formula){
     # there are moderators if there is a star and
     # it comes before any pluses, if pluses are present
     split_at_star <- str_split(predictor_str,"[ ]*\\*[ ]*")[[1]]
-    if( length(split_at_star) > 1){
+    if (length(split_at_star) > 1) {
         # there might be a moderator (because there's a star)
         # but it might also be a non-canonical ds.glm formula
         pre_star  <- split_at_star[1]
         post_star <- split_at_star[2]
-        if( length(split_at_star) > 2 | grepl( "\\+", pre_star) ){
+        if (length(split_at_star) > 2 | grepl( "\\+", pre_star)) {
             "ds.glm1 supports [0,1] stars" %+%
                 " and only between the 1st and 2nd predictor," %+%
                 " but this formula was provided: " %+% formula %>%
@@ -336,7 +336,7 @@ ds.helper$glm1_formula_to_varlist <- function(formula){
     # find any covariate(s)
     match_plus_or_star <- "[ ]*\\+[ ]*|[ ]*\\*[ ]*"
     predictors <- str_split( predictor_str, match_plus_or_star)[[1]]
-    if( sum( ! predictors %in% varlist ) > 0){
+    if (sum( ! predictors %in% varlist ) > 0) {
         varlist$covs <- predictors[ ! predictors %in% varlist ]
     }
     
@@ -344,10 +344,10 @@ ds.helper$glm1_formula_to_varlist <- function(formula){
 }
 
 
-ds.glm1 <- function( formula, data, mod_family=NULL ){
+ds.glm1 <- function( formula, data, mod_family=NULL) {
     # run the appropriate model, unless mod_family override is supplied
     dv_variable <- ds.helper$glm1_formula_to_varlist(formula)[["dv"]]
-    if( is.null(mod_family) ){
+    if (is.null(mod_family)) {
         dv_var_type <- ds.helper$variable_type(data[,dv_variable])
         mod_family  <- util.recode(
                             dv_var_type,
@@ -355,7 +355,7 @@ ds.glm1 <- function( formula, data, mod_family=NULL ){
                             unlist(ds.helper$map_dv_to_glm_family)
                         )
     }
-    if( ! mod_family %in% ds.helper$map_dv_to_glm_family ){
+    if (! mod_family %in% ds.helper$map_dv_to_glm_family) {
         util.warn("Unsupported model family requested: " %+% mod_family )
         mod_obj <- NULL
     } else{
@@ -364,28 +364,28 @@ ds.glm1 <- function( formula, data, mod_family=NULL ){
     return(mod_obj)
 }
 
-ds.glm1s <- function( formulas, data, family=NULL ){
+ds.glm1s <- function( formulas, data, family=NULL) {
     # run each formula on data.frame supplied in data argument
     # use the outcome type to select the model, or override with family
     models <- list()
-    if( is.null( family ) ){
-        for( i in 1:length(formulas)){
+    if (is.null( family )) {
+        for( i in 1:length(formulas)) {
             models[[i]] <- ds.glm1( formulas[i], data=data )
         }        
     } else{
-        for( i in 1:length(formulas)){
+        for( i in 1:length(formulas)) {
             models[[i]] <- ds.glm1( formulas[i], data=data, family=family )
         }    
     }
     return(models)
 }
 
-ds.summarize_glm1 <- function( glm_model ){
+ds.summarize_glm1 <- function( glm_model) {
     # extracts frequently used summary statistics from glm_model
     # glm_model must adhere to ds.glm1 spec, 
     # see ds.validate_glm1_model
     
-    if( ! ds.validate_glm1_model(glm_model)){
+    if (! ds.validate_glm1_model(glm_model)) {
         # glm1 only supports numerical or boolean IVs and MODs
         # others will issue a warning
         return(list())
@@ -421,18 +421,18 @@ ds.summarize_glm1 <- function( glm_model ){
     msl$iv_p <- coefs[2,4]
     
     # assemble apa string
-    if(msl$family %in% "binomial"){
+    if (msl$family %in% "binomial") {
         msl$iv_apa <- "OR=" %+% round(exp(msl$iv_coef),3) %+%
             ", z=" %+% round(msl$iv_stat,3) %+%
             ifelse(msl$iv_p < .001,", p<.001",", p=" %+% round(msl$iv_p,3))
             
-    } else if(msl$family %in% "gaussian"){
+    } else if (msl$family %in% "gaussian") {
         msl$iv_apa <- "b=" %+% round(msl$iv_coef,3)  %+%
             ", t(" %+% msl$df %+% ")" %+% "=" %+% round(msl$iv_stat,3) %+%
            ifelse(msl$iv_p < .001,", p<.001",", p=" %+% round(msl$iv_p,3))
     }
     
-    if( !is.na(msl$mod) ){
+    if (!is.na(msl$mod)) {
         msl$mod_coef <- coefs[3,1]
         msl$mod_se <- coefs[3,2]
         msl$mod_stat <- coefs[3,3]
@@ -445,12 +445,12 @@ ds.summarize_glm1 <- function( glm_model ){
         msl$int_stat <- coefs[int_row,3]
         msl$int_p <- coefs[int_row,4]
 
-        if(msl$family %in% "binomial"){
+        if (msl$family %in% "binomial") {
             msl$int_apa <- "OR=" %+% round(exp(msl$int_coef),2) %+%
                 ", z=" %+% round(msl$int_stat,3) %+%
                 ifelse(msl$int_p < .001,", p<.001",", p=" %+% round(msl$int_p,3))
             
-        } else if(msl$family %in% "gaussian"){
+        } else if (msl$family %in% "gaussian") {
             msl$int_apa <- "b=" %+% round(msl$int_coef,2)  %+%
                 ", t(" %+% msl$df %+% ")" %+% "=" %+% 
                 round(msl$int_stat,3) %+%
@@ -476,7 +476,7 @@ ds.summarize_glm1 <- function( glm_model ){
 ds.get_model_summary_df <- function( 
     models, # list of models
     summary_func = ds.summarize_glm1  # extracts ds.glm1 features
-){
+) {
     # returns a data.frame with one row per supplied model
     # and one column for each list index returned by the
     # supplied summary_func
@@ -485,21 +485,21 @@ ds.get_model_summary_df <- function(
     #   pass to printing functions to nice summary tables
     
     # msls = model summary lists
-    msls <- lapply( models , function(glm_model){
+    msls <- lapply( models , function(glm_model) {
         as.data.frame(summary_func(glm_model))
     })
     
     # remove empty feature lists
     # (e.g., may happen if ds.glm1 spec is violated)
     sanitized_msls <- list()
-    for( i in 1:length(msls) ){
-        if( nrow(msls[[i]]) > 0 ){
+    for( i in 1:length(msls)) {
+        if (nrow(msls[[i]]) > 0) {
             sanitized_msls[[length(sanitized_msls) + 1]] <- msls[[i]]
         }
     }
-    if(length(sanitized_msls) > 1){
+    if (length(sanitized_msls) > 1) {
         feature_table <- util.rbind_union(sanitized_msls)
-    } else if(length(sanitized_msls) == 1){
+    } else if (length(sanitized_msls) == 1) {
         feature_table <- sanitized_msls[[1]]
     } else{
         feature_table <- data.frame()
@@ -514,9 +514,9 @@ ds.get_model_summary_df <- function(
 ###
 #########################################################
 
-ds.helper$unit_test <- function(){
+ds.helper$unit_test <- function() {
     
-    assert_expected_output <- function( func_name , input, expected_output ){
+    assert_expected_output <- function( func_name , input, expected_output) {
         # warn if evaluated func_name(input) != expected_output
         # errors messages are not compared, but errors can be expected
         
@@ -534,12 +534,12 @@ ds.helper$unit_test <- function(){
         outputs_identical <- identical(expected_output, real_output)
         
         error_message <- ""
-        if("error" %in% class(real_output)){
+        if ("error" %in% class(real_output)) {
             error_message <- "\nError raised in tested function: " %+%
                 real_output$message
         }
         
-        if( ! ( both_are_errors | outputs_identical ) ){
+        if (! ( both_are_errors | outputs_identical )) {
             "assert_expected_output failed in " %+%
                 func_name %+% " when passed '" %+%
                 paste(input,collapse=", ") %+% "'" %+% 
@@ -548,7 +548,7 @@ ds.helper$unit_test <- function(){
         }
     }
     
-    test__glm1_formula_to_varlist <- function(){
+    test__glm1_formula_to_varlist <- function() {
         
         input_output_map <- list(
             list(
@@ -601,7 +601,7 @@ ds.helper$unit_test <- function(){
             )
         )
         
-        for( io in input_output_map ){
+        for( io in input_output_map) {
             assert_expected_output( 
                 "ds.helper$glm1_formula_to_varlist",
                 io$input,
@@ -611,7 +611,7 @@ ds.helper$unit_test <- function(){
         
     }
 
-    test__variable_type <- function(){
+    test__variable_type <- function() {
         input_output_map <- list(
             list(
                 input = c("dog","dog","dog"),
@@ -639,7 +639,7 @@ ds.helper$unit_test <- function(){
             )
         )
         
-        for( io in input_output_map ){
+        for( io in input_output_map) {
             assert_expected_output( 
                 "ds.helper$variable_type",
                 io$input,
