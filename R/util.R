@@ -87,7 +87,7 @@ util.trim <- function(x){
 }
 
 
-util.strip_non_acsii <- function(x){
+util.strip_non_ascii <- function(x){
     # deletes non-ASCII characters, e.g., ø, ñ, etc.
     # e.g., Ekstrøm becomes Ekstrm
     iconv(x, "latin1", "ASCII", sub="")
@@ -118,11 +118,11 @@ util.to_character <- function(x){
 }
 
 
-util.to_acsii <- function(x){
+util.to_ascii <- function(x){
     if(class(x) %in% "data.frame"){
-        util.apply_columns(x, util.strip_non_acsii)
+        util.apply_columns(x, util.strip_non_ascii)
     }
-    else{ as.util.strip_non_acsii(x) }
+    else{ as.util.strip_non_ascii(x) }
 }
 
 util.is_vector_of_numbers <- function(x){
@@ -463,7 +463,7 @@ util.hash_vector <- function(x, salt = NULL){
 ###
 ###############################################################
 
-util.read_csv_files <- function(path_list, environment = .GlobalEnv, ...){
+util.read_csv_files <- function(path_list, ...) {
     # reads a list of .csv file paths and returns a list of data.frames
     # Args
     #   path_list: list that contains paths pointing to the desired .csv files
@@ -475,7 +475,7 @@ util.read_csv_files <- function(path_list, environment = .GlobalEnv, ...){
     # a one-element list named "a" containing the contents my_file.csv
     # as a data.frame
 
-    found_files <- sapply(crypt_paths, function(path) {
+    found_files <- sapply(path_list, function(path) {
         length(path) > 0 && file.exists(path)
     })
 
