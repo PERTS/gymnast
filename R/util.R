@@ -132,18 +132,13 @@ util.is_vector_of_numbers <- function(x){
     # e.g., when all columns set to character types by default.
 
     # find numeric values
-    numeric_values <- grepl("^-*[[:digit:]]*\\.*[[:digit:]]+$",x)
+    x_as_numeric <- suppressWarnings(as.numeric(x))
 
-    # find the blank values
-    blank_values <- util.is_blank(x)
+    # anything that gets coerced to NA by as.numeric is non-numeric
+    x_is_numeric <- !is.na(x_as_numeric)
 
     # Return TRUE if all values are either numeric or blank
-    # Unless all values are blank, then false
-    # Return FALSE otherwise
-    if( all(blank_values) ){
-        return(FALSE)
-    }
-    else if(all(numeric_values | blank_values)){
+    if(all(x_is_numeric)){
         return(TRUE)
     }
     else{
