@@ -167,6 +167,8 @@ util.is_vector_of_numbers_test <- function(){
     }
 }
 
+util.is_vector_of_numbers_test()
+
 util.as_numeric_if_number <- function(x){
     # run as.numeric if the x is made up of numbers
     # runs independently on each column if x is data.frame
