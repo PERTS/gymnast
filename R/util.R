@@ -146,6 +146,27 @@ util.is_vector_of_numbers <- function(x){
     }
 }
 
+util.is_vector_of_numbers_test <- function(){
+    x_char <- c("1", "a", "b", "1.1", "1e05")
+    x_number <- c("1", "1.1", "2", "-1.1")
+    x_scientific <- c("1e05")
+
+    x <- x_char
+
+    if(util.is_vector_of_numbers(x_char) == TRUE){
+        stop("In util.is_vector_of_numbers, vectors containing " %+%
+                 "character values are being evaluted as numbers.")
+    }
+    if(util.is_vector_of_numbers(x_number) == FALSE){
+        stop("In util.is_vector_of_numbers, vectors containing " %+%
+                 "only number are being evaluted as non-numbers.")
+    }
+    if(util.is_vector_of_numbers(x_scientific) == FALSE){
+        stop("In util.is_vector_of_numbers, vectors containing " %+%
+                 "scientific notation are being evaluted as non-numbers.")
+    }
+}
+
 util.as_numeric_if_number <- function(x){
     # run as.numeric if the x is made up of numbers
     # runs independently on each column if x is data.frame
