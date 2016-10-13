@@ -689,6 +689,21 @@ gymnast_install <- function () {
             library(lib_name, character.only = TRUE)
         }
     }
+    resolve_name_conflicts()
 }
 
+resolve_name_conflicts <- function () {
+    # When gymnast is installed as a package, rather than loaded as code from
+    # github, some function names can conflict. Enforce our preferences here.
+
+    util.assign_list_to_environment(list(
+        # Use our string concatenation rather than the psych packages matrix
+        # addition.
+        # http://personality-project.org/r/psych/psych-manual.pdf
+        "%+%" = gymnast::`%+%`
+    ))
+}
+
+# Run if you source the code directly (e.g. from github), but NOT run if
+# included as a package. In the latter case, manually call gymnast_install().
 gymnast_install()
