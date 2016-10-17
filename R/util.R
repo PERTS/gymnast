@@ -696,6 +696,8 @@ resolve_name_conflicts <- function () {
         # Use our string concatenation rather than the psych packages matrix
         # addition.
         # http://personality-project.org/r/psych/psych-manual.pdf
+        # What the heck is a triple colon?
+        # http://stackoverflow.com/questions/2165342/r-calling-a-function-from-a-namespace
         "%+%" = gymnast:::`%+%`
     ))
 }
