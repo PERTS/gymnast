@@ -696,7 +696,7 @@ resolve_name_conflicts <- function () {
         # Use our string concatenation rather than the psych packages matrix
         # addition.
         # http://personality-project.org/r/psych/psych-manual.pdf
-        "%+%" = gymnast::`%+%`
+        "%+%" = gymnast:::`%+%`
     ))
 }
 
