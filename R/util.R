@@ -685,10 +685,14 @@ gymnast_install <- function () {
             library(lib_name, character.only = TRUE)
         }
     }
-    resolve_name_conflicts()
+    # Do not uncomment without resolving issue #27!
+    # resolve_name_conflicts()
   }
 
 resolve_name_conflicts <- function () {
+    # BAD (pending issue #27) b/c when sourcing gymnast namespace doesn't
+    # exist!
+
     # When gymnast is installed as a package, rather than loaded as code from
     # github, some function names can conflict. Enforce our preferences here.
 
