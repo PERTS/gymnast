@@ -122,7 +122,7 @@ util.to_ascii <- function(x){
     if(class(x) %in% "data.frame"){
         util.apply_columns(x, util.strip_non_ascii)
     }
-    else{ as.util.strip_non_ascii(x) }
+    else{ util.strip_non_ascii(x) }
 }
 
 util.is_vector_of_numbers <- function(x){
