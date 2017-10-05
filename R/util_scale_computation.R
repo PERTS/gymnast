@@ -18,7 +18,7 @@ sc.append_scales <- function(
     # filter any non-scale variables from scale_variables_table
     scale_variables_table <- filter(
         scale_variables_table,
-        !is.na(scale)
+        !util.is_blank(scale)
     )
 
     scales <- unique(scale_variables_table$scale)
@@ -47,7 +47,6 @@ sc.append_scales <- function(
             # compute and append row means
             scale_means <- util.row_means(survey_df[survey_scale_column_names])
             survey_df[[scale_name]] <- scale_means
-            print(scale_name)
             # optionally compute zscore of rowMeans(), or rowMeans() of the
             # standardized scale items
             if(add_z_score){

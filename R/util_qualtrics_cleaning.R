@@ -59,12 +59,22 @@ STANDARD_SECOND_ROW_QUALTRICS_COLUMNS <- c(
     # add any necessary _TEXT suffixes
     best_column_names <- qc.add_TEXT_suffixes(qdf_char, best_column_names)
 
-    # throw a warning if the function being used yields column names that are
-    # not unique
+    # if the function being used yields column names that are not unique...
     if(any(duplicated(best_column_names))){
+      # Add numeric differentiators so that further operations
+      # don't get messed up. (e.g., col, col, col... becomes col.1, col.2, etc.)
+      # note that the "dot-number" convention above parallels R's default behavior
+      # for handling duplicate column names.
       dup_col_names <- unique(best_column_names[duplicated(best_column_names)])
+      duplicated_columns <- best_column_names[best_column_names %in% dup_col_names]
+      enumerated_duplicates <- duplicated_columns %+% "." %+% seq(1, length(duplicated_columns))
+      best_column_names[best_column_names %in% dup_col_names] <- enumerated_duplicates
+      
+      # throw a warning so that the user can fix duplicated column names manually if desired.
       warning("Your function for pulling column names from the first row " %+%
-        "resulted in duplicate column names: " %+% dup_col_names)
+                  "resulted in duplicate column names: " %+% dup_col_names %+% 
+                  ". Numeric suffixes were added to differentiate these columns " %+%
+                  "in the cleaned output.")
     }
 
     # add the new column names to the data.frame
@@ -211,8 +221,14 @@ qc.rbind_inprogress <- function(inprogress_qdf, clean_qdf){
   # Qualtrics partial responses. However, they will appear once the partial
   # responses are closed and set to complete, and any survey elements that
   # depend on them (e.g, survey flow) should still work properly.
+  
+  # First, Qualtrics in-progress datasets automatically append an extra 
+  # column containing information about progress. This will break 
+  # rbinding, so append such a column to the clean_qdf.
+  
+  clean_qdf$partial_response_progress <- NA
 
-  # First, just stop if the in-progress qdf and clean qdf have different
+  # Next, just stop if the in-progress qdf and clean qdf have different
   # numbers of columns
   if(ncol(inprogress_qdf) != ncol(clean_qdf)){
     stop("Your in-progress dataset contains a different number of columns " %+%

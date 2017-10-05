@@ -373,7 +373,7 @@ ds.glm1 <- function( formula, data, family=NULL) {
     # run the appropriate model, unless family override is supplied
     dv_variable <- ds.helper$glm1_formula_to_varlist(formula)[["dv"]]
     if (is.null(family)) {
-        dv_var_type <- ds.helper$variable_type(data[,dv_variable])
+        dv_var_type <- ds.helper$variable_type(data[[dv_variable]])
         family  <- util.recode(
                             dv_var_type,
                             names(ds.helper$map_dv_to_glm_family),
