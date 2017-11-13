@@ -218,7 +218,7 @@ util.passed <- function(message) {
 ###############################################################
 
 
-util.html_table_from_model <- function(model){
+util.html_table_from_model <- function(model, ...){
     accepted_models <- c("lmerMod","lm","aov","glm","glmerMod")
     if( ! any(class(model) %in% accepted_models ) ){
         util.warn("Unaccepted model supplied!")
@@ -231,7 +231,8 @@ util.html_table_from_model <- function(model){
             notes        = "",
             notes.label = "1 star p<.05; 2 stars p<.01; 3 stars p<.001",
             notes.append = FALSE,
-            single.row=TRUE
+            single.row=TRUE,
+            ...
         )
     }
     else{
@@ -239,7 +240,7 @@ util.html_table_from_model <- function(model){
     }
 }
 
-util.html_table_data_frame <- function(x){
+util.html_table_data_frame <- function(x, ...){
     # "grouped_df", "tbl_df" are dplyr type data.frames
     # ungroup to make them printable like a data.frame
     if(any(class(x) %in% c("grouped_df", "tbl_df"))){
@@ -252,34 +253,44 @@ util.html_table_data_frame <- function(x){
               include.rownames = FALSE,
               html.table.attributes =
                   getOption("xtable.html.table.attributes",
-                            "border=0, class='xtable'")
+                            "border=0, class='xtable'"),
+              ...
         )
     }else{
         print(x)
     }
 }
 
-util.html_table_psych_alphas <- function(x){
+util.html_table_psych_alphas <- function(x, ...){
     # psych::alpha object, turn key data into data.frame
     if(! all(class(x) %in% c("psych","alpha"))){
         util.warn("Not a psych::alpha object!")
     }
     # extract the alpha coefficients for printing
     x <- x$total
-    util.html_table_data_frame(x)
+    util.html_table_data_frame(x, ...)
 }
 
 util.html_table <- function(x, ...) {
+    # Print a variety of things to rendered output as a nice table.
+    # Accepts extra keyword arguments which are passed to xtable or stargazer,
+    # as appropriate.
+    # To capture rendered output in non-interactive mode as a character vector:
+    # * Nothing is required in the case of models, just assign the returned
+    #   value, e.g. `output <- util.html_table(lm.D9)`
+    # * Set `print.results = FALSE` in other cases, e.g.
+    #   `output <- util.html_table(my_data_frame, print.results = FALSE)`
+    #   `output <- util.html_table(psych::alpha(r9), print.results = FALSE)`
     accepted_models <- c("lmerMod","lm","aov","glm","glmerMod")
     accepted_psych_objects <- c("psych","alpha")
     accepted_dfs <- c("grouped_df", "tbl_df","data.frame","table")
 
     if( any(class(x) %in% accepted_models ) ){
-        util.html_table_from_model(x)
+        util.html_table_from_model(x, ...)
     } else if( all( class(x) %in% accepted_psych_objects ) ){
-        util.html_table_psych_alphas(x)
+        util.html_table_psych_alphas(x, ...)
     } else if( any(class(x) %in% accepted_dfs ) ){
-        util.html_table_data_frame(x)
+        util.html_table_data_frame(x, ...)
     }
 }
 
