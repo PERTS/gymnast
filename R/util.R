@@ -614,7 +614,7 @@ util.find_crypt_paths <- function (files_to_load, initial_path = NA,
         stop("in util.find_crypt_paths, files_to_load must be a list.")
     }
     
-    if(any(util.is_blank(names(files_to_load)))){
+    if(any(util.is_blank(names(files_to_load))) | is.null(names(files_to_load))){
         stop("in util.find_crypt_paths, all elements of the list files_to_load must be named (e.g., list(a = 'a',), not list('a')")
     }
 
