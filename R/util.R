@@ -656,7 +656,7 @@ util.find_crypt_paths <- function (files_to_load, initial_path = NA,
     # Compile a list of files from each mount path.
     crypt_paths <- c()
     for (m in mount_paths) {
-        crypt_paths <- c(util.list_all(m), crypt_paths)
+        crypt_paths <- c(util.list_all(m, max_depth = max_depth), crypt_paths)
     }
 
     # For each file to load, scan the list of known files for a match.
