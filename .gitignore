@@ -25,3 +25,17 @@ vignettes/*.pdf
 # Knitted html
 Rmd/*.html
 
+
+.DS_Store
+
+R/.DS_Store
+
+.DS_Store
+
+R/.DS_Store
+
+R/util_data_summaries.R
+
+R/util_data_summaries.R
+
+R/util_data_summaries.R
