@@ -14,8 +14,6 @@
 setwd("~/Sites/gymnast/R")
 source("util.R")
 
-
-
 util_dfc.compare_vecs <- function(vec1, vec2) {
   # compare vector elements without regard to order.
   # return a list with three components -
@@ -27,6 +25,16 @@ util_dfc.compare_vecs <- function(vec1, vec2) {
               only_in_second = setdiff(vec2, vec1)))
 }
 
+
+util_dfc.get_condensed_ids <- function(df, id_cols) {
+  # Helper function for getting a vector of IDs (not necessarily unique) from a DF.
+  # If there are multiple ID columns, they need to be concatenated with "__".
+  if(length(id_cols) == 1) {
+    return(as.character(df[, id_cols]))
+  } else {
+    return(apply(df[, id_cols], 1, paste, collapse = "__"))
+  }
+}
 
 
 util_dfc.compare_colnames <- function(df1, df2) {
@@ -50,8 +58,9 @@ util_dfc.compare_colnames <- function(df1, df2) {
 util_dfc.compare_identifiers <- function(df1, df2, id_cols, id_cols_uniquely_identify_rows = FALSE) {
   # Compare two dfs on a set of one or more commonly-shared columns that identify rows.
   # If rows are identified by multiple columns (e.g. team x student x week), include all column names in id_cols.
+  # Return a list with shared IDs, IDs in df1 only, and IDs in df2 only.
   #
-  # If you expect id_cols to UNIQUELY identify rows in both dfs, set id_cols_uniquely_identify_rows to TRUE.
+  # If you expect id_cols to UNIQUELY identify each row in both dfs, set id_cols_uniquely_identify_rows to TRUE.
   # Otherwise, duplicate ID values within each data frame will get ignored.
   # Example use case: you want to compare a student-x-week df with a student df to see if they have the same students.
   # The commonly-shared id_col is student ID.
@@ -68,25 +77,20 @@ util_dfc.compare_identifiers <- function(df1, df2, id_cols, id_cols_uniquely_ide
     stop("Error - not all id columns provided are in both data frames.")
   }
 
-  # if id_cols is length 1, set id_col as col name in each df
-  # else, set id_col as col name in each df as a concatenation of id_cols with "__" in between.
-  # Note: this treats NAs as the character string "NA" in an identifier.
-  if(length(id_cols) == 1) {
-    df1_ids <- df1[, id_cols] %>% as.character()
-    df2_ids <- df2[, id_cols] %>% as.character()
-  } else {
-    df1_ids <- df1[, id_cols] %>% apply(., 1, paste, collapse = "__")
-    df2_ids <- df2[, id_cols] %>% apply(., 1, paste, collapse = "__")
-  }
+  # Extract the IDs from df1 and df2 in character format.
+  # If IDs are defined by multiple columns, use them all with "__" as a separator.
+  # Note: this section treats NAs as the character string "NA" in an ID.
+  df1_ids <- util_dfc.get_condensed_ids(df1, id_cols)
+  df2_ids <- util_dfc.get_condensed_ids(df2, id_cols)
 
-  # If id_cols aren't expected to uniquely identify rows, then cut duplicates from df1_ids and df2_ids.
+  # If the IDs aren't expected to uniquely identify rows, then cut duplicates from them.
   if(!id_cols_uniquely_identify_rows) {
     df1_ids <- df1_ids[!duplicated(df1_ids)]
     df2_ids <- df2_ids[!duplicated(df2_ids)]
   }
 
-  # warn if id_col has duplicates in either df!
-  # This means that id_col doesn't uniquely identify rows as expected.
+  # Warn if the IDs still have duplicates in either df!
+  # This would mean that the user expected no duplicates but actually had them.
   if(any(duplicated(df1_ids))) {
     warning("Warning - first data frame passed to util_dfc.compare_unique_identifiers has unexpected duplicate ID values:")
     util.print_pre(unique(df1_ids[duplicated(df1_ids)]))
@@ -127,18 +131,78 @@ util_dfc.compare_dfs <- function(df1, df2, id_cols = c(), id_cols_uniquely_ident
     stop("Error - at least one of the first two arguments for util_dfc.compare_dfs is not a data frame.")
   }
 
-  # Compare basic nrow and ncol
+  # Compare nrow
   diff_nrow <- FALSE
   util.print_pre("COMPARING ROW COUNTS: ")
   if(nrow(df1) == nrow(df2)) {
     util.print_pre(df1_name %+% " and " %+% df2_name %+% " both have " %+% nrow(df1) %+% " rows.")
   } else {
     diff_nrow <- TRUE
-    util.print_pre("Warning - " df1_name %+% " has " %+% nrow(df1) %+% " rows, while " %+% df2_name %+%
+    util.print_pre("Warning - "  %+% df1_name %+% " has " %+% nrow(df1) %+% " rows, while " %+% df2_name %+%
                      " has " %+% nrow(df2) %+% " rows.")
   }
 
-  # other stuff here
+  # Compare ncol
+  diff_ncol <- FALSE
+  util.print_pre("COMPARING COLUMN COUNTS: ")
+  if(ncol(df1) == ncol(df2)) {
+    util.print_pre(df1_name %+% " and " %+% df2_name %+% " both have " %+% ncol(df1) %+% " columns.")
+  } else {
+    diff_ncol <- TRUE
+    util.print_pre("Warning - " %+% df1_name %+% " has " %+% ncol(df1) %+% " columns, while " %+% df2_name %+%
+                     " has " %+% ncol(df2) %+% " columns.")
+  }
+
+  # Compare column names
+  util.print_pre("COMPARING COLUMN NAMES: ")
+  col_name_compare_list <- util_dfc.compare_colnames(df1, df2)
+  util.print_pre("Shared column names: " %+%
+                   paste(col_name_compare_list$shared_elements, collapse = ", "))
+  util.print_pre("Columns only in first data frame: " %+%
+                   paste(col_name_compare_list$only_in_first, collapse = ", "))
+  util.print_pre("Columns only in second data frame: " %+%
+                   paste(col_name_compare_list$only_in_second, collapse = ", "))
+
+  # Compare identifiers, if there are any
+  if(length(id_cols) > 0) {
+    util.print_pre("COMPARING IDENTIFIERS: ")
+    id_compare_list <- util_dfc.compare_identifiers(df1, df2,
+                                                    id_cols = id_cols,
+                                                    id_cols_uniquely_identify_rows = id_cols_uniquely_identify_rows)
+    util.print_pre("Shared identifiers: " %+%
+                     paste(id_compare_list$shared_elements, collapse = ", "))
+    util.print_pre("Identifiers only in first data frame: " %+%
+                     paste(id_compare_list$only_in_first, collapse = ", "))
+    util.print_pre("Identifiers only in second data frame: " %+%
+                     paste(id_compare_list$only_in_second, collapse = ", "))
+  }
+
+  # Strong comparison:
+  util.print_pre("STARTING STRONG COMPARISON: ")
+  # Subset to shared columns if needed
+  if(length(c(col_name_compare_list$only_in_first, col_name_compare_list$only_in_second)) > 0) {
+    util.print_pre("Column names don't match, so only comparing shared columns: " %+%
+                     paste(col_name_compare_list$shared_elements, collapse = ", "))
+    df1 <- df1[, col_name_compare_list$shared_elements]
+    df2 <- df2[, col_name_compare_list$shared_elements]
+  }
+  # Sort columns for apples-to-apples comparison
+  df1 <- df1[, sort(names(df1))]
+  df2 <- df1[, sort(names(df2))]
+  # Sort rows using id_cols (if available) for apples-to-apples comparison
+  if(length(id_cols) > 0) {
+    df1$temp_util_id <- util_dfc.get_condensed_ids(df1, id_cols)
+    df2$temp_util_id <- util_dfc.get_condensed_ids(df2, id_cols)
+    df1 <- arrange(df1, temp_util_id)
+    df2 <- arrange(df2, temp_util_id)
+  } else {
+    util.print_pre("Warning: ID columns were not identified in the function call, so no way to sort rows.
+                   Individual data frame values may not be aligned for proper comparison.")
+  }
+  # TO DO:
+  # cut to shared ID rows if possible,
+  # report some kind of table of the number of matches for each column. Be sure to ignore "id".
+
 
 }
 
