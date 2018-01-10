@@ -191,6 +191,7 @@ util_dfc.compare_dfs <- function(df1, df2, id_cols = c(), id_cols_uniquely_ident
   df2 <- df1[, sort(names(df2))]
   # Sort rows using id_cols (if available) for apples-to-apples comparison
   if(length(id_cols) > 0) {
+    util.print_pre("Sorting rows of both data frames by ID column(s): ")
     df1$temp_util_id <- util_dfc.get_condensed_ids(df1, id_cols)
     df2$temp_util_id <- util_dfc.get_condensed_ids(df2, id_cols)
     df1 <- arrange(df1, temp_util_id)
@@ -200,7 +201,8 @@ util_dfc.compare_dfs <- function(df1, df2, id_cols = c(), id_cols_uniquely_ident
                    Individual data frame values may not be aligned for proper comparison.")
   }
   # TO DO:
-  # cut to shared ID rows if possible,
+  # cut to shared ID rows if possible. List the IDs (or numbers of them) of the rows that get cut.
+  # Care about order?
   # report some kind of table of the number of matches for each column. Be sure to ignore "id".
 
 

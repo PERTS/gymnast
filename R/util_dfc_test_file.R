@@ -40,6 +40,10 @@ util_dfc.compare_dfs(cars1, cars4, id_cols = "id")
 
 
 
+##### Test ideas:
+
 # Big real-world data frame!
 # Probably going to need to only display the head of identifier vectors,
 # and show the proportion of identifiers that are shared
+
+# Completely different data frames with nothing in common!
