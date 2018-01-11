@@ -177,32 +177,46 @@ util_dfc.compare_dfs <- function(df1, df2, id_cols = c(), id_cols_uniquely_ident
                      paste(id_compare_list$only_in_second, collapse = ", "))
   }
 
-  # Strong comparison:
-  util.print_pre("STARTING STRONG COMPARISON: ")
-  # Subset to shared columns if needed
+  # Starting strong comparison:
+  util.print_pre("ATTEMPTING TO MATCH UP DATA FRAMES FOR STRONG COMPARISON OF VALUES: ")
+
+  # Subset to shared columns if needed.
   if(length(c(col_name_compare_list$only_in_first, col_name_compare_list$only_in_second)) > 0) {
-    util.print_pre("Column names don't match, so only comparing shared columns: " %+%
+    # If there are NO matching columns, exit!
+    if(length(col_name_compare_list$shared_elements) == 0) {
+      util.print_pre("Data frames share no common column names! Comparison is impossible. Exiting.")
+      return()
+    }
+    # otherwise, subset to shared columns
+    util.print_pre("Column names don't perfectly match, so only comparing shared columns: " %+%
                      paste(col_name_compare_list$shared_elements, collapse = ", "))
     df1 <- df1[, col_name_compare_list$shared_elements]
     df2 <- df2[, col_name_compare_list$shared_elements]
   }
-  # Sort columns for apples-to-apples comparison
+
+  # Sort columns for apples-to-apples comparison.
   df1 <- df1[, sort(names(df1))]
   df2 <- df1[, sort(names(df2))]
-  # Sort rows using id_cols (if available) for apples-to-apples comparison
+
+  # Sort rows using id_cols (if available) for apples-to-apples comparison.
+  # Complain if this is infeasible because of limitations of ID columns.
   if(length(id_cols) > 0) {
-    util.print_pre("Sorting rows of both data frames by ID column(s): ")
     df1$temp_util_id <- util_dfc.get_condensed_ids(df1, id_cols)
     df2$temp_util_id <- util_dfc.get_condensed_ids(df2, id_cols)
     df1 <- arrange(df1, temp_util_id)
     df2 <- arrange(df2, temp_util_id)
+    util.print_pre("Rows of both data frames sorted by ID column(s).")
+    if(!id_cols_uniquely_identify_rows) {
+      util.print_pre("WARNING - ID columns do not uniquely identify rows, so the rows of the two data frames
+                     cannot be guaranteed to be matched up.")
+    }
   } else {
-    util.print_pre("Warning: ID columns were not identified in the function call, so no way to sort rows.
+    util.print_pre("WARNING - ID columns were not identified in the function call, so no way to sort rows.
                    Individual data frame values may not be aligned for proper comparison.")
   }
+
   # TO DO:
   # cut to shared ID rows if possible. List the IDs (or numbers of them) of the rows that get cut.
-  # Care about order?
   # report some kind of table of the number of matches for each column. Be sure to ignore "id".
 
 
