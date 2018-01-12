@@ -8,14 +8,10 @@
 ###     Depends on util.R
 ###
 
-
-# REMOVE SECTION BEFORE FINALIZING
 setwd("~/Sites/gymnast/R")
 source("util.R")
 source("util_dfc.R")
 library(dplyr)
-
-
 
 # identical dfs
 cars1 <- cars
@@ -53,6 +49,4 @@ util_dfc.compare_dfs(cars1, cars5, id_cols = "id")
 ##### Test ideas:
 
 # Big real-world data frame!
-# Probably going to need to only display the head of identifier vectors,
-# and show the proportion of identifiers that are shared
 
