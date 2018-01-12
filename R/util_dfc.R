@@ -9,11 +9,6 @@
 ###     Depends on util.R
 ###
 
-
-# REMOVE SECTION BEFORE FINALIZING
-setwd("~/Sites/gymnast/R")
-source("util.R")
-
 util_dfc.compare_vecs <- function(vec1, vec2) {
   # compare vector elements without regard to order and without checking for duplicates.
   # return a list with three components -
