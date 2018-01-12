@@ -315,7 +315,6 @@ ds.build_glm1_formulas <- function(
 
 }
 
-
 ds.helper$glm1_formula_to_varlist <- function(formula) {
     # input is a canonical ds.glm1 formula,
     # see ds.validate_glm1_model
