@@ -17,7 +17,7 @@ library(dplyr)
 
 
 
-# Identical dfs
+# identical dfs
 cars1 <- cars
 cars2 <- cars
 cars1$id <- 1:nrow(cars1)
@@ -32,12 +32,22 @@ util_dfc.compare_dfs(cars1, cars3)
 cars4 <- filter(cars3, dist > 2)
 util_dfc.compare_dfs(cars1, cars4)
 
-# Identical dfs with identical single ID column
+# Identical dfs with identical single unique ID column
 util_dfc.compare_dfs(cars1, cars2, id_cols = "id")
 
 # Comparing IDs when one row and one column are missing from one df
 util_dfc.compare_dfs(cars1, cars4, id_cols = "id")
 
+# with wrong ID
+util_dfc.compare_dfs(cars1, cars4, id_cols = "foo")
+
+# Completely different data frames with nothing in common!
+util_dfc.compare_dfs(cars, iris)
+
+# Data frames with duplicate rows and duplicate IDs with different data
+cars5 <- cars4
+cars5[50, ] <- cars5[49, ]
+util_dfc.compare_dfs(cars1, cars5, id_cols = "id")
 
 
 ##### Test ideas:
@@ -46,4 +56,3 @@ util_dfc.compare_dfs(cars1, cars4, id_cols = "id")
 # Probably going to need to only display the head of identifier vectors,
 # and show the proportion of identifiers that are shared
 
-# Completely different data frames with nothing in common!
