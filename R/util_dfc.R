@@ -121,9 +121,14 @@ util_dfc.compare_dfs <- function(df1, df2, id_cols = c()) {
   }
 
   # Compare dimensions
-  util.print_pre("COMPARING DIMENSIONS OF DATA FRAMES: ")
-  util.print_pre("Data frame 1: " %+% paste(dim(df1), collapse = " x "))
-  util.print_pre("Data frame 2: " %+% paste(dim(df2), collapse = " x "))
+  if(identical(dim(df1), dim(df2))) {
+    util.print_pre("Data frames have the same dimensions.")
+  } else {
+    util.print_pre("Data frames have different dimensions!")
+    util.print_pre("Data frame 1: " %+% paste(dim(df1), collapse = " x "))
+    util.print_pre("Data frame 2: " %+% paste(dim(df2), collapse = " x "))
+  }
+
 
 
   ##### COMPARING AND FILTERING COLUMNS
