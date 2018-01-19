@@ -179,22 +179,22 @@ dfc.compare_dfs <- function(df1, df2, id_cols = c()) {
     }
 
     # Setup - create ID column for each data frame, condensing across multiple columns if necessary
-    df1$temp_util_id <- dfc.get_concatenated_ids(df1, id_cols)
-    df2$temp_util_id <- dfc.get_concatenated_ids(df2, id_cols)
+    df1$concat_id <- dfc.get_concatenated_ids(df1, id_cols)
+    df2$concat_id <- dfc.get_concatenated_ids(df2, id_cols)
 
     # Determine whether there are any duplicates in either data frame, and report that
     dup_IDs <- FALSE
-    if(any(duplicated(df1$temp_util_id))) {
+    if(any(duplicated(df1$concat_id))) {
       dup_IDs <- TRUE
       util.print_pre("WARNING - the first data frame has duplicate ID rows (as defined by the id_cols parameter). This makes precise row-matching impossible.")
     }
-    if(any(duplicated(df2$temp_util_id))) {
+    if(any(duplicated(df2$concat_id))) {
       dup_IDs <- TRUE
       util.print_pre("WARNING - the second data frame has duplicate ID rows (as defined by the id_cols parameter). This makes precise row-matching impossible.")
     }
 
     # Report on the overlap between unique IDs across data frames
-    unique_id_compare_list <- dfc.compare_vecs(unique(df1$temp_util_id), unique(df2$temp_util_id))
+    unique_id_compare_list <- dfc.compare_vecs(unique(df1$concat_id), unique(df2$concat_id))
     util.print_pre("COMPARING IDENTIFIERS: ")
     util.print_pre(length(unique_id_compare_list$shared_elements) %+% " shared unique identifiers, such as: " %+%
                      paste(head(unique_id_compare_list$shared_elements), collapse = ", "))
@@ -210,13 +210,13 @@ dfc.compare_dfs <- function(df1, df2, id_cols = c()) {
       util.print_pre("No shared IDs across data frames, so no way to compare data frame values. Ending function.")
       return()
     }
-    df1 <- df1[df1$temp_util_id %in% unique_id_compare_list$shared_elements, ]
-    df2 <- df2[df2$temp_util_id %in% unique_id_compare_list$shared_elements, ]
+    df1 <- df1[df1$concat_id %in% unique_id_compare_list$shared_elements, ]
+    df2 <- df2[df2$concat_id %in% unique_id_compare_list$shared_elements, ]
     util.print_pre("Both data frames filtered to remove any rows with non-shared IDs. Any duplicate IDs within a data frame are preserved.")
 
     # Sort both DFs by ID, and warn user if duplicates make perfect sorting impossible
-    df1 <- arrange(df1, temp_util_id)
-    df2 <- arrange(df2, temp_util_id)
+    df1 <- arrange(df1, concat_id)
+    df2 <- arrange(df2, concat_id)
     util.print_pre("Rows of both data frames sorted by ID column(s).")
     if(dup_IDs) {
       util.print_pre("WARNING - ID columns do not uniquely identify rows in at least one data frame, so the rows of the two data frames cannot be guaranteed to match up.")
@@ -234,19 +234,43 @@ dfc.compare_dfs <- function(df1, df2, id_cols = c()) {
     return()
   }
 
-  # Actually compare the two data frames and tabulate the number of matches for each column.
-  # First, cast NAs to the string "__NA__" so that "__NA__" == "__NA__" returns TRUE.
+  # Cast NAs to the string "__NA__" so that "__NA__" == "__NA__" returns TRUE for all comparisons.
   df1[is.na(df1)] <- "__NA__"
   df2[is.na(df2)] <- "__NA__"
-  # Also cut the temp_until_id column as you do the comparison.
-  dfdiff <- as.data.frame(df1[, !names(df1) %in% "temp_util_id"] == df2[, !names(df2) %in% "temp_util_id"])
-  dfdiff_sum <- ds.summarize_by_column(dfdiff, func_list = list("pct_unmatched" = function(x) {1 - mean(x)},
-                                                                "num_unmatched" = function(x) {length(x) - sum(x)}))
-  util.html_table(dfdiff_sum)
 
+  # Compare DF values
+  dfdiff <- as.data.frame(df1 == df2)
   if(all(dfdiff == TRUE)) {
-    util.print_pre("After subsetting and sorting on shared columns (by name) and rows (by ID, if possible), the data frames match.")
+    util.print_pre("After subsetting and sorting on shared columns (by name) and rows (by ID, if possible), the data frames perfectly match.")
+  } else {
+    util.print_pre("After subsetting and sorting on shared columns (by name) and rows (by ID, if possible), the data frames do not perfectly match.")
   }
+
+  # Compare DF values by COLUMN and report results on the first few column variables.
+  dfdiff_sum_cols <- ds.summarize_by_column(dfdiff, func_list = list("pct_unmatched" = function(x) {1 - mean(x)},
+                                                                "num_unmatched" = function(x) {length(x) - sum(x)}))
+  util.html_table(head(dfdiff_sum_cols))
+
+  # Compare DF values by ROW IDENTIFIER (if it exists) and report results on the first few identifiers.
+  # If no identifier given, just use row numbers.
+  dfdiff_sum_rows <- dfdiff
+  dfdiff_sum_rows$pct_unmatched <- apply(dfdiff_sum_rows, 1, function(x) {1 - mean(x)})
+  dfdiff_sum_rows$num_unmatched <- apply(dfdiff_sum_rows[, !names(dfdiff_sum_rows) %in% "pct_unmatched"],
+                                         1,
+                                         function(x) {length(x) - sum(x)})
+  if(length(id_cols) > 0) {
+    dfdiff_sum_rows <- dfdiff_sum_rows[, c("concat_id", "pct_unmatched", "num_unmatched")]
+  } else {
+    dfdiff_sum_rows$row_number <- 1:nrow(dfdiff_sum_rows)
+    dfdiff_sum_rows <- dfdiff_sum_rows[, c("row_number", "pct_unmatched", "num_unmatched")]
+  }
+
+  util.html_table(head(dfdiff_sum_rows))
+
+  # Return full summary dfs for user.
+  util.print_pre("Returning full summary tables:")
+  return(list(row_summary = dfdiff_sum_rows,
+              col_summary = dfdiff_sum_cols))
 
 }
 
