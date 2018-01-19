@@ -240,8 +240,10 @@ util_dfc.compare_dfs <- function(df1, df2, id_cols = c()) {
   df2[is.na(df2)] <- "__NA__"
   # Also cut the temp_until_id column as you do the comparison.
   dfdiff <- as.data.frame(df1[, !names(df1) %in% "temp_util_id"] == df2[, !names(df2) %in% "temp_util_id"])
-  ds.summarize_by_column(dfdiff, func_list = list("pct_matched" = mean)) %>%
-                           util.html_table()
+  dfdiff_sum <- ds.summarize_by_column(dfdiff, func_list = list("pct_unmatched" = function(x) {1 - mean(x)},
+                                                                "num_unmatched" = function(x) {length(x) - sum(x)}))
+  util.html_table(dfdiff_sum)
+
   if(all(dfdiff == TRUE)) {
     util.print_pre("After subsetting and sorting on shared columns (by name) and rows (by ID, if possible), the data frames match.")
   }

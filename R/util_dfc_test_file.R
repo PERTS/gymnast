@@ -46,6 +46,11 @@ cars5 <- cars4
 cars5[50, ] <- cars5[49, ]
 util_dfc.compare_dfs(cars1, cars5, id_cols = "id")
 
+# Identical data frames with IDs but one value different
+cars6 <- cars1
+cars6[1, 1] <- "foo"
+util_dfc.compare_dfs(cars1, cars6, id_cols = "id")
+
 
 ##### Test ideas:
 
