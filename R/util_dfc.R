@@ -136,26 +136,33 @@ util_dfc.compare_dfs <- function(df1, df2, id_cols = c()) {
   # Compare column names
   util.print_pre("COMPARING COLUMN NAMES: ")
   col_name_compare_list <- util_dfc.compare_colnames(df1, df2)
-  util.print_pre("Shared column names: " %+%
-                   paste(col_name_compare_list$shared_elements, collapse = ", "))
-  util.print_pre("Columns only in first data frame: " %+%
-                   paste(col_name_compare_list$only_in_first, collapse = ", "))
-  util.print_pre("Columns only in second data frame: " %+%
-                   paste(col_name_compare_list$only_in_second, collapse = ", "))
+  col_names_not_perfect_match <- ifelse(length(c(col_name_compare_list$only_in_first, col_name_compare_list$only_in_second)) > 0,
+                                        T, F)
+  # If the column names don't match up perfectly...
+  if(col_names_not_perfect_match) {
 
-  # Subset to shared columns if needed.
-  if(length(c(col_name_compare_list$only_in_first, col_name_compare_list$only_in_second)) > 0) {
+    # Report the column names that didn't match
+    util.print_pre("Column names did not match perfectly.")
+    util.print_pre("Columns only in first data frame: " %+%
+                     paste(col_name_compare_list$only_in_first, collapse = ", "))
+    util.print_pre("Columns only in second data frame: " %+%
+                     paste(col_name_compare_list$only_in_second, collapse = ", "))
+
     # If there are NO matching columns, exit!
     if(length(col_name_compare_list$shared_elements) == 0) {
       util.print_pre("Data frames share no common column names! Comparison is impossible. Exiting.")
       return()
     }
+
     # otherwise, subset to shared columns
-    util.print_pre("Column names don't perfectly match, so only comparing shared columns: " %+%
-                     paste(col_name_compare_list$shared_elements, collapse = ", "))
+    util.print_pre("Only comparing shared columns going forward.")
     df1 <- df1[, col_name_compare_list$shared_elements]
     df2 <- df2[, col_name_compare_list$shared_elements]
+
+  } else {
+    util.print_pre("Column names matched perfectly!")
   }
+
 
   # Sort columns for apples-to-apples comparison.
   df1 <- df1[, sort(names(df1))]
