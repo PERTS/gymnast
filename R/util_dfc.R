@@ -235,9 +235,9 @@ util_dfc.compare_dfs <- function(df1, df2, id_cols = c()) {
   }
 
   # Actually compare the two data frames and tabulate the number of matches for each column.
-  # First, cast NAs to the string "NA" so that "NA" == "NA" returns TRUE.
-  df1[is.na(df1)] <- "NA"
-  df2[is.na(df2)] <- "NA"
+  # First, cast NAs to the string "__NA__" so that "__NA__" == "__NA__" returns TRUE.
+  df1[is.na(df1)] <- "__NA__"
+  df2[is.na(df2)] <- "__NA__"
   # Also cut the temp_until_id column as you do the comparison.
   dfdiff <- as.data.frame(df1[, !names(df1) %in% "temp_util_id"] == df2[, !names(df2) %in% "temp_util_id"])
   ds.summarize_by_column(dfdiff, func_list = list("pct_matched" = mean)) %>%
