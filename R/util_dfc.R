@@ -6,7 +6,7 @@
 ###     The goal of the util_dfc ("data frame compare") module is to make it easy to see
 ###     where two data frames differ for debugging and further analysis.
 ###
-###     Depends on util.R
+###     Depends on util.R and util_data_summaries.R
 ###
 
 util_dfc.compare_vecs <- function(vec1, vec2) {
@@ -65,8 +65,8 @@ util_dfc.compare_identifiers <- function(df1, df2, id_cols, id_cols_uniquely_ide
   if(!is.data.frame(df1) | !is.data.frame(df2)) {
     stop("Error - at least one of the first two arguments for util_dfc.compare_unique_identifiers is not a data frame.")
   }
-  if(is.na(id_cols) | length(id_cols) == 0) {
-    stop("Error - id_cols argument is NA or empty.")
+  if(any(is.na(id_cols)) | length(id_cols) == 0) {
+    stop("Error - there are NAs in the id_cols argument, and/or no id_cols were provided.")
   }
   if(any(!id_cols %in% names(df1)) | any(!id_cols %in% names(df2))) {
     stop("Error - not all id columns provided are in both data frames.")

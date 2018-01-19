@@ -5,11 +5,12 @@
 ###
 ###     This script runs a series of tests on util_dfc.
 ###
-###     Depends on util.R
+###     Depends on util.R and util_data_summaries.R
 ###
 
 setwd("~/Sites/gymnast/R")
 source("util.R")
+source("util_data_summaries.R")
 source("util_dfc.R")
 library(dplyr)
 
