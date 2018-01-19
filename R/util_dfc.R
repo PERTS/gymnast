@@ -68,8 +68,15 @@ dfc.compare_identifiers <- function(df1, df2, id_cols, id_cols_uniquely_identify
   if(any(is.na(id_cols)) | length(id_cols) == 0) {
     stop("Error - there are NAs in the id_cols argument, and/or no id_cols were provided.")
   }
-  if(any(!id_cols %in% names(df1)) | any(!id_cols %in% names(df2))) {
-    stop("Error - not all id columns provided are in both data frames.")
+  id_cols_missing_from_df1 <- id_cols[!id_cols %in% names(df1)]
+  id_cols_missing_from_df2 <- id_cols[!id_cols %in% names(df2)]
+  if(length(id_cols_missing_from_df1) > 0) {
+    stop("Error - the following ID columns were not in data frame 1: " %+%
+           paste0(id_cols_missing_from_df1, collapse = ", "))
+  }
+  if(length(id_cols_missing_from_df2) > 0) {
+    stop("Error - the following ID columns were not in data frame 2: " %+%
+           paste0(id_cols_missing_from_df2, collapse = ", "))
   }
 
   # Extract the IDs from df1 and df2 in character format.
