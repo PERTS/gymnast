@@ -21,7 +21,7 @@ util_dfc.compare_vecs <- function(vec1, vec2) {
 }
 
 
-util_dfc.get_condensed_ids <- function(df, id_cols) {
+util_dfc.get_concatenated_ids <- function(df, id_cols) {
   # Helper function for getting a vector of IDs (not necessarily unique) from a DF.
   # If there are multiple ID columns, they need to be concatenated with "__".
   if(length(id_cols) == 1) {
@@ -75,8 +75,8 @@ util_dfc.compare_identifiers <- function(df1, df2, id_cols, id_cols_uniquely_ide
   # Extract the IDs from df1 and df2 in character format.
   # If IDs are defined by multiple columns, use them all with "__" as a separator.
   # Note: this section treats NAs as the character string "NA" in an ID.
-  df1_ids <- util_dfc.get_condensed_ids(df1, id_cols)
-  df2_ids <- util_dfc.get_condensed_ids(df2, id_cols)
+  df1_ids <- util_dfc.get_concatenated_ids(df1, id_cols)
+  df2_ids <- util_dfc.get_concatenated_ids(df2, id_cols)
 
   # If the IDs aren't expected to uniquely identify rows, then cut duplicates from them.
   if(!id_cols_uniquely_identify_rows) {
@@ -179,8 +179,8 @@ util_dfc.compare_dfs <- function(df1, df2, id_cols = c()) {
     }
 
     # Setup - create ID column for each data frame, condensing across multiple columns if necessary
-    df1$temp_util_id <- util_dfc.get_condensed_ids(df1, id_cols)
-    df2$temp_util_id <- util_dfc.get_condensed_ids(df2, id_cols)
+    df1$temp_util_id <- util_dfc.get_concatenated_ids(df1, id_cols)
+    df2$temp_util_id <- util_dfc.get_concatenated_ids(df2, id_cols)
 
     # Determine whether there are any duplicates in either data frame, and report that
     dup_IDs <- FALSE
