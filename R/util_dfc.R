@@ -9,7 +9,7 @@
 ###     Depends on util.R and util_data_summaries.R
 ###
 
-util_dfc.compare_vecs <- function(vec1, vec2) {
+dfc.compare_vecs <- function(vec1, vec2) {
   # compare vector elements without regard to order and without checking for duplicates.
   # return a list with three components -
   ## shared_elements: the shared elements,
@@ -21,7 +21,7 @@ util_dfc.compare_vecs <- function(vec1, vec2) {
 }
 
 
-util_dfc.get_concatenated_ids <- function(df, id_cols) {
+dfc.get_concatenated_ids <- function(df, id_cols) {
   # Helper function for getting a vector of IDs (not necessarily unique) from a DF.
   # If there are multiple ID columns, they need to be concatenated with "__".
   if(length(id_cols) == 1) {
@@ -32,8 +32,8 @@ util_dfc.get_concatenated_ids <- function(df, id_cols) {
 }
 
 
-util_dfc.compare_colnames <- function(df1, df2) {
-  # compare the column names of two data frames using util_dfc.compare_vecs.
+dfc.compare_colnames <- function(df1, df2) {
+  # compare the column names of two data frames using dfc.compare_vecs.
   # return a list with three components -
   ## shared_elements: the shared names,
   ## only_in_first: the names in df1 and not df2,
@@ -41,16 +41,16 @@ util_dfc.compare_colnames <- function(df1, df2) {
 
   # Sanity checks
   if(!is.data.frame(df1) | !is.data.frame(df2)) {
-    stop("Error - at least one of the first two arguments for util_dfc.compare_colnames is not a data frame.")
+    stop("Error - at least one of the first two arguments for dfc.compare_colnames is not a data frame.")
   }
 
-  return(util_dfc.compare_vecs(names(df1), names(df2)))
+  return(dfc.compare_vecs(names(df1), names(df2)))
 }
 
 
 
 
-util_dfc.compare_identifiers <- function(df1, df2, id_cols, id_cols_uniquely_identify_rows = FALSE) {
+dfc.compare_identifiers <- function(df1, df2, id_cols, id_cols_uniquely_identify_rows = FALSE) {
   # Compare two dfs on a set of one or more commonly-shared columns that identify rows.
   # If rows are identified by multiple columns (e.g. team x student x week), include all column names in id_cols.
   # Return a list with shared IDs, IDs in df1 only, and IDs in df2 only.
@@ -63,7 +63,7 @@ util_dfc.compare_identifiers <- function(df1, df2, id_cols, id_cols_uniquely_ide
 
   # Sanity checks
   if(!is.data.frame(df1) | !is.data.frame(df2)) {
-    stop("Error - at least one of the first two arguments for util_dfc.compare_unique_identifiers is not a data frame.")
+    stop("Error - at least one of the first two arguments for dfc.compare_unique_identifiers is not a data frame.")
   }
   if(any(is.na(id_cols)) | length(id_cols) == 0) {
     stop("Error - there are NAs in the id_cols argument, and/or no id_cols were provided.")
@@ -75,8 +75,8 @@ util_dfc.compare_identifiers <- function(df1, df2, id_cols, id_cols_uniquely_ide
   # Extract the IDs from df1 and df2 in character format.
   # If IDs are defined by multiple columns, use them all with "__" as a separator.
   # Note: this section treats NAs as the character string "NA" in an ID.
-  df1_ids <- util_dfc.get_concatenated_ids(df1, id_cols)
-  df2_ids <- util_dfc.get_concatenated_ids(df2, id_cols)
+  df1_ids <- dfc.get_concatenated_ids(df1, id_cols)
+  df2_ids <- dfc.get_concatenated_ids(df2, id_cols)
 
   # If the IDs aren't expected to uniquely identify rows, then cut duplicates from them.
   if(!id_cols_uniquely_identify_rows) {
@@ -87,22 +87,22 @@ util_dfc.compare_identifiers <- function(df1, df2, id_cols, id_cols_uniquely_ide
   # Warn if the IDs still have duplicates in either df!
   # This would mean that the user expected no duplicates but actually had them.
   if(any(duplicated(df1_ids))) {
-    warning("Warning - first data frame passed to util_dfc.compare_unique_identifiers has unexpected duplicate ID values:")
+    warning("Warning - first data frame passed to dfc.compare_unique_identifiers has unexpected duplicate ID values:")
     util.print_pre(unique(df1_ids[duplicated(df1_ids)]))
   }
   if(any(duplicated(df2_ids))) {
-    warning("Warning - second data frame passed to util_dfc.compare_unique_identifiers has unexpected duplicate ID values:")
+    warning("Warning - second data frame passed to dfc.compare_unique_identifiers has unexpected duplicate ID values:")
     util.print_pre(unique(df2_ids[duplicated(df2_ids)]))
   }
 
-  # use util_dfc.compare_vecs on id_cols of each df
-  return(util_dfc.compare_vecs(df1_ids, df2_ids))
+  # use dfc.compare_vecs on id_cols of each df
+  return(dfc.compare_vecs(df1_ids, df2_ids))
 }
 
 
 
 
-util_dfc.compare_dfs <- function(df1, df2, id_cols = c()) {
+dfc.compare_dfs <- function(df1, df2, id_cols = c()) {
   # Big wrapper function for giving an overall picture of how two DFs differ:
   ## Check nrow and ncol
   ## Compare colnames
@@ -117,7 +117,7 @@ util_dfc.compare_dfs <- function(df1, df2, id_cols = c()) {
 
   # Are they data frames?
   if(!is.data.frame(df1) | !is.data.frame(df2)) {
-    stop("Error - at least one of the first two arguments for util_dfc.compare_dfs is not a data frame.")
+    stop("Error - at least one of the first two arguments for dfc.compare_dfs is not a data frame.")
   }
 
   # Compare dimensions
@@ -135,7 +135,7 @@ util_dfc.compare_dfs <- function(df1, df2, id_cols = c()) {
 
   # Compare column names
   util.print_pre("COMPARING COLUMN NAMES: ")
-  col_name_compare_list <- util_dfc.compare_colnames(df1, df2)
+  col_name_compare_list <- dfc.compare_colnames(df1, df2)
   col_names_not_perfect_match <- ifelse(length(c(col_name_compare_list$only_in_first, col_name_compare_list$only_in_second)) > 0,
                                         T, F)
   # If the column names don't match up perfectly...
@@ -179,8 +179,8 @@ util_dfc.compare_dfs <- function(df1, df2, id_cols = c()) {
     }
 
     # Setup - create ID column for each data frame, condensing across multiple columns if necessary
-    df1$temp_util_id <- util_dfc.get_concatenated_ids(df1, id_cols)
-    df2$temp_util_id <- util_dfc.get_concatenated_ids(df2, id_cols)
+    df1$temp_util_id <- dfc.get_concatenated_ids(df1, id_cols)
+    df2$temp_util_id <- dfc.get_concatenated_ids(df2, id_cols)
 
     # Determine whether there are any duplicates in either data frame, and report that
     dup_IDs <- FALSE
@@ -194,7 +194,7 @@ util_dfc.compare_dfs <- function(df1, df2, id_cols = c()) {
     }
 
     # Report on the overlap between unique IDs across data frames
-    unique_id_compare_list <- util_dfc.compare_vecs(unique(df1$temp_util_id), unique(df2$temp_util_id))
+    unique_id_compare_list <- dfc.compare_vecs(unique(df1$temp_util_id), unique(df2$temp_util_id))
     util.print_pre("COMPARING IDENTIFIERS: ")
     util.print_pre(length(unique_id_compare_list$shared_elements) %+% " shared unique identifiers, such as: " %+%
                      paste(head(unique_id_compare_list$shared_elements), collapse = ", "))

@@ -19,37 +19,37 @@ cars1 <- cars
 cars2 <- cars
 cars1$id <- 1:nrow(cars1)
 cars2$id <- 1:nrow(cars2)
-util_dfc.compare_dfs(cars1, cars2)
+dfc.compare_dfs(cars1, cars2)
 
 # column missing in one df
 cars3 <- select(cars2, -speed)
-util_dfc.compare_dfs(cars1, cars3)
+dfc.compare_dfs(cars1, cars3)
 
 # row and column missing in one df
 cars4 <- filter(cars3, dist > 2)
-util_dfc.compare_dfs(cars1, cars4)
+dfc.compare_dfs(cars1, cars4)
 
 # Identical dfs with identical single unique ID column
-util_dfc.compare_dfs(cars1, cars2, id_cols = "id")
+dfc.compare_dfs(cars1, cars2, id_cols = "id")
 
 # Comparing IDs when one row and one column are missing from one df
-util_dfc.compare_dfs(cars1, cars4, id_cols = "id")
+dfc.compare_dfs(cars1, cars4, id_cols = "id")
 
 # with wrong ID
-util_dfc.compare_dfs(cars1, cars4, id_cols = "foo")
+dfc.compare_dfs(cars1, cars4, id_cols = "foo")
 
 # Completely different data frames with nothing in common!
-util_dfc.compare_dfs(cars, iris)
+dfc.compare_dfs(cars, iris)
 
 # Data frames with duplicate rows and duplicate IDs with different data
 cars5 <- cars4
 cars5[50, ] <- cars5[49, ]
-util_dfc.compare_dfs(cars1, cars5, id_cols = "id")
+dfc.compare_dfs(cars1, cars5, id_cols = "id")
 
 # Identical data frames with IDs but one value different
 cars6 <- cars1
 cars6[1, 1] <- "foo"
-util_dfc.compare_dfs(cars1, cars6, id_cols = "id")
+dfc.compare_dfs(cars1, cars6, id_cols = "id")
 
 
 ##### Test ideas:
