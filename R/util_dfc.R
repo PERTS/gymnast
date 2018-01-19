@@ -88,11 +88,11 @@ dfc.compare_identifiers <- function(df1, df2, id_cols, id_cols_uniquely_identify
   # This would mean that the user expected no duplicates but actually had them.
   if(any(duplicated(df1_ids))) {
     warning("Warning - first data frame passed to dfc.compare_unique_identifiers has unexpected duplicate ID values:")
-    util.print_pre(unique(df1_ids[duplicated(df1_ids)]))
+    message(unique(df1_ids[duplicated(df1_ids)]))
   }
   if(any(duplicated(df2_ids))) {
     warning("Warning - second data frame passed to dfc.compare_unique_identifiers has unexpected duplicate ID values:")
-    util.print_pre(unique(df2_ids[duplicated(df2_ids)]))
+    message(unique(df2_ids[duplicated(df2_ids)]))
   }
 
   # use dfc.compare_vecs on id_cols of each df
@@ -122,11 +122,11 @@ dfc.compare_dfs <- function(df1, df2, id_cols = c()) {
 
   # Compare dimensions
   if(identical(dim(df1), dim(df2))) {
-    util.print_pre("Data frames have the same dimensions.")
+    message("Data frames have the same dimensions.")
   } else {
-    util.print_pre("Data frames have different dimensions!")
-    util.print_pre("Data frame 1: " %+% paste(dim(df1), collapse = " x "))
-    util.print_pre("Data frame 2: " %+% paste(dim(df2), collapse = " x "))
+    message("Data frames have different dimensions!")
+    message("Data frame 1: " %+% paste(dim(df1), collapse = " x "))
+    message("Data frame 2: " %+% paste(dim(df2), collapse = " x "))
   }
 
 
@@ -134,7 +134,7 @@ dfc.compare_dfs <- function(df1, df2, id_cols = c()) {
   ##### COMPARING AND FILTERING COLUMNS
 
   # Compare column names
-  util.print_pre("COMPARING COLUMN NAMES: ")
+  message("COMPARING COLUMN NAMES: ")
   col_name_compare_list <- dfc.compare_colnames(df1, df2)
   col_names_not_perfect_match <- ifelse(length(c(col_name_compare_list$only_in_first, col_name_compare_list$only_in_second)) > 0,
                                         T, F)
@@ -142,25 +142,25 @@ dfc.compare_dfs <- function(df1, df2, id_cols = c()) {
   if(col_names_not_perfect_match) {
 
     # Report the column names that didn't match
-    util.print_pre("Column names did not match perfectly.")
-    util.print_pre("Columns only in first data frame: " %+%
+    message("Column names did not match perfectly.")
+    message("Columns only in first data frame: " %+%
                      paste(col_name_compare_list$only_in_first, collapse = ", "))
-    util.print_pre("Columns only in second data frame: " %+%
+    message("Columns only in second data frame: " %+%
                      paste(col_name_compare_list$only_in_second, collapse = ", "))
 
     # If there are NO matching columns, exit!
     if(length(col_name_compare_list$shared_elements) == 0) {
-      util.print_pre("Data frames share no common column names! Comparison is impossible. Exiting.")
+      message("Data frames share no common column names! Comparison is impossible. Exiting.")
       return()
     }
 
     # otherwise, subset to shared columns
-    util.print_pre("Only comparing shared columns going forward.")
+    message("Only comparing shared columns going forward.")
     df1 <- df1[, col_name_compare_list$shared_elements]
     df2 <- df2[, col_name_compare_list$shared_elements]
 
   } else {
-    util.print_pre("Column names matched perfectly!")
+    message("Column names matched perfectly!")
   }
 
 
@@ -186,43 +186,43 @@ dfc.compare_dfs <- function(df1, df2, id_cols = c()) {
     dup_IDs <- FALSE
     if(any(duplicated(df1$concat_id))) {
       dup_IDs <- TRUE
-      util.print_pre("WARNING - the first data frame has duplicate ID rows (as defined by the id_cols parameter). This makes precise row-matching impossible.")
+      message("WARNING - the first data frame has duplicate ID rows (as defined by the id_cols parameter). This makes precise row-matching impossible.")
     }
     if(any(duplicated(df2$concat_id))) {
       dup_IDs <- TRUE
-      util.print_pre("WARNING - the second data frame has duplicate ID rows (as defined by the id_cols parameter). This makes precise row-matching impossible.")
+      message("WARNING - the second data frame has duplicate ID rows (as defined by the id_cols parameter). This makes precise row-matching impossible.")
     }
 
     # Report on the overlap between unique IDs across data frames
     unique_id_compare_list <- dfc.compare_vecs(unique(df1$concat_id), unique(df2$concat_id))
-    util.print_pre("COMPARING IDENTIFIERS: ")
-    util.print_pre(length(unique_id_compare_list$shared_elements) %+% " shared unique identifiers, such as: " %+%
+    message("COMPARING IDENTIFIERS: ")
+    message(length(unique_id_compare_list$shared_elements) %+% " shared unique identifiers, such as: " %+%
                      paste(head(unique_id_compare_list$shared_elements), collapse = ", "))
-    util.print_pre(length(unique_id_compare_list$only_in_first) %+% " unique identifiers only in first data frame.")
+    message(length(unique_id_compare_list$only_in_first) %+% " unique identifiers only in first data frame.")
     if(length(unique_id_compare_list$only_in_first) > 0) {
-      util.print_pre("...such as: " %+% paste(head(unique_id_compare_list$only_in_first), collapse = ", "))}
-    util.print_pre(length(unique_id_compare_list$only_in_second) %+% " unique identifiers only in second data frame.")
+      message("...such as: " %+% paste(head(unique_id_compare_list$only_in_first), collapse = ", "))}
+    message(length(unique_id_compare_list$only_in_second) %+% " unique identifiers only in second data frame.")
     if(length(unique_id_compare_list$only_in_second) > 0) {
-      util.print_pre("...such as: " %+% paste(head(unique_id_compare_list$only_in_second), collapse = ", "))}
+      message("...such as: " %+% paste(head(unique_id_compare_list$only_in_second), collapse = ", "))}
 
     # Use the overlap to filter both data frames to rows with shared IDs, if possible
     if(length(unique_id_compare_list$shared_elements) == 0) {
-      util.print_pre("No shared IDs across data frames, so no way to compare data frame values. Ending function.")
+      message("No shared IDs across data frames, so no way to compare data frame values. Ending function.")
       return()
     }
     df1 <- df1[df1$concat_id %in% unique_id_compare_list$shared_elements, ]
     df2 <- df2[df2$concat_id %in% unique_id_compare_list$shared_elements, ]
-    util.print_pre("Both data frames filtered to remove any rows with non-shared IDs. Any duplicate IDs within a data frame are preserved.")
+    message("Both data frames filtered to remove any rows with non-shared IDs. Any duplicate IDs within a data frame are preserved.")
 
     # Sort both DFs by ID, and warn user if duplicates make perfect sorting impossible
     df1 <- arrange(df1, concat_id)
     df2 <- arrange(df2, concat_id)
-    util.print_pre("Rows of both data frames sorted by ID column(s).")
+    message("Rows of both data frames sorted by ID column(s).")
     if(dup_IDs) {
-      util.print_pre("WARNING - ID columns do not uniquely identify rows in at least one data frame, so the rows of the two data frames cannot be guaranteed to match up.")
+      message("WARNING - ID columns do not uniquely identify rows in at least one data frame, so the rows of the two data frames cannot be guaranteed to match up.")
     }
   } else {
-    util.print_pre("WARNING - no ID columns were defined in the function call, so no way to filter or sort rows for comparison.")
+    message("WARNING - no ID columns were defined in the function call, so no way to filter or sort rows for comparison.")
   }
 
 
@@ -230,7 +230,7 @@ dfc.compare_dfs <- function(df1, df2, id_cols = c()) {
 
   # Sanity-check that the dimensions of the two DFs are the same
   if(!all(dim(df1) == dim(df2))){
-    util.print_pre("WARNING - data frames do not have same dimensions after attempting to filter to shared rows and columns. No way to compare values. Stopping function.")
+    message("WARNING - data frames do not have same dimensions after attempting to filter to shared rows and columns. No way to compare values. Stopping function.")
     return()
   }
 
@@ -241,9 +241,9 @@ dfc.compare_dfs <- function(df1, df2, id_cols = c()) {
   # Compare DF values
   dfdiff <- as.data.frame(df1 == df2)
   if(all(dfdiff == TRUE)) {
-    util.print_pre("After subsetting and sorting on shared columns (by name) and rows (by ID, if possible), the data frames perfectly match.")
+    message("After subsetting and sorting on shared columns (by name) and rows (by ID, if possible), the data frames perfectly match.")
   } else {
-    util.print_pre("After subsetting and sorting on shared columns (by name) and rows (by ID, if possible), the data frames do not perfectly match.")
+    message("After subsetting and sorting on shared columns (by name) and rows (by ID, if possible), the data frames do not perfectly match.")
   }
 
   # Compare DF values by COLUMN and report results on the first few column variables.
@@ -268,7 +268,7 @@ dfc.compare_dfs <- function(df1, df2, id_cols = c()) {
   util.html_table(head(dfdiff_sum_rows))
 
   # Return full summary dfs for user.
-  util.print_pre("Returning full summary tables:")
+  message("Returning full summary tables.")
   return(list(row_summary = dfdiff_sum_rows,
               col_summary = dfdiff_sum_cols))
 
