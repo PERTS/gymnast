@@ -19,12 +19,10 @@ dfc.setdiff_plus <- function(vec1, vec2) {
   # First, warn if there are duplicates in either vector. They will be discarded in the setdiff.
   # Warn if there are duplicate IDs in either df!
   if(any(duplicated(vec1))) {
-    warning("Warning - first argument passed to dfc.setdiff_plus has duplicate values that will be ignored in the set-diff:")
-    message(unique(vec1[duplicated(vec1)]))
+    message("Warning - first argument passed to dfc.setdiff_plus has duplicate values that will be ignored in the set-diff.")
   }
   if(any(duplicated(vec2))) {
-    warning("Warning - second argument passed to dfc.setdiff_plus has duplicate values that will be ignored in the set-diff:")
-    message(unique(vec2[duplicated(vec2)]))
+    message("Warning - second argument passed to dfc.setdiff_plus has duplicate values that will be ignored in the set-diff.")
   }
 
   return(list(shared_elements = intersect(vec1, vec2),
@@ -44,24 +42,9 @@ dfc.get_concatenated_ids <- function(df, id_cols) {
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 dfc.compare_df_values <- function(df1, df2, id_col, verbose = FALSE) {
   # Function for comparing exact values of two data frames that have identical columns and row identifiers.
-  # INPUTS: two data frames and a string naming a shared ID column.
+  # INPUTS: two data frames and a string naming a shared ID column. "Verbose" prints heads of summary tables.
   # OUTPUT: A list containing three elements:
   #    diff_df: a DF the same dimensions as the input DF of TRUEs and FALSEs for value comparisons.
   #    row_summary: summary table of percent-matched across row identifiers.
@@ -98,7 +81,7 @@ dfc.compare_df_values <- function(df1, df2, id_col, verbose = FALSE) {
 
   # warn if there are duplicates in the ID column for either, because they make precise row sorting impossible
   if(any(duplicated(df1[, id_col])) | any(duplicated(df2[, id_col]))) {
-    warning("Warning - duplicate ID values found in at least one data frame. Rows might not be sorted the same way, even if row IDs are.")
+    message("Warning - duplicate ID values found in at least one data frame. Rows might not be sorted the same way, even if row IDs are.")
   }
 
   ##### ALL CHECKS PASSED - BEGIN VALUE-BY-VALUE COMPARISON #####
