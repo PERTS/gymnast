@@ -10,11 +10,23 @@
 ###
 
 dfc.setdiff_plus <- function(vec1, vec2) {
-  # compare unique vector elements without regard to order and without checking for duplicates.
+  # compare unique vector elements without regard to order and after automatically discarding any duplicates.
   # return a list with three components -
   ## shared_elements: the shared unique elements,
   ## only_in_first: the unique elements in vec1 and not vec2,
   ## only_in_second: the unique elements in vec2 and not vec1.
+
+  # First, warn if there are duplicates in either vector. They will be discarded in the setdiff.
+  # Warn if there are duplicate IDs in either df!
+  if(any(duplicated(vec1))) {
+    warning("Warning - first argument passed to dfc.setdiff_plus has duplicate values that will be ignored in the set-diff:")
+    message(unique(vec1[duplicated(vec1)]))
+  }
+  if(any(duplicated(vec2))) {
+    warning("Warning - second argument passed to dfc.setdiff_plus has duplicate values that will be ignored in the set-diff:")
+    message(unique(vec2[duplicated(vec2)]))
+  }
+
   return(list(shared_elements = intersect(vec1, vec2),
               only_in_first = setdiff(vec1, vec2),
               only_in_second = setdiff(vec2, vec1)))
@@ -30,65 +42,6 @@ dfc.get_concatenated_ids <- function(df, id_cols) {
     return(apply(df[, id_cols], 1, paste, collapse = "~~"))
   }
 }
-
-
-
-dfc.compare_identifiers <- function(df1, df2, id_cols, id_cols_uniquely_identify_rows = FALSE) {
-  # Compare two dfs on a set of one or more commonly-shared columns that identify rows.
-  # If rows are identified by multiple columns (e.g. team x student x week), include all column names in id_cols.
-  # Return a list with shared IDs, IDs in df1 only, and IDs in df2 only.
-  #
-  # If you expect id_cols to UNIQUELY identify each row in both dfs, set id_cols_uniquely_identify_rows to TRUE.
-  # Otherwise, duplicate ID values within each data frame will get ignored.
-  # Example use case: you want to compare a student-x-week df with a student df to see if they have the same students.
-  # The commonly-shared id_col is student ID.
-  # Since student ID doesn't uniquely identify rows in the first df, id_cols_uniquely_identify_rows = FALSE.
-
-  # Sanity checks
-  if(!is.data.frame(df1) | !is.data.frame(df2)) {
-    stop("Error - at least one of the first two arguments for dfc.compare_unique_identifiers is not a data frame.")
-  }
-  if(any(is.na(id_cols)) | length(id_cols) == 0) {
-    stop("Error - there are NAs in the id_cols argument, and/or no id_cols were provided.")
-  }
-  id_cols_missing_from_df1 <- id_cols[!id_cols %in% names(df1)]
-  id_cols_missing_from_df2 <- id_cols[!id_cols %in% names(df2)]
-  if(length(id_cols_missing_from_df1) > 0) {
-    stop("Error - the following ID columns were not in data frame 1: " %+%
-           paste0(id_cols_missing_from_df1, collapse = ", "))
-  }
-  if(length(id_cols_missing_from_df2) > 0) {
-    stop("Error - the following ID columns were not in data frame 2: " %+%
-           paste0(id_cols_missing_from_df2, collapse = ", "))
-  }
-
-  # Extract the IDs from df1 and df2 in character format.
-  # If IDs are defined by multiple columns, use them all with "~~" as a separator.
-  # Note: this section treats NAs as the character string "NA" in an ID.
-  df1_ids <- dfc.get_concatenated_ids(df1, id_cols)
-  df2_ids <- dfc.get_concatenated_ids(df2, id_cols)
-
-  # If the IDs aren't expected to uniquely identify rows, then cut duplicates from them.
-  if(!id_cols_uniquely_identify_rows) {
-    df1_ids <- df1_ids[!duplicated(df1_ids)]
-    df2_ids <- df2_ids[!duplicated(df2_ids)]
-  }
-
-  # Warn if the IDs still have duplicates in either df!
-  # This would mean that the user expected no duplicates but actually had them.
-  if(any(duplicated(df1_ids))) {
-    warning("Warning - first data frame passed to dfc.compare_unique_identifiers has unexpected duplicate ID values:")
-    message(unique(df1_ids[duplicated(df1_ids)]))
-  }
-  if(any(duplicated(df2_ids))) {
-    warning("Warning - second data frame passed to dfc.compare_unique_identifiers has unexpected duplicate ID values:")
-    message(unique(df2_ids[duplicated(df2_ids)]))
-  }
-
-  # use dfc.compare_vecs on id_cols of each df
-  return(dfc.compare_vecs(df1_ids, df2_ids))
-}
-
 
 
 
