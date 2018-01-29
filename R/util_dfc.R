@@ -23,11 +23,11 @@ dfc.compare_vecs <- function(vec1, vec2) {
 
 dfc.get_concatenated_ids <- function(df, id_cols) {
   # Helper function for getting a vector of IDs (not necessarily unique) from a DF.
-  # If there are multiple ID columns, they need to be concatenated with "__".
+  # If there are multiple ID columns, they need to be concatenated with "~~".
   if(length(id_cols) == 1) {
     return(as.character(df[, id_cols]))
   } else {
-    return(apply(df[, id_cols], 1, paste, collapse = "__"))
+    return(apply(df[, id_cols], 1, paste, collapse = "~~"))
   }
 }
 
@@ -80,7 +80,7 @@ dfc.compare_identifiers <- function(df1, df2, id_cols, id_cols_uniquely_identify
   }
 
   # Extract the IDs from df1 and df2 in character format.
-  # If IDs are defined by multiple columns, use them all with "__" as a separator.
+  # If IDs are defined by multiple columns, use them all with "~~" as a separator.
   # Note: this section treats NAs as the character string "NA" in an ID.
   df1_ids <- dfc.get_concatenated_ids(df1, id_cols)
   df2_ids <- dfc.get_concatenated_ids(df2, id_cols)
@@ -241,9 +241,9 @@ dfc.compare_dfs <- function(df1, df2, id_cols = c()) {
     return()
   }
 
-  # Cast NAs to the string "__NA__" so that "__NA__" == "__NA__" returns TRUE for all comparisons.
-  df1[is.na(df1)] <- "__NA__"
-  df2[is.na(df2)] <- "__NA__"
+  # Cast NAs to the string "~~NA~~" so that "~~NA~~" == "~~NA~~" returns TRUE for all comparisons.
+  df1[is.na(df1)] <- "~~NA~~"
+  df2[is.na(df2)] <- "~~NA~~"
 
   # Compare DF values
   dfdiff <- as.data.frame(df1 == df2)
