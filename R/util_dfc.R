@@ -35,13 +35,118 @@ dfc.setdiff_plus <- function(vec1, vec2) {
 
 dfc.get_concatenated_ids <- function(df, id_cols) {
   # Helper function for getting a vector of IDs (not necessarily unique) from a DF.
-  # If there are multiple ID columns, they need to be concatenated with "~~".
+  # If there are multiple ID columns, they need to be concatenated with "---".
   if(length(id_cols) == 1) {
     return(as.character(df[, id_cols]))
   } else {
-    return(apply(df[, id_cols], 1, paste, collapse = "~~"))
+    return(apply(df[, id_cols], 1, paste, collapse = "---"))
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+dfc.compare_df_values <- function(df1, df2, id_col, verbose = FALSE) {
+  # Function for comparing exact values of two data frames that have identical columns and row identifiers.
+  # INPUTS: two data frames and a string naming a shared ID column.
+  # OUTPUT: if the match is perfect, return nothing. Otherwise, return a list containing two elements:
+  #    row_summary: summary table of percent-matched across row identifiers.
+  #    col_summary: summary table of percent-matched across col identifiers.
+  # STEPS:
+  #    check that dimensions are identical
+  #    check that column names are identical and ordered the same
+  #    check that both DFs have the id column named in the arguments
+  #    check that both DFs have the same exact set of values in the ID column, ordered the same way
+  #    warn if there are duplicates in the ID column for either, because they make precise row sorting impossible
+  #    compare the DFs value-by-value, getting a new DF of trues and falses for matches and non-matches
+  #    report summary tables of percent-matched by row ID and by col name.
+
+
+  # check that dimensions are identical
+  if(!identical(dim(df1), dim(df2))) {
+    stop("Cannot compare DF values - DFs have different dimensions.")
+  }
+
+  # check that column names are identical and ordered the same
+  if(!identical(names(df1), names(df2))) {
+    stop("Cannot compare DF values - DFs have different column names, or the same columns in a different order.")
+  }
+
+  # check that both DFs have the id column named in the arguments
+  if(!id_col %in% names(df1) | !id_col %in% names(df2)) {
+    stop("Cannot compare DF values - the ID column named in the arguments is not present in at least one DF.")
+  }
+
+  # check that both DFs have the same exact set of values in the ID column, ordered the same way
+  if(!identical(df1[, id_col], df2[, id_col]) {
+    stop("Cannot compare DF values - DFs have different ID column values, or the same values in a different order.")
+  }
+
+  # warn if there are duplicates in the ID column for either, because they make precise row sorting impossible
+  if(any(duplicated(df1[, id_col])) | any(duplicated(df2[, id_col]))) {
+    warning("Warning - duplicate ID values found in at least one data frame. Rows might not be sorted the same way, even if row IDs are.")
+  }
+
+  ##### ALL CHECKS PASSED - BEGIN VALUE-BY-VALUE COMPARISON #####
+
+  # Cast NAs to the string "---NA---" so that "---NA---" == "---NA---" returns TRUE for all comparisons.
+  df1[is.na(df1)] <- "---NA---"
+  df2[is.na(df2)] <- "---NA---"
+
+  # Compare DF values
+  dfdiff <- as.data.frame(df1 == df2)
+  if(all(dfdiff == TRUE)) {
+    message("Perfect match!")
+    return()
+  } else {
+    message("Match was not perfect.")
+  }
+
+  # Compare DF values by COLUMN and report results on the first few column variables.
+  dfdiff_sum_cols <- ds.summarize_by_column(dfdiff, func_list = list("pct_unmatched" = function(x) {1 - mean(x)},
+                                                                     "num_unmatched" = function(x) {length(x) - sum(x)}))
+  if(verbose) {util.html_table(head(dfdiff_sum_cols))}
+
+  # Compare DF values by ROW IDENTIFIER and report results on the first few identifiers.
+  dfdiff_sum_rows <- dfdiff
+  dfdiff_sum_rows$pct_unmatched <- apply(dfdiff_sum_rows, 1, function(x) {1 - mean(x)})
+  dfdiff_sum_rows$num_unmatched <- apply(dfdiff_sum_rows[, !names(dfdiff_sum_rows) %in% "pct_unmatched"],
+                                         1,
+                                         function(x) {length(x) - sum(x)})
+  dfdiff_sum_rows <- dfdiff_sum_rows[, c(id_col, "pct_unmatched", "num_unmatched")]
+
+  if(verbose) {util.html_table(head(dfdiff_sum_rows))}
+
+  # Return full summary dfs for user.
+  return(list(row_summary = dfdiff_sum_rows,
+              col_summary = dfdiff_sum_cols))
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -177,9 +282,9 @@ dfc.compare_dfs <- function(df1, df2, id_cols = c()) {
     return()
   }
 
-  # Cast NAs to the string "~~NA~~" so that "~~NA~~" == "~~NA~~" returns TRUE for all comparisons.
-  df1[is.na(df1)] <- "~~NA~~"
-  df2[is.na(df2)] <- "~~NA~~"
+  # Cast NAs to the string "---NA---" so that "---NA---" == "---NA---" returns TRUE for all comparisons.
+  df1[is.na(df1)] <- "---NA---"
+  df2[is.na(df2)] <- "---NA---"
 
   # Compare DF values
   dfdiff <- as.data.frame(df1 == df2)
