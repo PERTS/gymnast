@@ -9,12 +9,12 @@
 ###     Depends on util.R and util_data_summaries.R
 ###
 
-dfc.compare_vecs <- function(vec1, vec2) {
-  # compare vector elements without regard to order and without checking for duplicates.
+dfc.setdiff_plus <- function(vec1, vec2) {
+  # compare unique vector elements without regard to order and without checking for duplicates.
   # return a list with three components -
-  ## shared_elements: the shared elements,
-  ## only_in_first: the elements in vec1 and not vec2,
-  ## only_in_second: the elements in vec2 and not vec1.
+  ## shared_elements: the shared unique elements,
+  ## only_in_first: the unique elements in vec1 and not vec2,
+  ## only_in_second: the unique elements in vec2 and not vec1.
   return(list(shared_elements = intersect(vec1, vec2),
               only_in_first = setdiff(vec1, vec2),
               only_in_second = setdiff(vec2, vec1)))
@@ -30,23 +30,6 @@ dfc.get_concatenated_ids <- function(df, id_cols) {
     return(apply(df[, id_cols], 1, paste, collapse = "~~"))
   }
 }
-
-
-dfc.compare_colnames <- function(df1, df2) {
-  # compare the column names of two data frames using dfc.compare_vecs.
-  # return a list with three components -
-  ## shared_elements: the shared names,
-  ## only_in_first: the names in df1 and not df2,
-  ## only_in_second: the names in df2 and not df1
-
-  # Sanity checks
-  if(!is.data.frame(df1) | !is.data.frame(df2)) {
-    stop("Error - at least one of the first two arguments for dfc.compare_colnames is not a data frame.")
-  }
-
-  return(dfc.compare_vecs(names(df1), names(df2)))
-}
-
 
 
 
@@ -142,7 +125,7 @@ dfc.compare_dfs <- function(df1, df2, id_cols = c()) {
 
   # Compare column names
   message("COMPARING COLUMN NAMES: ")
-  col_name_compare_list <- dfc.compare_colnames(df1, df2)
+  col_name_compare_list <- dfc.setdiff_plus(names(df1), names(df2))
   col_names_not_perfect_match <- ifelse(length(c(col_name_compare_list$only_in_first, col_name_compare_list$only_in_second)) > 0,
                                         T, F)
   # If the column names don't match up perfectly...
