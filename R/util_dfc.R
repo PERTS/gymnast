@@ -47,8 +47,8 @@ dfc.compare_df_values <- function(df1, df2, id_col, verbose = FALSE) {
   # INPUTS: two data frames and a string naming a shared ID column. "Verbose" prints heads of summary tables.
   # OUTPUT: A list containing three elements:
   #    diff_df: a DF the same dimensions as the input DF of TRUEs and FALSEs for value comparisons.
-  #    row_summary: summary table of percent-matched across row identifiers.
-  #    col_summary: summary table of percent-matched across col identifiers.
+  #    row_summary: summary table of percent-unmatched across row identifiers.
+  #    col_summary: summary table of percent-unmatched across col identifiers.
   # STEPS:
   #    check that dimensions are identical
   #    check that column names are identical and ordered the same
@@ -56,7 +56,7 @@ dfc.compare_df_values <- function(df1, df2, id_col, verbose = FALSE) {
   #    check that both DFs have the same exact set of values in the ID column, ordered the same way
   #    warn if there are duplicates in the ID column for either, because they make precise row sorting impossible
   #    compare the DFs value-by-value, getting a new DF of trues and falses for matches and non-matches
-  #    report diff DF and summary tables of percent-matched by row ID and by col name.
+  #    report diff DF and summary tables of percent-unmatched by row ID and by col name.
 
 
   # check that dimensions are identical
@@ -75,7 +75,7 @@ dfc.compare_df_values <- function(df1, df2, id_col, verbose = FALSE) {
   }
 
   # check that both DFs have the same exact set of values in the ID column, ordered the same way
-  if(!identical(df1[, id_col], df2[, id_col]) {
+  if(!identical(df1[, id_col], df2[, id_col])) {
     stop("Cannot compare DF values - DFs have different ID column values, or the same values in a different order.")
   }
 
@@ -109,6 +109,9 @@ dfc.compare_df_values <- function(df1, df2, id_col, verbose = FALSE) {
   dfdiff_sum_rows$num_unmatched <- apply(dfdiff_sum_rows[, !names(dfdiff_sum_rows) %in% "pct_unmatched"],
                                          1,
                                          function(x) {length(x) - sum(x)})
+  dfdiff_sum_rows <- dfdiff_sum_rows[, c("pct_unmatched", "num_unmatched")]
+  # need to attach the original ids too.
+  dfdiff_sum_rows[, id_col] <- df1[, id_col]
   dfdiff_sum_rows <- dfdiff_sum_rows[, c(id_col, "pct_unmatched", "num_unmatched")]
 
   if(verbose) {util.html_table(head(dfdiff_sum_rows))}
