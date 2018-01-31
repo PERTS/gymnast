@@ -37,7 +37,12 @@ dfc.get_concatenated_ids <- function(df, id_cols) {
   if(length(id_cols) == 1) {
     return(as.character(df[, id_cols]))
   } else {
-    return(apply(df[, id_cols], 1, paste, collapse = "___"))
+    # use util.to_character do avoid some nasty behavior with apply(), which 
+    # converts numeric types to varchars when passing to paste, so that white spaces 
+    # are appended to numbers with fewer than the max digits (e.g., if a column
+    # has both "9" and "10", the apply function turns them to " 9" and "10". 
+    # util.to_character prevents this.)
+    return(apply(util.to_character(df[, id_cols]), 1, paste, collapse = "___"))
   }
 }
 
