@@ -171,7 +171,7 @@ util.is_vector_of_numbers_test <- function(){
         stop("In util.is_vector_of_numbers, vectors containing " %+%
                  "scientific notation are being evaluted as non-numbers.")
     }
-    if(util.is_vector_of_numbers(x_with_blanks) == TRUE){
+    if(util.is_vector_of_numbers(x_with_blanks) == FALSE){
       stop("In util.is_vector_of_numbers, vectors containing " %+%
              "only numbers and blank values are being evaluted as non-numbers.")
     }
