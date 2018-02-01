@@ -134,22 +134,28 @@ util.is_vector_of_numbers <- function(x){
     # find numeric values
     x_as_numeric <- suppressWarnings(as.numeric(x))
 
-    # anything that gets coerced to NA by as.numeric is non-numeric
-    x_is_numeric <- !is.na(x_as_numeric)
+    # anything that gets coerced to NA by as.numeric is not really a number.
+    # but elements that were blank originally are ok.
+    blanks <- is.na(x_as_numeric)
+    coerced_blanks <- blanks & !util.is_blank(x)
 
-    # Return TRUE if all values are either numeric or blank
-    if(all(x_is_numeric)){
-        return(TRUE)
-    }
-    else{
+    # Return FALSE if there are any coerced blanks, because that means x 
+    # contained elements that could not be converted to numeric.
+    # Otherwise return TRUE.
+    if(any(coerced_blanks)){
         return(FALSE)
     }
+    else{
+        return(TRUE)
+    }
 }
+
 
 util.is_vector_of_numbers_test <- function(){
     x_char <- c("1", "a", "b", "1.1", "1e05")
     x_number <- c("1", "1.1", "2", "-1.1")
     x_scientific <- c("1e05")
+    x_with_blanks <- c(x_number, "", NA)
 
     x <- x_char
 
@@ -164,6 +170,10 @@ util.is_vector_of_numbers_test <- function(){
     if(util.is_vector_of_numbers(x_scientific) == FALSE){
         stop("In util.is_vector_of_numbers, vectors containing " %+%
                  "scientific notation are being evaluted as non-numbers.")
+    }
+    if(util.is_vector_of_numbers(x_with_blanks) == TRUE){
+      stop("In util.is_vector_of_numbers, vectors containing " %+%
+             "only numbers and blank values are being evaluted as non-numbers.")
     }
 }
 
