@@ -122,7 +122,7 @@ util.to_ascii <- function(x){
     if(class(x) %in% "data.frame"){
         util.apply_columns(x, util.strip_non_ascii)
     }
-    else{ as.util.strip_non_ascii(x) }
+    else{util.strip_non_ascii(x) }
 }
 
 util.is_vector_of_numbers <- function(x){
@@ -236,7 +236,7 @@ util.passed <- function(message) {
 ###############################################################
 
 
-util.html_table_from_model <- function(model){
+util.html_table_from_model <- function(model, ...){
     accepted_models <- c("lmerMod","lm","aov","glm","glmerMod")
     if( ! any(class(model) %in% accepted_models ) ){
         util.warn("Unaccepted model supplied!")
@@ -249,7 +249,8 @@ util.html_table_from_model <- function(model){
             notes        = "",
             notes.label = "1 star p<.05; 2 stars p<.01; 3 stars p<.001",
             notes.append = FALSE,
-            single.row=TRUE
+            single.row=TRUE,
+            ...
         )
     }
     else{
@@ -257,7 +258,7 @@ util.html_table_from_model <- function(model){
     }
 }
 
-util.html_table_data_frame <- function(x){
+util.html_table_data_frame <- function(x, ...){
     # "grouped_df", "tbl_df" are dplyr type data.frames
     # ungroup to make them printable like a data.frame
     if(any(class(x) %in% c("grouped_df", "tbl_df"))){
@@ -270,34 +271,44 @@ util.html_table_data_frame <- function(x){
               include.rownames = FALSE,
               html.table.attributes =
                   getOption("xtable.html.table.attributes",
-                            "border=0, class='xtable'")
+                            "border=0, class='xtable'"),
+              ...
         )
     }else{
         print(x)
     }
 }
 
-util.html_table_psych_alphas <- function(x){
+util.html_table_psych_alphas <- function(x, ...){
     # psych::alpha object, turn key data into data.frame
     if(! all(class(x) %in% c("psych","alpha"))){
         util.warn("Not a psych::alpha object!")
     }
     # extract the alpha coefficients for printing
     x <- x$total
-    util.html_table_data_frame(x)
+    util.html_table_data_frame(x, ...)
 }
 
 util.html_table <- function(x, ...) {
+    # Print a variety of things to rendered output as a nice table.
+    # Accepts extra keyword arguments which are passed to xtable or stargazer,
+    # as appropriate.
+    # To capture rendered output in non-interactive mode as a character vector:
+    # * Nothing is required in the case of models, just assign the returned
+    #   value, e.g. `output <- util.html_table(lm.D9)`
+    # * Set `print.results = FALSE` in other cases, e.g.
+    #   `output <- util.html_table(my_data_frame, print.results = FALSE)`
+    #   `output <- util.html_table(psych::alpha(r9), print.results = FALSE)`
     accepted_models <- c("lmerMod","lm","aov","glm","glmerMod")
     accepted_psych_objects <- c("psych","alpha")
     accepted_dfs <- c("grouped_df", "tbl_df","data.frame","table")
 
     if( any(class(x) %in% accepted_models ) ){
-        util.html_table_from_model(x)
+        util.html_table_from_model(x, ...)
     } else if( all( class(x) %in% accepted_psych_objects ) ){
-        util.html_table_psych_alphas(x)
+        util.html_table_psych_alphas(x, ...)
     } else if( any(class(x) %in% accepted_dfs ) ){
-        util.html_table_data_frame(x)
+        util.html_table_data_frame(x, ...)
     }
 }
 
@@ -626,6 +637,15 @@ util.find_crypt_paths <- function (files_to_load, initial_path = NA,
     #     files. Zero means enter no subfolders.
     #
     # Returns: List with provided labels to absolute file paths.
+    
+    # check the format of files_to_load
+    if(!is.list(files_to_load)){
+        stop("in util.find_crypt_paths, files_to_load must be a list.")
+    }
+    
+    if(any(util.is_blank(names(files_to_load))) | is.null(names(files_to_load))){
+        stop("in util.find_crypt_paths, all elements of the list files_to_load must be named (e.g., list(a = 'a',), not list('a')")
+    }
 
     if (.Platform$OS.type == 'unix') {
         # You may want to set this to '/media' if you're using linux.
@@ -654,7 +674,7 @@ util.find_crypt_paths <- function (files_to_load, initial_path = NA,
     # Compile a list of files from each mount path.
     crypt_paths <- c()
     for (m in mount_paths) {
-        crypt_paths <- c(util.list_all(m), crypt_paths)
+        crypt_paths <- c(util.list_all(m, max_depth = max_depth), crypt_paths)
     }
 
     # For each file to load, scan the list of known files for a match.
@@ -707,6 +727,27 @@ gymnast_install <- function () {
             library(lib_name, character.only = TRUE)
         }
     }
+    # Do not uncomment without resolving issue #27!
+    # resolve_name_conflicts()
+  }
+
+resolve_name_conflicts <- function () {
+    # BAD (pending issue #27) b/c when sourcing gymnast namespace doesn't
+    # exist!
+
+    # When gymnast is installed as a package, rather than loaded as code from
+    # github, some function names can conflict. Enforce our preferences here.
+
+    util.assign_list_to_environment(list(
+        # Use our string concatenation rather than the psych packages matrix
+        # addition.
+        # http://personality-project.org/r/psych/psych-manual.pdf
+        # What the heck is a triple colon?
+        # http://stackoverflow.com/questions/2165342/r-calling-a-function-from-a-namespace
+        "%+%" = gymnast:::`%+%`
+    ))
 }
 
+# Run if you source the code directly (e.g. from github), but NOT run if
+# included as a package. In the latter case, manually call gymnast_install().
 gymnast_install()

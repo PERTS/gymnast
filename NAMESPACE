@@ -1,2 +1,5 @@
 # Export all names
 exportPattern(".")
+# Use our string concatenation rather than the psych packages matrix addition.
+# http://personality-project.org/r/psych/psych-manual.pdf
+export(`%+%`)
