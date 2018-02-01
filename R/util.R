@@ -130,7 +130,11 @@ util.is_vector_of_numbers <- function(x){
     # (regardless of whether x is numeric)
     # Character vectors sometimes need to be changed to numerics,
     # e.g., when all columns set to character types by default.
-
+  
+    # determine if x is logical first, because as.numeric will coerce logicals
+    # to boolean 0,1 rather than to NA, meaning util.is_vector_of_numbers would return TRUE
+    if(is.logical(x)) return(FALSE)
+    
     # find numeric values
     x_as_numeric <- suppressWarnings(as.numeric(x))
 
@@ -158,6 +162,7 @@ util.is_vector_of_numbers_test <- function(){
     x_with_blanks <- c(x_number, "", NA)
 
     x <- x_char
+    x_logical <- c(TRUE, FALSE)
 
     if(util.is_vector_of_numbers(x_char) == TRUE){
         stop("In util.is_vector_of_numbers, vectors containing " %+%
@@ -165,7 +170,7 @@ util.is_vector_of_numbers_test <- function(){
     }
     if(util.is_vector_of_numbers(x_number) == FALSE){
         stop("In util.is_vector_of_numbers, vectors containing " %+%
-                 "only number are being evaluted as non-numbers.")
+                 "only numbers are being evaluted as non-numbers.")
     }
     if(util.is_vector_of_numbers(x_scientific) == FALSE){
         stop("In util.is_vector_of_numbers, vectors containing " %+%
@@ -174,6 +179,10 @@ util.is_vector_of_numbers_test <- function(){
     if(util.is_vector_of_numbers(x_with_blanks) == FALSE){
       stop("In util.is_vector_of_numbers, vectors containing " %+%
              "only numbers and blank values are being evaluted as non-numbers.")
+    }
+    if(util.is_vector_of_numbers(x_logical) == TRUE){
+      stop("In util.is_vector_of_numbers, vectors containing " %+%
+             "only TRUE/FALSE values are being evaluated as numbers.")
     }
 }
 
