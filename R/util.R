@@ -160,8 +160,6 @@ util.is_vector_of_numbers_test <- function(){
     x_number <- c("1", "1.1", "2", "-1.1")
     x_scientific <- c("1e05")
     x_with_blanks <- c(x_number, "", NA)
-
-    x <- x_char
     x_logical <- c(TRUE, FALSE)
 
     if(util.is_vector_of_numbers(x_char) == TRUE){
