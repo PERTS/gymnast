@@ -156,32 +156,18 @@ util.is_vector_of_numbers <- function(x){
 
 
 util.is_vector_of_numbers_test <- function(){
-    x_char <- c("1", "a", "b", "1.1", "1e05")
+    x_char <- c("1", "a", "b", "1.1", "1e05", "a1", "1a")
     x_number <- c("1", "1.1", "2", "-1.1",  ".1", "0.1", "00.1", "1.00", "1.1", "01")
     x_scientific <- c("1e05")
     x_with_blanks <- c(x_number, "", NA)
     x_logical <- c(TRUE, FALSE)
-
-    if(util.is_vector_of_numbers(x_char) == TRUE){
-        stop("In util.is_vector_of_numbers, vectors containing " %+%
-                 "character values are being evaluted as numbers.")
-    }
-    if(util.is_vector_of_numbers(x_number) == FALSE){
-        stop("In util.is_vector_of_numbers, vectors containing " %+%
-                 "only numbers are being evaluted as non-numbers.")
-    }
-    if(util.is_vector_of_numbers(x_scientific) == FALSE){
-        stop("In util.is_vector_of_numbers, vectors containing " %+%
-                 "scientific notation are being evaluted as non-numbers.")
-    }
-    if(util.is_vector_of_numbers(x_with_blanks) == FALSE){
-      stop("In util.is_vector_of_numbers, vectors containing " %+%
-             "only numbers and blank values are being evaluted as non-numbers.")
-    }
-    if(util.is_vector_of_numbers(x_logical) == TRUE){
-      stop("In util.is_vector_of_numbers, vectors containing " %+%
-             "only TRUE/FALSE values are being evaluated as numbers.")
-    }
+    
+    assert <- stopifnot
+    assert(!util.is_vector_of_numbers(x_char))
+    assert(util.is_vector_of_numbers(x_number))
+    assert(util.is_vector_of_numbers(x_scientific))
+    assert(util.is_vector_of_numbers(x_with_blanks))
+    assert(!util.is_vector_of_numbers(x_logical))
 }
 
 util.is_vector_of_numbers_test()
