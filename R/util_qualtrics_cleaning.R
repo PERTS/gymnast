@@ -221,12 +221,6 @@ qc.rbind_inprogress <- function(inprogress_qdf, clean_qdf){
   # Qualtrics partial responses. However, they will appear once the partial
   # responses are closed and set to complete, and any survey elements that
   # depend on them (e.g, survey flow) should still work properly.
-  
-  # First, Qualtrics in-progress datasets automatically append an extra 
-  # column containing information about progress. This will break 
-  # rbinding, so append such a column to the clean_qdf.
-  
-  clean_qdf$partial_response_progress <- NA
 
   # Next, just stop if the in-progress qdf and clean qdf have different
   # numbers of columns
