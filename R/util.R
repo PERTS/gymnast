@@ -140,13 +140,13 @@ util.is_vector_of_numbers <- function(x){
 
     # anything that gets coerced to NA by as.numeric is not really a number.
     # but elements that were blank originally are ok.
-    blanks <- is.na(x_as_numeric)
-    coerced_blanks <- blanks & !util.is_blank(x)
+    non_numeric <- is.na(x_as_numeric)
+    originally_blank <- util.is_blank(x)
 
     # Return FALSE if there are any coerced blanks, because that means x 
     # contained elements that could not be converted to numeric.
     # Otherwise return TRUE.
-    if(any(coerced_blanks)){
+    if(any(non_numeric & !originally_blank)){
         return(FALSE)
     }
     else{
