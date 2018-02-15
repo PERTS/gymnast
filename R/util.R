@@ -130,26 +130,47 @@ util.is_vector_of_numbers <- function(x){
     # (regardless of whether x is numeric)
     # Character vectors sometimes need to be changed to numerics,
     # e.g., when all columns set to character types by default.
-
+  
+    # determine if x is logical first, because as.numeric will coerce logicals
+    # to boolean 0,1 rather than to NA, meaning util.is_vector_of_numbers would return TRUE
+    if(is.logical(x)) return(FALSE)
+    
     # find numeric values
-    numeric_values <- grepl("^-*[[:digit:]]*\\.*[[:digit:]]+$",x)
+    x_as_numeric <- suppressWarnings(as.numeric(x))
 
-    # find the blank values
-    blank_values <- util.is_blank(x)
+    # anything that gets coerced to NA by as.numeric is not really a number.
+    # but elements that were blank originally are ok.
+    non_numeric <- is.na(x_as_numeric)
+    originally_blank <- util.is_blank(x)
 
-    # Return TRUE if all values are either numeric or blank
-    # Unless all values are blank, then false
-    # Return FALSE otherwise
-    if( all(blank_values) ){
+    # Return FALSE if there are any coerced blanks, because that means x 
+    # contained elements that could not be converted to numeric.
+    # Otherwise return TRUE.
+    if(any(non_numeric & !originally_blank)){
         return(FALSE)
-    }
-    else if(all(numeric_values | blank_values)){
-        return(TRUE)
     }
     else{
-        return(FALSE)
+        return(TRUE)
     }
 }
+
+
+util.is_vector_of_numbers_test <- function(){
+    x_char <- c("1", "a", "b", "1.1", "1e05", "a1", "1a")
+    x_number <- c("1", "1.1", "2", "-1.1",  ".1", "0.1", "00.1", "1.00", "1.1", "01")
+    x_scientific <- c("1e05")
+    x_with_blanks <- c(x_number, "", NA)
+    x_logical <- c(TRUE, FALSE)
+    
+    assert <- stopifnot
+    assert(!util.is_vector_of_numbers(x_char))
+    assert(util.is_vector_of_numbers(x_number))
+    assert(util.is_vector_of_numbers(x_scientific))
+    assert(util.is_vector_of_numbers(x_with_blanks))
+    assert(!util.is_vector_of_numbers(x_logical))
+}
+
+util.is_vector_of_numbers_test()
 
 util.as_numeric_if_number <- function(x){
     # run as.numeric if the x is made up of numbers
