@@ -157,7 +157,7 @@ util.is_vector_of_numbers <- function(x){
 
 util.is_vector_of_numbers_test <- function(){
     x_char <- c("1", "a", "b", "1.1", "1e05")
-    x_number <- c("1", "1.1", "2", "-1.1")
+    x_number <- c("1", "1.1", "2", "-1.1",  ".1", "0.1", "00.1", "1.00", "1.1", "01")
     x_scientific <- c("1e05")
     x_with_blanks <- c(x_number, "", NA)
     x_logical <- c(TRUE, FALSE)
