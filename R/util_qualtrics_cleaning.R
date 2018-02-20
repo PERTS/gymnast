@@ -25,7 +25,7 @@ STANDARD_SECOND_ROW_QUALTRICS_COLUMNS <- c(
 ##########################
 # Name variables appropriately
 
-  qc.insert_hidden_column_names <- function(qdf_char,
+qc.insert_hidden_column_names <- function(qdf_char,
     extract_column_name=qc.extract_delimited, ...){
     # Qualtrics uses two header rows, one for variables named in Qualtrics, and
     # one for the question text itself. We have a practice of "hiding" column
@@ -73,7 +73,7 @@ STANDARD_SECOND_ROW_QUALTRICS_COLUMNS <- c(
   }
 
 
-  qc.extract_delimited <- function(x,delimiter = "__pdd__"){
+qc.extract_delimited <- function(x,delimiter = "__pdd__"){
     # Input:
     # - string vector from first row of raw Qualtrics dataset containing second
     # Qualtrics header
@@ -91,7 +91,7 @@ STANDARD_SECOND_ROW_QUALTRICS_COLUMNS <- c(
     return(delimited_strings)
   }
 
-  qc.handle_known_Qualtrics_columns <- function(
+qc.handle_known_Qualtrics_columns <- function(
     qdf_char,
     known=STANDARD_SECOND_ROW_QUALTRICS_COLUMNS){
     # Insert known Qualtrics columns that always appear in row 1 instead of in
@@ -102,7 +102,7 @@ STANDARD_SECOND_ROW_QUALTRICS_COLUMNS <- c(
     return(qdf_char)
   }
 
-  qc.remove_unnamed_columns <- function(qdf_rn){
+qc.remove_unnamed_columns <- function(qdf_rn){
     # Remove unnamed columns (optional)
     # this function removed default-named Qualtrics columns (e.g., V1, Q3)
     # it can be really useful to do this, but should be optional.
