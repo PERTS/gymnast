@@ -58,25 +58,15 @@ STANDARD_SECOND_ROW_QUALTRICS_COLUMNS <- c(
 
     # add any necessary _TEXT suffixes
     best_column_names <- qc.add_TEXT_suffixes(qdf_char, best_column_names)
-
-    # if the function being used yields column names that are not unique...
+    
+    # throw a warning if the function being used yields column names that are
+    # not unique
     if(any(duplicated(best_column_names))){
-      # Add numeric differentiators so that further operations
-      # don't get messed up. (e.g., col, col, col... becomes col.1, col.2, etc.)
-      # note that the "dot-number" convention above parallels R's default behavior
-      # for handling duplicate column names.
       dup_col_names <- unique(best_column_names[duplicated(best_column_names)])
-      duplicated_columns <- best_column_names[best_column_names %in% dup_col_names]
-      enumerated_duplicates <- duplicated_columns %+% "." %+% seq(1, length(duplicated_columns))
-      best_column_names[best_column_names %in% dup_col_names] <- enumerated_duplicates
-      
-      # throw a warning so that the user can fix duplicated column names manually if desired.
       warning("Your function for pulling column names from the first row " %+%
-                  "resulted in duplicate column names: " %+% dup_col_names %+% 
-                  ". Numeric suffixes were added to differentiate these columns " %+%
-                  "in the cleaned output.")
+                "resulted in duplicate column names: " %+% dup_col_names)
     }
-
+    
     # add the new column names to the data.frame
     names(qdf_char) <- best_column_names
     return(qdf_char)
