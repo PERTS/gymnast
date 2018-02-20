@@ -18,7 +18,7 @@ sc.append_scales <- function(
     # filter any non-scale variables from scale_variables_table
     scale_variables_table <- filter(
         scale_variables_table,
-        !util.is_blank(scale)
+        !is.na(scale)
     )
 
     scales <- unique(scale_variables_table$scale)
