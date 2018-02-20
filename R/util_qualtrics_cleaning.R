@@ -25,7 +25,7 @@ STANDARD_SECOND_ROW_QUALTRICS_COLUMNS <- c(
 ##########################
 # Name variables appropriately
 
-  qc.insert_hidden_column_names <- function(qdf_char,
+qc.insert_hidden_column_names <- function(qdf_char,
     extract_column_name=qc.extract_delimited, ...){
     # Qualtrics uses two header rows, one for variables named in Qualtrics, and
     # one for the question text itself. We have a practice of "hiding" column
@@ -58,15 +58,15 @@ STANDARD_SECOND_ROW_QUALTRICS_COLUMNS <- c(
 
     # add any necessary _TEXT suffixes
     best_column_names <- qc.add_TEXT_suffixes(qdf_char, best_column_names)
-    
+
     # throw a warning if the function being used yields column names that are
     # not unique
     if(any(duplicated(best_column_names))){
       dup_col_names <- unique(best_column_names[duplicated(best_column_names)])
       warning("Your function for pulling column names from the first row " %+%
-                "resulted in duplicate column names: " %+% dup_col_names)
+          "resulted in duplicate column names: " %+% dup_col_names)
     }
-    
+
     # add the new column names to the data.frame
     names(qdf_char) <- best_column_names
     return(qdf_char)
