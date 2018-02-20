@@ -64,7 +64,7 @@ qc.insert_hidden_column_names <- function(qdf_char,
     if(any(duplicated(best_column_names))){
       dup_col_names <- unique(best_column_names[duplicated(best_column_names)])
       warning("Your function for pulling column names from the first row " %+%
-          "resulted in duplicate column names: " %+% dup_col_names)
+        "resulted in duplicate column names: " %+% dup_col_names)
     }
 
     # add the new column names to the data.frame
@@ -73,7 +73,7 @@ qc.insert_hidden_column_names <- function(qdf_char,
   }
 
 
-  qc.extract_delimited <- function(x,delimiter = "__pdd__"){
+qc.extract_delimited <- function(x,delimiter = "__pdd__"){
     # Input:
     # - string vector from first row of raw Qualtrics dataset containing second
     # Qualtrics header
@@ -91,7 +91,7 @@ qc.insert_hidden_column_names <- function(qdf_char,
     return(delimited_strings)
   }
 
-  qc.handle_known_Qualtrics_columns <- function(
+qc.handle_known_Qualtrics_columns <- function(
     qdf_char,
     known=STANDARD_SECOND_ROW_QUALTRICS_COLUMNS){
     # Insert known Qualtrics columns that always appear in row 1 instead of in
@@ -102,7 +102,7 @@ qc.insert_hidden_column_names <- function(qdf_char,
     return(qdf_char)
   }
 
-  qc.remove_unnamed_columns <- function(qdf_rn){
+qc.remove_unnamed_columns <- function(qdf_rn){
     # Remove unnamed columns (optional)
     # this function removed default-named Qualtrics columns (e.g., V1, Q3)
     # it can be really useful to do this, but should be optional.
