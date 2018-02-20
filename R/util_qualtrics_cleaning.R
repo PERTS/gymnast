@@ -222,7 +222,7 @@ qc.rbind_inprogress <- function(inprogress_qdf, clean_qdf){
   # responses are closed and set to complete, and any survey elements that
   # depend on them (e.g, survey flow) should still work properly.
 
-  # Next, just stop if the in-progress qdf and clean qdf have different
+  # First, just stop if the in-progress qdf and clean qdf have different
   # numbers of columns
   if(ncol(inprogress_qdf) != ncol(clean_qdf)){
     stop("Your in-progress dataset contains a different number of columns " %+%
