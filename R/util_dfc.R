@@ -93,7 +93,7 @@ dfc.compare_df_values <- function(df1, df2, id_col, verbose = FALSE) {
 
   # Cast NAs to the string "___NA___" so that "___NA___" == "___NA___" returns TRUE for all comparisons.
   df1 <- util.apply_columns(df1, function(x) ifelse(is.na(x), "___NA___", x))
-  df2.1 <- util.apply_columns(df2, function(x) ifelse(is.na(x), "___NA___", x))
+  df2 <- util.apply_columns(df2, function(x) ifelse(is.na(x), "___NA___", x))
 
   # Compare DF values
   dfdiff <- as.data.frame(df1 == df2)
