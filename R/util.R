@@ -111,7 +111,7 @@ util.is_blank <- function(x){
 util.to_character <- function(x){
     # like base::as.character()
     # but accepts (and returns) data frames or vectors
-    if(class(x) %in% "data.frame"){
+    if("data.frame" %in% class(x)){
         util.apply_columns(x, as.character)
     }
     else{ as.character(x) }
@@ -119,7 +119,7 @@ util.to_character <- function(x){
 
 
 util.to_ascii <- function(x){
-    if(class(x) %in% "data.frame"){
+    if("data.frame" %in% class(x)){
         util.apply_columns(x, util.strip_non_ascii)
     }
     else{util.strip_non_ascii(x) }
@@ -175,7 +175,7 @@ util.is_vector_of_numbers_test()
 util.as_numeric_if_number <- function(x){
     # run as.numeric if the x is made up of numbers
     # runs independently on each column if x is data.frame
-    if(class(x) %in% "data.frame"){
+    if("data.frame" %in% class(x)){
         return(util.apply_columns(x, util.as_numeric_if_number))
     }
     if(util.is_vector_of_numbers(x)){
@@ -328,7 +328,7 @@ util.html_table <- function(x, ...) {
 
 util.z_score <- function(x){
     # calculate the z-score of vector or for each vector in a data.frame
-    if(class(x) %in% "data.frame"){
+    if("data.frame" %in% class(x)){
         util.apply_columns(x,util.z_score)
     }
     else{ ( x - mean(x,na.rm=T) ) / sd(x,na.rm=T) }
