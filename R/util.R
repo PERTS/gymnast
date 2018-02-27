@@ -187,6 +187,7 @@ util.as_numeric_if_number <- function(x){
 to_type_tbldf_test <- function(){
     test_df <- data.frame(a = c(1, 2), b = c('c','d'))
     test_tbldf <- test_df %>% group_by(a)
+    test_vec <- c(1, 2)
     
     assert <- stopifnot
 
@@ -194,12 +195,15 @@ to_type_tbldf_test <- function(){
     # for both dfs and tbl_df types (i.e., data.frame-like objects returned by dplyr operations)
     assert(identical(dim(test_df), dim(util.to_character(test_df))))
     assert(identical(dim(test_tbldf), dim(util.to_character(test_tbldf))))
+    assert(identical(length(test_vec), length(util.to_character(test_vec))))
     
     assert(identical(dim(test_df), dim(util.to_ascii(test_df))))
     assert(identical(dim(test_tbldf), dim(util.to_ascii(test_tbldf))))
+    assert(identical(length(test_vec), length(util.to_ascii(test_vec))))
     
     assert(identical(dim(test_df), dim(util.as_numeric_if_number(test_df))))
     assert(identical(dim(test_tbldf), dim(util.as_numeric_if_number(test_tbldf))))
+    assert(identical(length(test_vec), length(util.as_numeric_if_number(test_vec))))
 }
 
 to_type_tbldf_test()
