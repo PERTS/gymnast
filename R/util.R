@@ -202,7 +202,7 @@ to_type_tbldf_test <- function(){
     assert(identical(dim(test_tbldf), dim(util.as_numeric_if_number(test_tbldf))))
 }
 
-
+to_type_tbldf_test()
 ###############################################################
 ###
 ###     Messages
