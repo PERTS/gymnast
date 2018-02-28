@@ -35,7 +35,7 @@ dfc.get_concatenated_ids <- function(df, id_cols) {
   # Helper function for getting a vector of IDs (not necessarily unique) from a DF.
   # If there are multiple ID columns, they need to be concatenated with "___".
   if(length(id_cols) == 1) {
-    return(as.character(df[, id_cols]))
+    return(as.character(df[[id_cols]]))
   } else {
     # use util.to_character do avoid some nasty behavior with apply(), which 
     # converts numeric types to varchars when passing to paste, so that white spaces 

@@ -111,7 +111,7 @@ util.is_blank <- function(x){
 util.to_character <- function(x){
     # like base::as.character()
     # but accepts (and returns) data frames or vectors
-    if(class(x) %in% "data.frame"){
+    if("data.frame" %in% class(x)){
         util.apply_columns(x, as.character)
     }
     else{ as.character(x) }
@@ -119,7 +119,7 @@ util.to_character <- function(x){
 
 
 util.to_ascii <- function(x){
-    if(class(x) %in% "data.frame"){
+    if("data.frame" %in% class(x)){
         util.apply_columns(x, util.strip_non_ascii)
     }
     else{util.strip_non_ascii(x) }
@@ -175,7 +175,7 @@ util.is_vector_of_numbers_test()
 util.as_numeric_if_number <- function(x){
     # run as.numeric if the x is made up of numbers
     # runs independently on each column if x is data.frame
-    if(class(x) %in% "data.frame"){
+    if("data.frame" %in% class(x)){
         return(util.apply_columns(x, util.as_numeric_if_number))
     }
     if(util.is_vector_of_numbers(x)){
@@ -184,7 +184,29 @@ util.as_numeric_if_number <- function(x){
     return(x)
 }
 
+to_type_tbldf_test <- function(){
+    test_df <- data.frame(a = c(1, 2), b = c('c','d'))
+    test_tbldf <- test_df %>% group_by(a)
+    test_vec <- c(1, 2)
+    
+    assert <- stopifnot
 
+    # all the util.to_ functions should return dfs of the same dimensions as the originals,
+    # for both dfs and tbl_df types (i.e., data.frame-like objects returned by dplyr operations)
+    assert(identical(dim(test_df), dim(util.to_character(test_df))))
+    assert(identical(dim(test_tbldf), dim(util.to_character(test_tbldf))))
+    assert(identical(length(test_vec), length(util.to_character(test_vec))))
+    
+    assert(identical(dim(test_df), dim(util.to_ascii(test_df))))
+    assert(identical(dim(test_tbldf), dim(util.to_ascii(test_tbldf))))
+    assert(identical(length(test_vec), length(util.to_ascii(test_vec))))
+    
+    assert(identical(dim(test_df), dim(util.as_numeric_if_number(test_df))))
+    assert(identical(dim(test_tbldf), dim(util.as_numeric_if_number(test_tbldf))))
+    assert(identical(length(test_vec), length(util.as_numeric_if_number(test_vec))))
+}
+
+to_type_tbldf_test()
 ###############################################################
 ###
 ###     Messages
@@ -328,7 +350,7 @@ util.html_table <- function(x, ...) {
 
 util.z_score <- function(x){
     # calculate the z-score of vector or for each vector in a data.frame
-    if(class(x) %in% "data.frame"){
+    if("data.frame" %in% class(x)){
         util.apply_columns(x,util.z_score)
     }
     else{ ( x - mean(x,na.rm=T) ) / sd(x,na.rm=T) }
