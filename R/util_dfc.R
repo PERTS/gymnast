@@ -118,13 +118,29 @@ dfc.compare_df_values <- function(df1, df2, id_col, verbose = FALSE) {
   # need to attach the original ids too.
   dfdiff_sum_rows[, id_col] <- df1[, id_col]
   dfdiff_sum_rows <- dfdiff_sum_rows[, c(id_col, "pct_unmatched", "num_unmatched")]
-
+  
+  # get a side-by-side comparison of any unmatched values
+  unmatched_summary <- dfdiff_sum_cols[dfdiff_sum_cols$num_unmatched > 0, ]
+  unmatched_cols <- unmatched_summary$variable_name
+  
+  if(length(unmatched_cols) > 0){
+    side_by_side_df <- data.frame(matrix(nrow = nrow(dfdiff_sum_rows), ncol = 0))
+    # we know they're all sorted the same way, so we can build the data.frame just by concatenating columns
+    side_by_side_df[[id_col]] <- dfdiff_sum_rows[[id_col]]
+    for(col in unmatched_cols){
+      side_by_side_df[[col %+% "_matches"]] <- diff_df[[col]]
+      side_by_side_df[[col %+% "_df1"]] <- df1[[col]]
+      side_by_side_df[[col %+% "_df2"]] <- df2[[col]]
+    }
+  }
+  
   if(verbose) {util.html_table(head(dfdiff_sum_rows))}
 
   # Return diff DF and full summary dfs for user.
   return(list(diff_df = dfdiff,
               row_summary = dfdiff_sum_rows,
-              col_summary = dfdiff_sum_cols))
+              col_summary = dfdiff_sum_cols,
+              side_by_side_df = side_by_side_df))
 
 }
 
