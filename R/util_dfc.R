@@ -128,7 +128,7 @@ dfc.compare_df_values <- function(df1, df2, id_col, verbose = FALSE) {
     # we know they're all sorted the same way, so we can build the data.frame just by concatenating columns
     side_by_side_df[[id_col]] <- dfdiff_sum_rows[[id_col]]
     for(col in unmatched_cols){
-      side_by_side_df[[col %+% "_matches"]] <- diff_df[[col]]
+      side_by_side_df[[col %+% "_matches"]] <- dfdiff[[col]]
       side_by_side_df[[col %+% "_df1"]] <- df1[[col]]
       side_by_side_df[[col %+% "_df2"]] <- df2[[col]]
     }
