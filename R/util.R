@@ -706,6 +706,65 @@ util.find_crypt_paths <- function (files_to_load, initial_path = NA,
 }
 
 
+util.custom_fread <- function(path, ...){
+  # setting colClasses to character prevents non-lossless coersion of column types by fread;
+  # however, non-character types must be converted back to original types afterwards
+  fread(
+    input = path,
+    data.table = FALSE,
+    sep = ",",
+    na.strings = c("NA", ""),
+    colClasses = "character",
+    ...
+  ) %>%
+    util.to_ascii %>%
+    util.apply_columns(., util.as_numeric_if_number) %>%
+    util.apply_columns(., as_logical_if_logical)
+}
+
+__util.read_csv_files_fast <- function(path_list, ...) {
+  # identical to util.read_csv_files() except that it uses readr::read_csv 
+  # which apparently is a lot faster with big files than base::read.csv
+  # reads a list of .csv file paths and returns a list of data.frames
+  # Args
+  #   path_list: list that contains paths pointing to the desired .csv files
+  #   ... optional arguments to be passed to read.csv (e.g., na.strings)
+  #
+  # Loops through the paths in path_list, reads them into R, and creates
+  # a list of data.frames, e.g., for
+  # path_list <- list("a" = "~Downloads/my_file.csv"), you would get
+  # a one-element list named "a" containing the contents my_file.csv
+  # as a data.frame
+  
+  found_files <- sapply(path_list, function(path) {
+    length(path) > 0 && file.exists(path)
+  })
+  
+  # Check for nonexistant files
+  if(any(!found_files)){
+    util.warn(
+      "The following files were not found: " %+%
+        paste0(
+          names(found_files)[!found_files],
+          collapse=", "
+        )
+    )
+  } else{
+    util.passed("All files present, successfully loaded " %+%
+                  length(found_files) %+%
+                  " files.")
+  }
+  # Read the new files into df_list()
+  df_list <- list()
+  for(file_name in names(path_list)){
+    # only try to read in files that exist!
+    if(file_name %in% names(found_files[found_files])){
+      df_list[[file_name]] <- custom_fread(path_list[[file_name]]) 
+    }
+  }
+  return(df_list)
+}
+
 ###############################################################
 ###
 ###     Package Installation
