@@ -146,3 +146,146 @@ dfc.compare_df_values <- function(df1, df2, id_col, verbose = FALSE) {
 
 }
 
+
+dfc.strip_for_comparison <- function(DF){
+  # formats a DF to eliminate frequent causes of unimportant mismatches, including
+  # differently-formatted blanks, rounding errors, and special characters
+  clean_blanks <- function(DF){
+    DF %>%
+      util.apply_columns(function(x) ifelse(util.is_blank(x), NA, x)) %>%
+      util.apply_columns(function(x) if(all(is.na(x))) return(rep(NA, length(x))) else return(x))
+  }
+  
+  DF %>%
+    clean_blanks %>%
+    util.apply_columns(., util.as_numeric_if_number) %>%
+    util.round_df(., 5) %>%
+    util.apply_columns(util.strip_non_ascii) %>%
+    util.apply_columns(util.strip_special_characters)
+}
+
+compare_to_previous <- function(current_df, previous_df, index_cols, compare_values = FALSE){
+  # compare_values is FALSE by default because it is computationally intensive
+  # returns a list containing: 
+  # (1) a colname comparison;
+  # (2) an index comparison;
+  # (3) IFF all column names, indices, and dims match, a values summary
+  
+  current_df <- as.data.frame(current_df)
+  previous_df <- as.data.frame(previous_df)
+  
+  # compare dimensions
+  dim_comparison <- list(
+    nrows_comparison = list(current = nrow(current_df), previous = nrow(previous_df)),
+    ncols_comparison = list(current = ncol(current_df), previous = ncol(previous_df))
+  )
+  nrows_match <- dim_comparison$nrows_comparison$current == dim_comparison$nrows_comparison$previous
+  ncols_match <- dim_comparison$ncols_comparison$current == dim_comparison$ncols_comparison$previous
+  
+  dim_comparison$nrows_comparison$match <- nrows_match
+  dim_comparison$ncols_comparison$match <- ncols_match
+  
+  # compare column names
+  colname_comparison <- dfc.setdiff_plus(names(current_df), names(previous_df))
+  colnames_match <- length(colname_comparison$only_in_first) == 0 & length(colname_comparison$only_in_second) == 0
+  
+  # compare indices
+  current_df$index <- dfc.get_concatenated_ids(current_df, index_cols)
+  previous_df$index <- dfc.get_concatenated_ids(previous_df, index_cols)
+  index_comparison <- dfc.setdiff_plus(current_df$index, previous_df$index)
+  indices_match <- length(index_comparison$only_in_first) == 0 & length(index_comparison$only_in_second) == 0
+  
+  # if everything else matches, and a values comparison was requested, go ahead and do a values comparison
+  if(nrows_match & ncols_match & colnames_match & indices_match & compare_values){
+    current_df <- current_df[order(current_df$index), ]
+    previous_df <- previous_df[order(previous_df$index), ]
+    values_comparison <- dfc.compare_df_values(current_df, previous_df, "index")
+    values_comparison$values_match <- all(values_comparison$col_summary$num_unmatched == 0)
+  } else{
+    values_comparison <- NA
+    side_by_side_df <- NA
+  }
+  comparison <- list(
+    "colname_comparison" = colname_comparison,
+    "index_comparison" = index_comparison,
+    "dim_comparison" = dim_comparison,
+    "values_comparison" = values_comparison
+  )
+  return(comparison)
+}
+
+compare_to_previous_summary <- function(comparison_to_previous){
+  # takes an object returned by compare_to_previous and summarizes deviations
+  # into readable df format (returns a data.frame)
+  n_cols_unmatched <- sum(
+    length(comparison_to_previous$colname_comparison$only_in_first),
+    length(comparison_to_previous$colname_comparison$only_in_second)
+  )
+  n_indices_only_in_current <- length(comparison_to_previous$index_comparison$only_in_first)
+  n_indices_only_in_previous <- length(comparison_to_previous$index_comparison$only_in_second)
+  nrows_diff <- comparison_to_previous$dim_comparison$nrows_comparison$current - 
+    comparison_to_previous$dim_comparison$nrows_comparison$previous
+  ncols_diff <- comparison_to_previous$dim_comparison$ncols_comparison$current - 
+    comparison_to_previous$dim_comparison$ncols_comparison$previous
+  
+  values_match <- NA
+  if(length(comparison_to_previous$values_comparison) > 1){
+    values_match <- all(comparison_to_previous$values_comparison$col_summary$num_unmatched == 0)
+  }
+  return(
+    data.frame(
+      n_cols_unmatched,
+      n_indices_only_in_current,
+      n_indices_only_in_previous,
+      nrows_diff,
+      ncols_diff,
+      values_match
+    )
+  )
+}
+
+dfc.get_granular_mismatches <- function(values_comparison, id_cols = "index"){
+  # takes a values_comparison object (returned by dfc.compare_values)
+  # and returns a data.frame with one row per value difference in the data.frames 
+  # that were compared. Variable names and df index values appear in the rows of this df.
+  # id_cols — when working with the output of dfc.compare_values, the id_col will usually
+  # be "index," a composite identifier produced with dfc.concatenate_ids. However,
+  # the user can specify their own index columns in case they've modified the output of dfc.compare_values,
+  # e.g., to de-concatenate the index columns or add new index columns whose job it is to handle duplicates.
+  
+  sbs_df <- values_comparison$side_by_side_df
+  
+  # make sure all id_cols appear in values_comparison$side_by_side_df
+  if(!all(id_cols %in% names(sbs_df))){
+    stop("in get_granular_mismatches, the id_cols you specified do not all appear in values_comparison$side_by_side_df. (" %+%
+           paste0(id_cols, collapse = ", ") %+% ")")
+  }
+  
+  # check for duplicated combinations of id_cols in values_comparison
+  if(any(duplicated(sbs_df[id_cols]))){
+    stop("cannot get granular mismatches because duplicated id_col values were found. Please handle duplicates and try again.")
+  }
+  
+  col_summary <- values_comparison$col_summary
+  vars <- col_summary$variable_name[col_summary$num_unmatched > 0]
+  suffixes <- c("_df1", "_df2", "_matches")
+  var_names <- expand.grid(vars, suffixes) %>%
+    setNames(c("variable", "suffix")) %>%
+    mutate(colname = variable %+% suffix)
+  
+  # to look at granular mismatches, restrict to columns with unmatched values,
+  # handle duplicate indices by marking each instance
+  # melt, and cast
+  granular_mismatches <- sbs_df[c(var_names$colname, id_cols)] %>%
+    melt(., id.vars = id_cols) %>%
+    rename(colname = variable) %>%
+    # merge in var_names to separate variables from suffixes
+    merge(., var_names, by = "colname") %>%
+    # clean up the suffix column
+    mutate(suffix = gsub("^_", "", suffix)) %>%
+    # cast
+    dcast(paste0(id_cols, collapse = " + ") %+% " + variable ~ suffix") %>%
+    mutate(matches = as.logical(matches)) %>%
+    filter(!matches)
+  return(granular_mismatches)
+}
