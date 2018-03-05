@@ -184,6 +184,78 @@ util.as_numeric_if_number <- function(x){
     return(x)
 }
 
+util.is_vector_of_logicals <- function(x){
+  # Are all elements of x logicals (permitting blanks, NOT permitting vectors entirely 
+  # composed of numeric booleans, i.e., 0/1)?
+  # (regardless of whether x is numeric)
+  # Character vectors sometimes need to be changed to logicals,
+  # e.g., when all columns set to character types by default.
+  
+  # if all the elements of x are numbers, return FALSE. This is to ensure correct handling of
+  # binary 0/1 variables as numbers, not logicals
+  if(util.is_vector_of_numbers(x)){
+    return(FALSE)
+  }
+  
+  # find logical values
+  x_as_logical <- suppressWarnings(as.logical(x))
+  
+  # anything that gets coerced to NA by as.numeric is not really a number.
+  # but elements that were blank originally are ok.
+  non_logical <- is.na(x_as_logical)
+  originally_blank <- util.is_blank(x)
+  
+  # Return FALSE if there are any coerced blanks, because that means x 
+  # contained elements that could not be converted to numeric.
+  # Otherwise return TRUE.
+  if(any(non_logical & !originally_blank)){
+    return(FALSE)
+  }
+  else{
+    return(TRUE)
+  }
+}
+
+util.is_vector_of_logicals_test <- function(){
+  x_char <- c("TRUE", "FALSE", "a", "b")
+  x_logical <- c("TRUE", "FALSE")
+  x_0_1_only <- c(1, 0)
+  x_logical_blanks <- c(x_logical, "NA", NA, "")
+  
+  if(is_vector_of_logicals(x_char) == TRUE){
+    stop("In is_vector_of_logicals, vectors containing " %+%
+           "character values are being evaluted as numbers.")
+  }
+  if(is_vector_of_logicals(x_logical) == FALSE){
+    stop("In is_vector_of_logicals, vectors containing " %+%
+           "only 'TRUE' and 'FALSE' string values are being evaluted as non-logicals.")
+  }
+  if(is_vector_of_logicals(x_0_1_only) == TRUE){
+    stop("In is_vector_of_logicals, vectors containing " %+%
+           "only 0/1 values are being evaluated as logical. They " %+%
+           "should not evaluate as logical, because it is more likely that " %+%
+           "they are vectors of numbers.")
+  }
+  if(is_vector_of_logicals(x_logical_blanks) == FALSE){
+    stop("In util.is_vector_of_numbers, vectors containing " %+%
+           "only 'TRUE' and 'FALSE' string values and blanks are being evaluated as non-logicals.")
+  }
+}
+
+is_vector_of_logicals_test()
+
+as_logical_if_logical <- function(x){
+  # run as.numeric if the x is made up of numbers
+  # runs independently on each column if x is data.frame
+  if(class(x) %in% "data.frame"){
+    return(util.apply_columns(x, is_vector_of_logicals))
+  }
+  if(is_vector_of_logicals(x)){
+    x <- as.logical(x)
+  }
+  return(x)
+}
+
 ###############################################################
 ###
 ###     Messages
