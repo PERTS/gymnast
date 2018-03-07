@@ -123,7 +123,7 @@ dfc.compare_df_values <- function(df1, df2, id_col, verbose = FALSE) {
   unmatched_summary <- dfdiff_sum_cols[dfdiff_sum_cols$num_unmatched > 0, ]
   unmatched_cols <- unmatched_summary$variable_name
   
-  if(length(unmatched_cols) == 0){
+  if(length(unmatched_cols) > 0){
     side_by_side_df <- data.frame(matrix(nrow = nrow(dfdiff_sum_rows), ncol = 0))
     # we know they're all sorted the same way, so we can build the data.frame just by concatenating columns
     side_by_side_df[[id_col]] <- dfdiff_sum_rows[[id_col]]
@@ -272,6 +272,10 @@ dfc.get_granular_mismatches <- function(values_comparison, id_cols = "index"){
   var_names <- expand.grid(vars, suffixes) %>%
     setNames(c("variable", "suffix")) %>%
     mutate(colname = variable %+% suffix)
+  
+  # restrict to rows with at least one mismatch (to save computation time)
+  sbs_df$at_least_one_mismatch <- values_comparison$row_summary$num_unmatched > 0
+  sbs_df <- sbs_df[sbs_df$at_least_one_mismatch, ]
   
   # to look at granular mismatches, restrict to columns with unmatched values,
   # handle duplicate indices by marking each instance
