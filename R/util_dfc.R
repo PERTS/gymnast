@@ -10,11 +10,19 @@
 ###
 
 dfc.setdiff_plus <- function(vec1, vec2) {
-  # compare unique vector elements without regard to order and after automatically discarding any duplicates.
-  # return a list with three components -
-  ## shared_elements: the shared unique elements,
-  ## only_in_first: the unique elements in vec1 and not vec2,
-  ## only_in_second: the unique elements in vec2 and not vec1.
+  # Compare unique vector elements without regard to order and after
+  # automatically discarding any duplicates.
+  #
+  # Args: two vectors to compare
+  #
+  # Returns: list with three components:
+  # * shared_elements: the shared unique elements,
+  # * only_in_first: the unique elements in vec1 and not vec2,
+  # * only_in_second: the unique elements in vec2 and not vec1.
+  #
+  # Example:
+  #   dfc.setdiff_plus(c(1,2), c(2, 3))
+
 
   # First, warn if there are duplicates in either vector. They will be discarded in the setdiff.
   # Warn if there are duplicate IDs in either df!
@@ -37,10 +45,10 @@ dfc.get_concatenated_ids <- function(df, id_cols) {
   if(length(id_cols) == 1) {
     return(as.character(df[[id_cols]]))
   } else {
-    # use util.to_character do avoid some nasty behavior with apply(), which 
-    # converts numeric types to varchars when passing to paste, so that white spaces 
+    # use util.to_character do avoid some nasty behavior with apply(), which
+    # converts numeric types to varchars when passing to paste, so that white spaces
     # are appended to numbers with fewer than the max digits (e.g., if a column
-    # has both "9" and "10", the apply function turns them to " 9" and "10". 
+    # has both "9" and "10", the apply function turns them to " 9" and "10".
     # util.to_character prevents this.)
     return(apply(util.to_character(df[, id_cols]), 1, paste, collapse = "___"))
   }
@@ -118,11 +126,11 @@ dfc.compare_df_values <- function(df1, df2, id_col, verbose = FALSE) {
   # need to attach the original ids too.
   dfdiff_sum_rows[, id_col] <- df1[, id_col]
   dfdiff_sum_rows <- dfdiff_sum_rows[, c(id_col, "pct_unmatched", "num_unmatched")]
-  
+
   # get a side-by-side comparison of any unmatched values
   unmatched_summary <- dfdiff_sum_cols[dfdiff_sum_cols$num_unmatched > 0, ]
   unmatched_cols <- unmatched_summary$variable_name
-  
+
   if(length(unmatched_cols) > 0){
     side_by_side_df <- data.frame(matrix(nrow = nrow(dfdiff_sum_rows), ncol = 0))
     # we know they're all sorted the same way, so we can build the data.frame just by concatenating columns
@@ -135,7 +143,7 @@ dfc.compare_df_values <- function(df1, df2, id_col, verbose = FALSE) {
   } else{
     side_by_side_df <- NA
   }
-  
+
   if(verbose) {util.html_table(head(dfdiff_sum_rows))}
 
   # Return diff DF and full summary dfs for user.
@@ -155,7 +163,7 @@ dfc.strip_for_comparison <- function(DF){
       util.apply_columns(function(x) ifelse(util.is_blank(x), NA, x)) %>%
       util.apply_columns(function(x) if(all(is.na(x))) return(rep(NA, length(x))) else return(x))
   }
-  
+
   DF %>%
     clean_blanks %>%
     util.apply_columns(., util.as_numeric_if_number) %>%
@@ -166,14 +174,14 @@ dfc.strip_for_comparison <- function(DF){
 
 compare_to_previous <- function(current_df, previous_df, index_cols, compare_values = FALSE){
   # compare_values is FALSE by default because it is computationally intensive
-  # returns a list containing: 
+  # returns a list containing:
   # (1) a colname comparison;
   # (2) an index comparison;
   # (3) IFF all column names, indices, and dims match, a values summary
-  
+
   current_df <- as.data.frame(current_df)
   previous_df <- as.data.frame(previous_df)
-  
+
   # compare dimensions
   dim_comparison <- list(
     nrows_comparison = list(current = nrow(current_df), previous = nrow(previous_df)),
@@ -181,20 +189,20 @@ compare_to_previous <- function(current_df, previous_df, index_cols, compare_val
   )
   nrows_match <- dim_comparison$nrows_comparison$current == dim_comparison$nrows_comparison$previous
   ncols_match <- dim_comparison$ncols_comparison$current == dim_comparison$ncols_comparison$previous
-  
+
   dim_comparison$nrows_comparison$match <- nrows_match
   dim_comparison$ncols_comparison$match <- ncols_match
-  
+
   # compare column names
   colname_comparison <- dfc.setdiff_plus(names(current_df), names(previous_df))
   colnames_match <- length(colname_comparison$only_in_first) == 0 & length(colname_comparison$only_in_second) == 0
-  
+
   # compare indices
   current_df$index <- dfc.get_concatenated_ids(current_df, index_cols)
   previous_df$index <- dfc.get_concatenated_ids(previous_df, index_cols)
   index_comparison <- dfc.setdiff_plus(current_df$index, previous_df$index)
   indices_match <- length(index_comparison$only_in_first) == 0 & length(index_comparison$only_in_second) == 0
-  
+
   # if everything else matches, and a values comparison was requested, go ahead and do a values comparison
   if(nrows_match & ncols_match & colnames_match & indices_match & compare_values){
     current_df <- current_df[order(current_df$index), ]
@@ -223,11 +231,11 @@ compare_to_previous_summary <- function(comparison_to_previous){
   )
   n_indices_only_in_current <- length(comparison_to_previous$index_comparison$only_in_first)
   n_indices_only_in_previous <- length(comparison_to_previous$index_comparison$only_in_second)
-  nrows_diff <- comparison_to_previous$dim_comparison$nrows_comparison$current - 
+  nrows_diff <- comparison_to_previous$dim_comparison$nrows_comparison$current -
     comparison_to_previous$dim_comparison$nrows_comparison$previous
-  ncols_diff <- comparison_to_previous$dim_comparison$ncols_comparison$current - 
+  ncols_diff <- comparison_to_previous$dim_comparison$ncols_comparison$current -
     comparison_to_previous$dim_comparison$ncols_comparison$previous
-  
+
   values_match <- NA
   if(length(comparison_to_previous$values_comparison) > 1){
     values_match <- all(comparison_to_previous$values_comparison$col_summary$num_unmatched == 0)
@@ -246,37 +254,37 @@ compare_to_previous_summary <- function(comparison_to_previous){
 
 dfc.get_granular_mismatches <- function(values_comparison, id_cols = "index"){
   # takes a values_comparison object (returned by dfc.compare_values)
-  # and returns a data.frame with one row per value difference in the data.frames 
+  # and returns a data.frame with one row per value difference in the data.frames
   # that were compared. Variable names and df index values appear in the rows of this df.
   # id_cols — when working with the output of dfc.compare_values, the id_col will usually
   # be "index," a composite identifier produced with dfc.concatenate_ids. However,
   # the user can specify their own index columns in case they've modified the output of dfc.compare_values,
   # e.g., to de-concatenate the index columns or add new index columns whose job it is to handle duplicates.
-  
+
   sbs_df <- values_comparison$side_by_side_df
-  
+
   # make sure all id_cols appear in values_comparison$side_by_side_df
   if(!all(id_cols %in% names(sbs_df))){
     stop("in get_granular_mismatches, the id_cols you specified do not all appear in values_comparison$side_by_side_df. (" %+%
            paste0(id_cols, collapse = ", ") %+% ")")
   }
-  
+
   # check for duplicated combinations of id_cols in values_comparison
   if(any(duplicated(sbs_df[id_cols]))){
     stop("cannot get granular mismatches because duplicated id_col values were found. Please handle duplicates and try again.")
   }
-  
+
   col_summary <- values_comparison$col_summary
   vars <- col_summary$variable_name[col_summary$num_unmatched > 0]
   suffixes <- c("_df1", "_df2", "_matches")
   var_names <- expand.grid(vars, suffixes) %>%
     setNames(c("variable", "suffix")) %>%
     mutate(colname = variable %+% suffix)
-  
+
   # restrict to rows with at least one mismatch (to save computation time)
   sbs_df$at_least_one_mismatch <- values_comparison$row_summary$num_unmatched > 0
   sbs_df <- sbs_df[sbs_df$at_least_one_mismatch, ]
-  
+
   # to look at granular mismatches, restrict to columns with unmatched values,
   # handle duplicate indices by marking each instance
   # melt, and cast
