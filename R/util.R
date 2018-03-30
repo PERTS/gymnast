@@ -107,6 +107,9 @@ util.is_blank <- function(x){
     is.na(x) | grepl("^[ \t]*$", x)
 }
 
+util.is_present <- function(x){
+    ! util.is_blank(x)
+}
 
 util.to_character <- function(x){
     # like base::as.character()
@@ -130,11 +133,11 @@ util.is_vector_of_numbers <- function(x){
     # (regardless of whether x is numeric)
     # Character vectors sometimes need to be changed to numerics,
     # e.g., when all columns set to character types by default.
-  
+
     # determine if x is logical first, because as.numeric will coerce logicals
     # to boolean 0,1 rather than to NA, meaning util.is_vector_of_numbers would return TRUE
     if(is.logical(x)) return(FALSE)
-    
+
     # find numeric values
     x_as_numeric <- suppressWarnings(as.numeric(x))
 
@@ -143,7 +146,7 @@ util.is_vector_of_numbers <- function(x){
     non_numeric <- is.na(x_as_numeric)
     originally_blank <- util.is_blank(x)
 
-    # Return FALSE if there are any coerced blanks, because that means x 
+    # Return FALSE if there are any coerced blanks, because that means x
     # contained elements that could not be converted to numeric.
     # Otherwise return TRUE.
     if(any(non_numeric & !originally_blank)){
@@ -161,7 +164,7 @@ util.is_vector_of_numbers_test <- function(){
     x_scientific <- c("1e05")
     x_with_blanks <- c(x_number, "", NA)
     x_logical <- c(TRUE, FALSE)
-    
+
     assert <- stopifnot
     assert(!util.is_vector_of_numbers(x_char))
     assert(util.is_vector_of_numbers(x_number))
@@ -303,7 +306,7 @@ util.html_table <- function(x, ...) {
     #   `output <- util.html_table(psych::alpha(r9), print.results = FALSE)`
     accepted_models <- c("lmerMod","lm","aov","glm","glmerMod")
     accepted_psych_objects <- c("psych","alpha")
-    accepted_dfs <- c("grouped_df", "tbl_df","data.frame","table")
+    accepted_dfs <- c("grouped_df", "tbl_df","data.frame","table","matrix")
 
     if( any(class(x) %in% accepted_models ) ){
         util.html_table_from_model(x, ...)
@@ -639,12 +642,12 @@ util.find_crypt_paths <- function (files_to_load, initial_path = NA,
     #     files. Zero means enter no subfolders.
     #
     # Returns: List with provided labels to absolute file paths.
-    
+
     # check the format of files_to_load
     if(!is.list(files_to_load)){
         stop("in util.find_crypt_paths, files_to_load must be a list.")
     }
-    
+
     if(any(util.is_blank(names(files_to_load))) | is.null(names(files_to_load))){
         stop("in util.find_crypt_paths, all elements of the list files_to_load must be named (e.g., list(a = 'a',), not list('a')")
     }
@@ -758,19 +761,19 @@ to_type_tbldf_test <- function(){
   test_df <- data.frame(a = c(1, 2), b = c('c','d'))
   test_tbldf <- test_df %>% group_by(a)
   test_vec <- c(1, 2)
-  
+
   assert <- stopifnot
-  
+
   # all the util.to_ functions should return dfs of the same dimensions as the originals,
   # for both dfs and tbl_df types (i.e., data.frame-like objects returned by dplyr operations)
   assert(identical(dim(test_df), dim(util.to_character(test_df))))
   assert(identical(dim(test_tbldf), dim(util.to_character(test_tbldf))))
   assert(identical(length(test_vec), length(util.to_character(test_vec))))
-  
+
   assert(identical(dim(test_df), dim(util.to_ascii(test_df))))
   assert(identical(dim(test_tbldf), dim(util.to_ascii(test_tbldf))))
   assert(identical(length(test_vec), length(util.to_ascii(test_vec))))
-  
+
   assert(identical(dim(test_df), dim(util.as_numeric_if_number(test_df))))
   assert(identical(dim(test_tbldf), dim(util.as_numeric_if_number(test_tbldf))))
   assert(identical(length(test_vec), length(util.as_numeric_if_number(test_vec))))
