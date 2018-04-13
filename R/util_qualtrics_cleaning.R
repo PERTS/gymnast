@@ -110,6 +110,8 @@ qc.test_enumerate_duplicates <- function(){
   )
 }
 
+qc.test_enumerate_duplicates()
+
 qc.extract_delimited <- function(x,delimiter = "__pdd__"){
     # Input:
     # - string vector from first row of raw Qualtrics dataset containing second
