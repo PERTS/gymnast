@@ -63,15 +63,52 @@ qc.insert_hidden_column_names <- function(qdf_char,
     # not unique
     if(any(duplicated(best_column_names))){
       dup_col_names <- unique(best_column_names[duplicated(best_column_names)])
+      best_column_names <- qc.enumerate_duplicates(best_column_names)
+      # throw a warning so that the user can fix duplicated column names manually if desired.
       warning("Your function for pulling column names from the first row " %+%
-        "resulted in duplicate column names: " %+% dup_col_names)
+                "resulted in duplicate column names: " %+% paste0(dup_col_names, collapse = ", ") %+% 
+                ". Numeric suffixes were added to differentiate these columns " %+%
+                "in the cleaned output.")
     }
-
     # add the new column names to the data.frame
     names(qdf_char) <- best_column_names
     return(qdf_char)
-  }
+}
 
+qc.enumerate_duplicates <- function(column_names){
+  # Add numeric differentiators so that further operations
+  # don't get messed up. (e.g., col, col, col... becomes col.1, col.2, etc.)
+  # note that the "dot-number" convention above parallels R's default behavior
+  # for handling duplicate column names.
+  
+  # make a data.frame so that enumerated values can be grouped by column name
+  # (e.g., to produce col1.1, col2.1, col1.2, col2.2 
+  # instead of col1.1, col2.2, col1.3, col2.4)
+  duplicated_names_df <- data.frame(
+    duplicated_name = column_names[util.duplicated_all(column_names)]
+  ) %>%
+    group_by(duplicated_name) %>%
+    mutate(
+      enumerated_instance = 1:length(duplicated_name),
+      new_name = paste0(duplicated_name, ".", enumerated_instance)
+    )
+  # replace the duplicated names with new names
+  column_names[column_names %in% duplicated_names_df$duplicated_name] <- duplicated_names_df$new_name
+  return(column_names)
+}
+
+qc.test_enumerate_duplicates <- function(){
+  # test the basic behavior of qc.enumerate_duplicates
+  column_names <- c("col1", "fms_1", "col2", "fms_2", "fms_1", "col3", "fms_2")
+  enumerated_names <- qc.enumerate_duplicates(column_names)
+  assert <- stopifnot
+  assert(
+    identical(
+      enumerated_names,
+      c("col1", "fms_1.1", "col2", "fms_2.1", "fms_1.2", "col3", "fms_2.2")
+    )
+  )
+}
 
 qc.extract_delimited <- function(x,delimiter = "__pdd__"){
     # Input:
