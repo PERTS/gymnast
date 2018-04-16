@@ -75,7 +75,7 @@ qc.insert_hidden_column_names <- function(qdf_char,
     return(qdf_char)
 }
 
-qc.enumerate_duplicates <- function(column_names){
+qc.enumerate_duplicates <- function(column_names, sep = "."){
   # Add numeric differentiators so that further operations
   # don't get messed up. (e.g., col, col, col... becomes col.1, col.2, etc.)
   # note that the "dot-number" convention above parallels R's default behavior
@@ -84,13 +84,17 @@ qc.enumerate_duplicates <- function(column_names){
   # make a data.frame so that enumerated values can be grouped by column name
   # (e.g., to produce col1.1, col2.1, col1.2, col2.2 
   # instead of col1.1, col2.2, col1.3, col2.4)
+  
+  # note that this operation relies on the fact that dplyr::group_by 
+  # does not change the order of columns in the data.frame. If that
+  # property is ever broken, then this operation will not work!
   duplicated_names_df <- data.frame(
     duplicated_name = column_names[util.duplicated_all(column_names)]
   ) %>%
     group_by(duplicated_name) %>%
     mutate(
       enumerated_instance = 1:length(duplicated_name),
-      new_name = paste0(duplicated_name, ".", enumerated_instance)
+      new_name = paste0(duplicated_name, sep, enumerated_instance)
     )
   # replace the duplicated names with new names
   column_names[column_names %in% duplicated_names_df$duplicated_name] <- duplicated_names_df$new_name
@@ -106,6 +110,13 @@ qc.test_enumerate_duplicates <- function(){
     identical(
       enumerated_names,
       c("col1", "fms_1.1", "col2", "fms_2.1", "fms_1.2", "col3", "fms_2.2")
+    )
+  )
+  enumerated_names_underscore <- qc.enumerate_duplicates(column_names, sep = "_")
+  assert(
+    identical(
+      enumerated_names_underscore,
+      c("col1", "fms_1_1", "col2", "fms_2_1", "fms_1_2", "col3", "fms_2_2")
     )
   )
 }
