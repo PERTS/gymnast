@@ -715,6 +715,8 @@ util.find_crypt_paths <- function (files_to_load, initial_path = NA,
 ###
 ###############################################################
 
+source('ensure_packages.R')
+
 gymnast_install <- function () {
     # Load (or install) all packages used by gymnast.
     dependencies <- c(
@@ -723,14 +725,11 @@ gymnast_install <- function () {
         "lmerTest","psych","reshape2","scales" ,
         "stargazer","stringr","xtable"
     )
+
+    ensure_packages(dependencies, prefer_type = "source")
+
     for(lib_name in dependencies){
-        message(paste0("Loading... ",lib_name))
-        # Require returns FALSE if packages failed
-        if( !require(lib_name, character.only = TRUE) ){
-            install.packages(lib_name)
-            # library raises error if installation failed
-            library(lib_name, character.only = TRUE)
-        }
+        library(lib_name, character.only = TRUE)
     }
     # Do not uncomment without resolving issue #27!
     # resolve_name_conflicts()
