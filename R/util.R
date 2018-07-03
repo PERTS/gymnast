@@ -774,4 +774,4 @@ to_type_tbldf_test <- function(){
   assert(identical(length(test_vec), length(util.as_numeric_if_number(test_vec))))
 }
 
-to_type_tbldf_test()
+# to_type_tbldf_test()
