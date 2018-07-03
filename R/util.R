@@ -752,10 +752,6 @@ resolve_name_conflicts <- function () {
     ))
 }
 
-# Run if you source the code directly (e.g. from github), but NOT run if
-# included as a package. In the latter case, manually call gymnast_install().
-gymnast_install()
-
 to_type_tbldf_test <- function(){
   test_df <- data.frame(a = c(1, 2), b = c('c','d'))
   test_tbldf <- test_df %>% group_by(a)
