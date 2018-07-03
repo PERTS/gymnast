@@ -744,8 +744,6 @@ util.find_crypt_paths <- function (files_to_load, initial_path = NA,
 ###
 ###############################################################
 
-source('ensure_packages.R')
-
 gymnast_install <- function () {
     # Load (or install) all packages used by gymnast.
     dependencies <- c(
