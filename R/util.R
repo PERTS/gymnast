@@ -14,6 +14,35 @@
 ###
 ###############################################################
 
+ensure_packages <- function (libs, prefer_type = "binary") {
+  # Install `libs` if they aren't installed already.
+  #
+  # Args:
+  #   libs - character, packages to maybe install
+  #   prefer_type - character, default "binary", or "source", sets
+  #     options(install.packages.check.source) which is an indirect way of
+  #     controlling whether we use binary or source installation, since the
+  #     `type` argument of install.packages() is platform-dependent and thus
+  #     unreliable.
+  if (prefer_type == "binary") {
+    # Prefer binary packages, even if the source version is farther ahead.
+    # This is default because it's so much faster to install a binary.
+    options(install.packages.check.source = "no")
+  } else if (prefer_type == "source") {
+    options(install.packages.check.source = NULL)
+  }
+
+  installed <- utils::installed.packages()[,"Package"]
+  to_install <- libs[!(libs %in% installed)]
+
+  if (length(to_install)) {
+    utils::install.packages(
+      to_install,
+      repos = 'http://cran.us.r-project.org'
+      # type = 'binary'  # doesn't work for some platforms, e.g. linux
+    )
+  }
+}
 
 util.tidy <- function(source = "clipboard") {
     # cleans up coding style; by default from the clipboard
@@ -715,8 +744,6 @@ util.find_crypt_paths <- function (files_to_load, initial_path = NA,
 ###
 ###############################################################
 
-source('ensure_packages.R')
-
 gymnast_install <- function () {
     # Load (or install) all packages used by gymnast.
     dependencies <- c(
@@ -752,10 +779,6 @@ resolve_name_conflicts <- function () {
     ))
 }
 
-# Run if you source the code directly (e.g. from github), but NOT run if
-# included as a package. In the latter case, manually call gymnast_install().
-gymnast_install()
-
 to_type_tbldf_test <- function(){
   test_df <- data.frame(a = c(1, 2), b = c('c','d'))
   test_tbldf <- test_df %>% group_by(a)
@@ -778,4 +801,4 @@ to_type_tbldf_test <- function(){
   assert(identical(length(test_vec), length(util.as_numeric_if_number(test_vec))))
 }
 
-to_type_tbldf_test()
+# to_type_tbldf_test()
