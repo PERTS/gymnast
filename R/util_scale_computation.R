@@ -16,7 +16,7 @@ sc.append_scales <- function(
     # survey_variables_table.
 
     # filter any non-scale variables from scale_variables_table
-    scale_variables_table <- filter(
+    scale_variables_table <- dplyr::filter(
         scale_variables_table,
         !util.is_blank(scale)
     )
