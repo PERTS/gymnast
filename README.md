@@ -1,6 +1,6 @@
 # gymnast
 
-Collection of useful functions for data analysis and visualization.
+Collection of useful functions for data analysis and visualization. Its authors place it into the Public Domain. This work is provided as-is and without any warranty.
 
 ## Install gymnast
 
