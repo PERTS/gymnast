@@ -399,6 +399,8 @@ util.ordinal <- function(vec){
   # e.g., 4,5,5,3,NA,8 returns 2,3,3,1,NA,4
   # The line commented out below should return true.
   # all( util.ordinal(c(4,5,5,3,NA,8)) == c(2,3,3,1,NA,4), na.rm=TRUE )
+  if(all(is.na(vec))){ return(vec) }
+
   df <- data.frame(original = vec)
   vec_to_ord <- df %>%
     filter( ! is.na(original) ) %>%
