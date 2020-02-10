@@ -95,9 +95,8 @@ util.na_omit <- function(x){
   }
   if(is.data.frame(x)){
     return(x[complete.cases(x), ])
-  } else{
-    stop("util.na_omit is for vectors, matrices and data.frames only.")
   }
+  stop("util.na_omit is for vectors, matrices and data.frames only.")
 }
 
 util.na_omit_test <- function(){
@@ -106,7 +105,7 @@ util.na_omit_test <- function(){
   x_matrix <- matrix(nrow = 2, ncol = 2, data = c(NA, 1, 2, 3))
   x_list <- list(a = c(NA, 1), b = c(2, 3))
   x_df <- data.frame(a = c(NA, 1), b = c(2, 3))
-  x_df_allblankcol <- data.frame(a = c(1, 2), b = c(NA, NA))
+  x_df_allb <- data.frame(a = c(1, 2), b = c(NA, NA))
   x_tibble <- dplyr::as_tibble(x_df)
 
   assert <- stopifnot
@@ -114,12 +113,16 @@ util.na_omit_test <- function(){
   assert(util.na_omit(x_number) == c(1, 2))
   # I couldn't think of how to test that it throws an error for lists
   assert(util.na_omit(x_matrix) == matrix(nrow = 1, ncol = 2, data = c(1, 3)))
+  # make sure a 2-d matrix has still been returned as well
+  assert(dim(util.na_omit(x_matrix)) == c(1,2))
+  # see what happens when matrix has an all-blank col
+  assert(util.na_omit(x_matrix_allb) == matrix(ncol = 2, nrow = 0))
   assert(util.na_omit(x_df) == data.frame(a = 1, b = 3))
   assert(util.na_omit(x_tibble) == dplyr::tibble(a = 1, b = 3))
   # where there are all blank cols, the result should be a zero-row data.frame
   # that preserves column names and number of columns
-  assert(nrow(util.na_omit(x_df_allblankcol)) == 0)
-  assert(names(util.na_omit(x_df_allblankcol)) == names(x_df_allblankcol))
+  assert(nrow(util.na_omit(x_df_allb)) == 0)
+  assert(names(util.na_omit(x_df_allb)) == names(x_df_allb))
 }
 util.na_omit_test()
 
