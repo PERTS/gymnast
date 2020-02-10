@@ -93,7 +93,7 @@ util.na_omit <- function(x){
     return(x[!is.na(x)])
   }
   if(is.matrix(x) | is.data.frame(x)){
-    return(x[complete.cases(x), ])
+    return(x[stats::complete.cases(x), ])
   }
   stop("util.na_omit is for vectors, matrices and data.frames only.")
 }
