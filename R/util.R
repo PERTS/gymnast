@@ -84,11 +84,39 @@ util.duplicated_all <- function(x) {
 }
 
 util.na_omit <- function(x){
-  # returns all values of vector x that are not NA,
+  # returns all values of vector, matrix or data.frame x that are not NA,
   # but maintains the type of x (in contrast with stats::na.omit which adds a
   # bunch of unsolicited attributes to vectors)
-  return(x[!is.na(x)])
+  if(is.atomic(x) & is.vector(x)){
+    return(x[!is.na(x)])
+  }
+  if(is.matrix(x)){
+    return(na.omit(x))
+  }
+  if(is.data.frame(x)){
+    return(x[complete.cases(x), ])
+  } else{
+    stop("util.na_omit is for vectors, matrices and data.frames only.")
+  }
 }
+
+util.na_omit_test <- function(){
+  x_char <- c("1", "a", NA)
+  x_number <- c(1, 2, NA)
+  x_matrix <- matrix(nrow = 2, ncol = 2, data = c(NA, 1, 2, 3))
+  x_list <- list(a = c(NA, 1), b = c(2, 3))
+  x_df <- data.frame(a = c(NA, 1), b = c(2, 3))
+  x_tibble <- dplyr::as_tibble(x_df)
+
+  assert <- stopifnot
+  assert(util.na_omit(x_char) == c("1", "a"))
+  assert(util.na_omit(x_number) == c(1, 2))
+  # I couldn't think of how to test that it throws an error for lists
+  assert(util.na_omit(x_matrix) == matrix(nrow = 1, ncol = 2, data = c(1, 3)))
+  assert(util.na_omit(x_df) == data.frame(a = 1, b = 3))
+  assert(util.na_omit(x_tibble) == dplyr::tibble(a = 1, b = 3))
+}
+util.na_omit_test()
 
 ###############################################################
 ###
