@@ -86,14 +86,13 @@ util.duplicated_all <- function(x) {
 util.na_omit <- function(x){
   # returns all values of vector, matrix or data.frame x that are not NA,
   # but maintains the type of x (in contrast with stats::na.omit which adds a
-  # bunch of unsolicited attributes to vectors)
+  # bunch of unsolicited attributes to vectors) For 2-d objects, util.na_omit
+  # returns zero-row objects rather than removing whole columns of all-NA
+  # values (which na.omit does)
   if(is.atomic(x) & is.vector(x)){
     return(x[!is.na(x)])
   }
-  if(is.matrix(x)){
-    return(na.omit(x))
-  }
-  if(is.data.frame(x)){
+  if(is.matrix(x) | is.data.frame(x)){
     return(x[complete.cases(x), ])
   }
   stop("util.na_omit is for vectors, matrices and data.frames only.")
@@ -103,6 +102,7 @@ util.na_omit_test <- function(){
   x_char <- c("1", "a", NA)
   x_number <- c(1, 2, NA)
   x_matrix <- matrix(nrow = 2, ncol = 2, data = c(NA, 1, 2, 3))
+  x_matrix_allb <- matrix(nrow = 3, ncol = 2, c(1,2,3,NA,NA,NA))
   x_list <- list(a = c(NA, 1), b = c(2, 3))
   x_df <- data.frame(a = c(NA, 1), b = c(2, 3))
   x_df_allb <- data.frame(a = c(1, 2), b = c(NA, NA))
