@@ -83,6 +83,13 @@ util.duplicated_all <- function(x) {
   return (duplicated_downward | duplicated_upward)
 }
 
+util.na_omit <- function(x){
+  # returns all values of vector x that are not NA,
+  # but maintains the type of x (in contrast with stats::na.omit which adds a
+  # bunch of unsolicited attributes to vectors)
+  return(x[!is.na(x)])
+}
+
 ###############################################################
 ###
 ###     String Cleaning
