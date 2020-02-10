@@ -106,6 +106,7 @@ util.na_omit_test <- function(){
   x_matrix <- matrix(nrow = 2, ncol = 2, data = c(NA, 1, 2, 3))
   x_list <- list(a = c(NA, 1), b = c(2, 3))
   x_df <- data.frame(a = c(NA, 1), b = c(2, 3))
+  x_df_allblankcol <- data.frame(a = c(1, 2), b = c(NA, NA))
   x_tibble <- dplyr::as_tibble(x_df)
 
   assert <- stopifnot
@@ -115,6 +116,10 @@ util.na_omit_test <- function(){
   assert(util.na_omit(x_matrix) == matrix(nrow = 1, ncol = 2, data = c(1, 3)))
   assert(util.na_omit(x_df) == data.frame(a = 1, b = 3))
   assert(util.na_omit(x_tibble) == dplyr::tibble(a = 1, b = 3))
+  # where there are all blank cols, the result should be a zero-row data.frame
+  # that preserves column names and number of columns
+  assert(nrow(util.na_omit(x_df_allblankcol)) == 0)
+  assert(names(util.na_omit(x_df_allblankcol)) == names(x_df_allblankcol))
 }
 util.na_omit_test()
 
