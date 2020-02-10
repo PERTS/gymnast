@@ -83,6 +83,49 @@ util.duplicated_all <- function(x) {
   return (duplicated_downward | duplicated_upward)
 }
 
+util.na_omit <- function(x){
+  # returns all values of vector, matrix or data.frame x that are not NA,
+  # but maintains the type of x (in contrast with stats::na.omit which adds a
+  # bunch of unsolicited attributes to vectors) For 2-d objects, util.na_omit
+  # returns zero-row objects rather than removing whole columns of all-NA
+  # values (which na.omit does)
+  if(is.atomic(x) & is.vector(x)){
+    return(x[!is.na(x)])
+  }
+  if(is.matrix(x) | is.data.frame(x)){
+    return(x[complete.cases(x), ])
+  }
+  stop("util.na_omit is for vectors, matrices and data.frames only.")
+}
+
+util.na_omit_test <- function(){
+  x_char <- c("1", "a", NA)
+  x_number <- c(1, 2, NA)
+  x_matrix <- matrix(nrow = 2, ncol = 2, data = c(NA, 1, 2, 3))
+  x_matrix_allb <- matrix(nrow = 3, ncol = 2, c(1,2,3,NA,NA,NA))
+  x_list <- list(a = c(NA, 1), b = c(2, 3))
+  x_df <- data.frame(a = c(NA, 1), b = c(2, 3))
+  x_df_allb <- data.frame(a = c(1, 2), b = c(NA, NA))
+  x_tibble <- dplyr::as_tibble(x_df)
+
+  assert <- stopifnot
+  assert(util.na_omit(x_char) == c("1", "a"))
+  assert(util.na_omit(x_number) == c(1, 2))
+  # I couldn't think of how to test that it throws an error for lists
+  assert(util.na_omit(x_matrix) == matrix(nrow = 1, ncol = 2, data = c(1, 3)))
+  # make sure a 2-d matrix has still been returned as well
+  assert(dim(util.na_omit(x_matrix)) == c(1,2))
+  # see what happens when matrix has an all-blank col
+  assert(util.na_omit(x_matrix_allb) == matrix(ncol = 2, nrow = 0))
+  assert(util.na_omit(x_df) == data.frame(a = 1, b = 3))
+  assert(util.na_omit(x_tibble) == dplyr::tibble(a = 1, b = 3))
+  # where there are all blank cols, the result should be a zero-row data.frame
+  # that preserves column names and number of columns
+  assert(nrow(util.na_omit(x_df_allb)) == 0)
+  assert(names(util.na_omit(x_df_allb)) == names(x_df_allb))
+}
+util.na_omit_test()
+
 ###############################################################
 ###
 ###     String Cleaning
