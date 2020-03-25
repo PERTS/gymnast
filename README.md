@@ -2,11 +2,78 @@
 
 Collection of useful functions for data analysis and visualization. Its authors place it into the Public Domain. This work is provided as-is and without any warranty.
 
-## Install gymnast
+Gymnast uses R 3.6.2.
 
-Make sure you have a current version of R. The most recently tested version is 3.2.3.
+## Use gymnast as a git submodule (preferred)
 
-Then copy and paste the following code into the top of your R script, or run it in your R console.
+This method makes files within gymnast available to be imported á-la-carte and ensures that you have a consistent version available. If updates are pushed to gymnast, your code doesn't change until you update your submodule.
+
+To add gymast as a submodule to your repo:
+
+```
+git submodule add https://github.com/PERTS/gymnast
+git commit -am "add gymnast"
+```
+
+Note that, in the future when cloning your repo, you'll need a separate command to also clone the submodule:
+
+```
+git submodule update --recursive --init
+```
+
+### Typical use
+
+The following is recommened, but not required.
+
+Add this import path to your `package.json` file:
+
+```
+{
+    "R": {
+        "importPaths": ["gymnast/R"],
+    }
+}
+```
+
+Bootstrap gymnast in your top-level code:
+
+```
+bootstrap <- modules::use("gymnast/R/bootstrap.R")
+bootstrap$install_dependencies(gymnast_base_path = "gymnast")
+bootstrap$install_module_imports() # import_module() now in global env
+```
+
+Now you can import gymnast modules (and any of your own, see comments in `install_module_imports`):
+
+```
+sql <- import_module('sql')
+```
+
+### Dependencies
+
+Gymnast documents exactly what packages and package versions it depends on in its `DESCRIPTION` file. It does not force you to install them; that's left up to the app using gymnast. However, you are encouraged to incorporate gymnast's dependency list into your own and/or use the `install_dependencies()` function as shown above.
+
+### Minimalistic Use
+
+As long as the submodule is correctly cloned, you can still use gymnast code, you just have to manage dependencies and file paths yourself:
+
+```
+# Should work, assuming you have all the required packages, working dir, etc.
+source("gymnast/R/sql.R")
+```
+
+----
+
+# Deprecated Features
+
+## Use gymnast over the Internet
+
+Avoid using this method because:
+
+1. Any updates to gymnast may immediately affect your scripts and may introduce bugs.
+2. Reading URLs over the Internet takes time, so if your script does this repeatedly it will be slow.
+
+Copy and paste the following code into the top of your R script, or run it in your R console.
 
 ```r
 source_urls <- c(
@@ -21,7 +88,7 @@ for (source_url in source_urls) {
 
 If you are only interested in some gynmast modules, you can modify the list of installed `source_urls`.
 
-## Alternate Installation
+## Devtools Installation
 
 This is more like a typical package installation, however you will not get any updates made to gymnast until you re-install.
 
