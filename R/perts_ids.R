@@ -3,7 +3,7 @@
 modules::import('stringr', 'str_split')
 
 # Letters only, in StandingCamelCase
-kind_pattern <- '([A-Z][a-z]+)+'
+kind_pattern <- '([A-Z][a-z]*)+'
 
 # Letters, numbers, hyphen.
 id_pattern <- '[A-Za-z0-9\\-]+'
