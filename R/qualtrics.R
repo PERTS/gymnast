@@ -122,7 +122,7 @@ create_service <- function (api_key) {
     # have the correct format and length.
 
     ANONYMOUS_COPILOT_RESPONSES <- utils::read.csv(
-      'common/qualtrics_anonymous_sample_ep_2018.csv',
+      'data/qualtrics_anonymous_sample_ep_2018.csv',
       stringsAsFactors = FALSE
     )
     # Drop the double header so we can treat all rows as real data to sample.
