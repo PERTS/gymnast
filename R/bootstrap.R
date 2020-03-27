@@ -97,7 +97,7 @@ install_module_imports <- function() {
 
     # Import the found module file, but also inject the import function
     # from the global environement. The `amodule` function makes the immediate
-    # parent environment available, so we have access to `module_path`.
+    # parent environment available, so we have access to `resolved_path`.
     modules::amodule({
       import_module <- globalenv()$import_module
       eval(parse(resolved_path))

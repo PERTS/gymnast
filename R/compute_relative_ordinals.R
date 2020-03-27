@@ -5,7 +5,7 @@
 
 # Note--this function ignores any gaps in the inputs
 
-logging <- import_module('common/logging.R')
+logging <- import_module("logging")
 
 `%+%` <- paste0
 

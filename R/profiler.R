@@ -5,11 +5,11 @@
 #
 # Example use:
 #
-#   profiler <- import_module('common/profiler.R')
+#   profiler <- import_module("profiler")
 #   profiler$add_event("lets-a go")
 #
 #   # in other files or modules sharing the same global environment
-#   profiler <- import_module('common/profiler.R')
+#   profiler <- import_module("profiler")
 #   profiler$add_event("doing another thing")
 #
 #   # to view all profile events
@@ -17,11 +17,11 @@
 #
 # You can also name your profiler:
 #
-#   profiler <- import_module('common/profiler.R')
+#   profiler <- import_module("profiler")
 #   profiler$add_event("start my script", "custom_profiler")
 #
 #   # in other files or modules sharing the same global environment
-#   profiler <- import_module('common/profiler.R')
+#   profiler <- import_module("profiler")
 #   profiler$add_event("doing more stuff", "custom_profiler")
 #
 #   # to all profile events with this name:

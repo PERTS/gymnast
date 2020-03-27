@@ -1,4 +1,4 @@
-# to import: logging <- import_module('common/logging.R')
+# to import: logging <- import_module("logging")
 # to call:
 #  logging$info("my message")
 #  logging$info("The situation is foo", bar)
