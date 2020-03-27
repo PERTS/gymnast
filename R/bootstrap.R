@@ -50,11 +50,11 @@ install_dependencies <- function(gymnast_base_path = NULL) {
 modules::export("install_module_imports")
 install_module_imports <- function() {
   r_path_raw <- Sys.getenv("R_PATH")
-  r_path <- ifelse(
-    r_path_raw %in% "",
-    character(),
-    strsplit(r_path_raw, ":")
-  )[[1]]
+  if (r_path_raw %in% "") {
+    r_path <- character()
+  } else {
+    r_path <- strsplit(r_path_raw, ":")[[1]]
+  }
 
   import_paths <- NULL
   if (file.exists("package.json")) {
@@ -90,7 +90,7 @@ install_module_imports <- function() {
         "Could not resolve path: ",
         module_path,
         "; R_PATH is: \"",
-        paste(r_path, collapse = ":"),
+        paste(all_paths, collapse = ":"),
         "\""
       ))
     }
