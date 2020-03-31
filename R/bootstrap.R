@@ -49,6 +49,16 @@ install_dependencies <- function(gymnast_base_path = NULL) {
 
 modules::export("install_module_imports")
 install_module_imports <- function() {
+  # Creates a specialized function, `import_module`, in the global environment.
+  # This function has two important features:
+  # 1. It will search for a file matching what you requested in a list of
+  #    directories. By default it looks in the current working directory and the
+  #    `R/` subdirectory. If you have the R_PATH environment variable set, or if
+  #    you define "importPaths" in your package.json file, you can have it
+  #    search additional places.
+  # 2. It copies itself into the scope/environment of every module it loads
+  #    (normally the `modules` package creates a totally isolated environment)
+  #    so that code can in turn load more modules.
   r_path_raw <- Sys.getenv("R_PATH")
   if (r_path_raw %in% "") {
     r_path <- character()
@@ -64,28 +74,22 @@ install_module_imports <- function() {
     import_paths <- character()
   }
 
-  all_paths <- c('.', 'R', r_path, import_paths)
+  all_paths <- c(".", "R", r_path, import_paths)
 
   import_module <- function(module_path) {
-    resolved_path <- NULL
+    resolved_paths <- character()
     for (base_path in all_paths) {
       p <- file.path(base_path, module_path)
       if (file.exists(p)) {
-        resolved_path <- p
-        break
+        resolved_paths <- c(p, resolved_paths)
       }
       p.R <- paste0(p, ".R")
       if (file.exists(p.R)) {
-        resolved_path <- p.R
-        break
-      }
-      p.r <- paste0(p, ".r")
-      if (file.exists(p.r)) {
-        resolved_path <- p.r
-        break
+        resolved_paths <- c(p.R, resolved_paths)
       }
     }
-    if (is.null(resolved_path)) {
+
+    if (length(resolved_paths) == 0) {
       stop(paste0(
         "Could not resolve path: ",
         module_path,
@@ -94,6 +98,17 @@ install_module_imports <- function() {
         "\""
       ))
     }
+
+    if (length(resolved_paths) > 1) {
+      stop(paste0(
+        "Could not resolve path: ",
+        module_path,
+        "; found multiple matches: ",
+        paste(resolved_paths, collapse = ", ")
+      ))
+    }
+
+    resolved_path <- resolved_paths # now guaranteed to be length 1
 
     # Import the found module file, but also inject the import function
     # from the global environement. The `amodule` function makes the immediate
