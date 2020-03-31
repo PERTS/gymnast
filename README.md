@@ -8,22 +8,7 @@ Gymnast uses R 3.6.2.
 
 This method makes files within gymnast available to be imported á-la-carte and ensures that you have a consistent version available. If updates are pushed to gymnast, your code doesn't change until you update your submodule.
 
-To add gymast as a submodule to your repo:
-
-```
-git submodule add https://github.com/PERTS/gymnast
-git commit -am "add gymnast"
-```
-
-Note that, in the future when cloning your repo, you'll need a separate command to also clone the submodule:
-
-```
-git submodule update --recursive --init
-```
-
-### Typical use
-
-The following is recommened, but not required.
+### Use in R scripts
 
 Add this import path to your `package.json` file:
 
@@ -35,7 +20,7 @@ Add this import path to your `package.json` file:
 }
 ```
 
-Bootstrap gymnast in your top-level code:
+Bootstrap gymnast in your top-level code. Calling `install_dependencies` is not required if you already have all the right packages, but it's still a good idea.
 
 ```
 bootstrap <- modules::use("gymnast/R/bootstrap.R")
@@ -53,13 +38,53 @@ sql <- import_module('sql')
 
 Gymnast documents exactly what packages and package versions it depends on in its `DESCRIPTION` file. It does not force you to install them; that's left up to the app using gymnast. However, you are encouraged to incorporate gymnast's dependency list into your own and/or use the `install_dependencies()` function as shown above.
 
-### Minimalistic Use
-
-As long as the submodule is correctly cloned, you can still use gymnast code, you just have to manage dependencies and file paths yourself:
+For instance this doesn't check that you have the right packages, but it's a little shorter. Will probably work for one-off scripts in the `analysis` repo.
 
 ```
-# Should work, assuming you have all the required packages, working dir, etc.
-source("gymnast/R/sql.R")
+modules::use("gymnast/R/bootstrap.R")$install_module_imports()
+```
+
+### Updating a gymnast submodule
+
+GitHub Desktop doesn't appear to support this ☹️, so we'll use the terminal. There are two conceptual steps:
+
+1. Manage changes within the submodule exactly like any other repository: change, commit, push.
+2. Change the parent respository's reference to the submodule to point at the updated code.
+
+If you have uncommited changes in the submodule, the parent repository will report that the submodule is "dirty". To fix this, commit your changes within the submodule (step 1). Then the parent will show a diff of two commit hashes: the reference it currently has, and the HEAD commit you've updated. Add and commit this reference change just like any other change (step 2).
+
+Here's a more literal, detailed example workflow. Assume `analysis` is the parent repository, and `gymnast` is checked out in a subdirectory.
+
+```
+# I've changed some gymnast code. Time to commit.
+cd gymnast
+git checkout -b my-gymnast-working-branch
+git add .
+git commit -m "my cool gymnast changes"
+git push
+cd ..
+# Great, gymnast is taken care of. I can PR my changes there.
+# But I'll also need to update analysis.
+git add gymnast
+git commit -m "updating gymnast"
+git push
+```
+
+Note that once your `gymnast` working branch is PRed and approved and merged, you do NOT have to do anything more with the submodule reference in `analysis`, because it points at a _commit_ and not a _branch_. Merging just updates the HEAD of `master` to point at a new commit, but your submodule reference already points at that commit, so there's nothing to do. This is also why you'll find that when you `cd` into a submodule, running `git status` will usually _not_ tell you what branch you're on, but rather just what commit you're on. You can still `git checkout master` and `git pull` to get the newest code.
+
+### Installing as a submodule in a new repo
+
+To add gymast as a submodule to your repo:
+
+```
+git submodule add https://github.com/PERTS/gymnast
+git commit -am "add gymnast"
+```
+
+Note that, in the future when cloning your repo, you'll need a separate command to also clone the submodule:
+
+```
+git submodule update --recursive --init
 ```
 
 ----
@@ -77,7 +102,7 @@ Copy and paste the following code into the top of your R script, or run it in yo
 
 ```r
 source_urls <- c(
-    "https://raw.githubusercontent.com/PERTS/gymnast/master/R/util.R",
+    "https://raw.githubusercontent.com/PERTS/gymnast/master/R/util_legacy.R",
     "https://raw.githubusercontent.com/PERTS/gymnast/master/R/util_qualtrics_cleaning.R",
     "https://raw.githubusercontent.com/PERTS/gymnast/master/R/util_graphing.R"
 )
