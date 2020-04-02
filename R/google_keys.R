@@ -17,7 +17,8 @@ read_google_key <- function(gk_url, na_string = " ") {
     response <- httr::GET(gk_url)
     df <- utils::read.csv(
       textConnection(httr::content(response, "text")),
-      na.strings = na_string
+      na.strings = na_string,
+      stringsAsFactors = FALSE
     )
   }, error = function(e){
     print(e)
