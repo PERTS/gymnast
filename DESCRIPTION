@@ -21,20 +21,36 @@ Imports_comment: This DESCRIPTION file can specify other packages that are
     it places all dependencies under `Imports:`. This may change in the
     future as the package is more widely adopted.
 Imports:
+    base (== 3.6.2),
+    cellranger (>= 1.1.0),
+    DBI (>= 1.1.0),
+    dplyr (>= 0.8.3),
+    ggplot2 (>= 3.2.1),
+    httr (>= 1.4.1),
+    jsonlite (>= 1.6),
+    lubridate (>= 1.7.4),
+    modules (>= 0.8.0),
+    pkgload (>= 1.0.2),
+    RMySQL (>= 0.10.18),
+    stats (>= 3.6.2),
+    stringr (>= 1.4.0)
+Suggests:
+    callr,
     devtools,
     digest,
-    dplyr,
     formatR,
-    ggplot2,
     grid,
     Hmisc,
     knitr,
     lme4,
     lmerTest,
+    pryr,
     psych,
+    RCurl,
+    readr,
     reshape2,
     scales,
     stargazer,
-    stringr,
+    tidyr,
     xtable
 RoxygenNote: 5.0.1
