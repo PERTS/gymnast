@@ -133,12 +133,9 @@ describe("get_classrooms_from_network", {
       network_tbl
     )
 
-    print("!!!!")
-    print(classrooms)
-    print(class_tbl[1:2]$uid)
-
     # Note that "Classroom Foo" is in two different networks ("foo" and "meta")
-    # but it should only appear in the output once.
+    # but it should only appear in the output once. The "other" classroom
+    # should not be included.
     expect_identical(classrooms$uid, class_tbl[1:2, ]$uid)
     expect_identical(classrooms$code, class_tbl[1:2, ]$code)
   })
