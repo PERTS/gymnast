@@ -3,13 +3,16 @@ modules::import(
   `%>%`,
   "arrange",
   "between",
+  "distinct",
   "filter",
   "first",
   "group_by",
   "left_join",
   "mutate",
   "n",
+  "pull",
   "rename",
+  "sample_n",
   "select",
   "summarise"
 )
@@ -19,6 +22,7 @@ modules::import("tidyr", "spread")
 
 json_utils <- import_module("json_utils")
 logging <- import_module("logging")
+perts_ids <- import_module("perts_ids")
 util <- import_module("util")
 
 `%+%` <- paste0
@@ -514,4 +518,100 @@ map_responses_to_cycles_orig <- function(response_data_merged, cycle_tbl) {
   }
 
   return(response_data_cycles_merged)
+}
+
+get_classrooms_from_organization <- function(organization_ids,
+                                             classroom_tbl,
+                                             team_tbl) {
+  # Returns a subset of classroom_tbl rows that are related the the provided
+  # organization_ids.
+  #
+  # Args:
+  #   organization_ids - character, can be any id, will be matched against
+  #     team's org associations.
+  #   classroom_tbl - from triton, should include all the classrooms that might
+  #     match (e.g. all from a given program)
+  #   team_tbl - from triton, should include all the teams that might match
+  #     (e.g. all from a given program).
+  team_org_assoc <- team_tbl %>%
+    json_utils$expand_string_array_column(organization_ids) %>%
+    select(
+      team_id = uid,
+      organization_id = organization_ids
+    ) %>%
+    filter(!util$is_blank(organization_id))
+
+  if(any(duplicated(team_org_assoc))){
+    stop(
+      "Duplicated combinations of team and organization ids were found in " %+%
+      "the triton data. Reports not rendered."
+    )
+  }
+
+  org_entailed_classrooms <- classroom_tbl %>%
+    # merge in team data with an inner join so that teams without orgs are
+    # dropped (we don't need org-entailed codes for classes on teams with no
+    # orgs).
+    # we take the UNIQUE codes because teams and orgs have a many-to-many
+    # relationship, so there could be classes on teams that correspond to multiple
+    # orgs, and therefore those classes' codes would occur more than once
+    merge(
+      .,
+      team_org_assoc,
+      by = "team_id",
+      all.x = FALSE,
+      all.y = FALSE
+    ) %>%
+    # filter to the requested organization_ids. Because the ids are
+    # prefixed, non-org ids like team ids will never match the values
+    # in organization_id
+    filter(organization_id %in% organization_ids) %>%
+    distinct(uid, .keep_all = TRUE)
+
+  return(org_entailed_classrooms)
+}
+
+get_classrooms_from_network <- function(network_ids,
+                                        class_tbl,
+                                        team_tbl,
+                                        org_tbl,
+                                        network_tbl) {
+  # Returns a subset of classroom_tbl rows that are related the the provided
+  # network(s).
+  #
+  # Args:
+  #   network_ids - character, can be any id, will be matched against
+  #     network_tbl$uid.
+  #   class_tbl - from triton, should include all the classrooms that might
+  #     match (e.g. all from a given program)
+  #   team_tbl - from triton, should include all that might match...
+  #   org_tbl - from triton, should include all that might match...
+  #   network_tbl - from triton, should include all that might match...
+  network <- network_tbl %>%
+    # Isolate one matching row.
+    filter(uid %in% network_ids) %>%
+    # Long-form it so nrow == number of associations
+    json_utils$expand_string_array_column(association_ids)
+
+  classrooms <- sample_n(class_tbl, 0)  # zero-row df, for rbinding
+
+  for (assc_id in network$association_ids) {
+    assc_kind <- perts_ids$get_kind(assc_id)
+    if (assc_kind %in% 'Network') {
+      # Recurse.
+      to_add <- get_classrooms_from_network(
+        assc_id,
+        class_tbl,
+        team_tbl,
+        org_tbl,
+        network_tbl
+      )
+    } else if (assc_kind %in% 'Organization') {
+      to_add <- get_classrooms_from_organization(assc_id, class_tbl, team_tbl)
+    }
+
+    classrooms <- rbind(classrooms, to_add)
+  }
+
+  classrooms %>% distinct()
 }
