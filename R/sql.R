@@ -182,10 +182,12 @@ create_service <- function (...) {
   ))
 }
 
+NEPTUNE_IP_ANALYSIS_REPLICA <- '104.198.23.91'
+
 create_neptune_service <- function () {
   # Requires that perts_crypt.vc be mounted.
   return(create_service(
-    server_ip = '104.198.23.91',
+    server_ip = NEPTUNE_IP_ANALYSIS_REPLICA,
     dbname = 'neptune',
     ssl_file_names = list(
       key = "neptuneplatform_analysis-replica_2019.key",
@@ -196,10 +198,12 @@ create_neptune_service <- function () {
   ))
 }
 
+TRITON_IP_ANALYSIS_REPLICA <- '35.188.76.62'
+
 create_triton_service <- function () {
   # Requires that perts_crypt.vc be mounted.
   return(create_service(
-    server_ip = '35.188.76.62',
+    server_ip = TRITON_IP_ANALYSIS_REPLICA,
     dbname = 'triton',
     ssl_file_names = list(
       ca = 'triton_sql_production-01-analysis-replica.ca',
