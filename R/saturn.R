@@ -48,6 +48,13 @@ create_service <- function (
     ssl_credentials$password <- NULL
   }
 
+  conn <- sql$create_service(
+    ip,
+    dbname = db_name,
+    ssl_credentials = ssl_credentials,
+    password = password,
+    mysql_user = mysql_user
+  )
 
   get_raw_responses <- function (
     survey_label,
@@ -55,16 +62,6 @@ create_service <- function (
     start_date = NULL,
     end_date = NULL
   ) {
-    logging$info("saturn_service$get_responses()")
-
-    conn <- sql$create_service(
-      ip,
-      dbname = db_name,
-      ssl_credentials = ssl_credentials,
-      password = password,
-      mysql_user = mysql_user
-    )
-
     safe_survey_label <- conn$escape_strings(survey_label)
     safe_codes <- NULL
     if (!is.null(codes)) {
@@ -115,8 +112,6 @@ create_service <- function (
 
     results <- conn$query(query)
 
-    conn$disconnect()
-
     logging$info("saturn service get_raw_responses() got dimensions:", dim(results))
 
     return(results)
@@ -164,6 +159,7 @@ create_service <- function (
       get_responses
     ),
     get_raw_responses = get_raw_responses,
-    fake_responses = fake_responses
+    fake_responses = fake_responses,
+    query = conn$query
   ))
 }
