@@ -1,0 +1,12 @@
+The Project for Education Research That Scales (PERTS) hereby provides all
+PERTS-created source code contained within this repository to the general
+public under the CC0 1.0 Universal (CC0 1.0) Public Domain Dedication License.
+This DOES NOT include any third-party software found in this repository, which
+continues to be under their included license(s). This also DOES NOT include any
+non-source-code files found in this repository. Excluded non-source-code files
+may be, but are not limited to, images, audio recordings, and documents.
+
+Full text of the CC0 1.0 license is available at
+https://creativecommons.org/publicdomain/zero/1.0/legalcode
+
+
