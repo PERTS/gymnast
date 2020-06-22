@@ -3,15 +3,18 @@ modules::import(
   `%>%`,
   "arrange",
   "between",
+  "distinct",
   "filter",
   "first",
   "group_by",
   "left_join",
   "mutate",
   "n",
+  "pull",
   "rename",
   "select",
-  "summarise"
+  "summarise",
+  "tibble"
 )
 modules::import("lubridate", "ymd")
 modules::import("stringr", "str_pad")
@@ -19,6 +22,7 @@ modules::import("tidyr", "spread")
 
 json_utils <- import_module("json_utils")
 logging <- import_module("logging")
+perts_ids <- import_module("perts_ids")
 util <- import_module("util")
 
 `%+%` <- paste0
@@ -514,4 +518,96 @@ map_responses_to_cycles_orig <- function(response_data_merged, cycle_tbl) {
   }
 
   return(response_data_cycles_merged)
+}
+
+get_classrooms_from_organization <- function(organization_ids,
+                                             triton.classroom,
+                                             triton.team) {
+
+  team_org_assoc <- triton.team %>%
+    json_utils$expand_string_array_column(team.organization_ids) %>%
+    rename(organization.uid = "team.organization_ids") %>%
+    filter(organization.uid %in% organization_ids)
+
+  team_org_class <- team_org_assoc %>%
+    left_join(triton.classroom, by = c(team.uid = 'classroom.team_id'))
+
+  team_org_class %>%
+    select(
+      organization.uid,
+      team.uid,
+      classroom.uid,
+      classroom.code
+    )
+}
+
+get_classrooms_from_network <- function (network_ids,
+                                         triton.classroom,
+                                         triton.team,
+                                         triton.organization,
+                                         triton.network) {
+  # Long form relationship table, unique by network-child
+  network_assc <- triton.network %>%
+    filter(network.uid %in% network_ids) %>%
+    json_utils$expand_string_array_column(network.association_ids)
+
+  # Structure of df to return.
+  classroom_assc <- tibble(
+    network.uid = character(),
+    child_id = character(),
+    child_name = character(),
+    classroom.uid = character(),
+    classroom.code = character(),
+  )
+
+  for (x in sequence(length(network_assc$network.uid))) {
+    network_id <- network_assc$network.uid[x]
+    child_id <- network_assc$network.association_ids[x]
+    child_kind <- perts_ids$get_kind(child_id)
+
+    if (child_kind %in% 'Organization') {
+      cl <- get_classrooms_from_organization(
+        child_id,
+        triton.classroom,
+        triton.team
+      )
+
+      to_add <- cl %>%
+        left_join(triton.organization, by = 'organization.uid') %>%
+        rename(child_id = organization.uid, child_name = organization.name) %>%
+        mutate(network.uid = network_id) %>%
+        select(
+          network.uid,
+          child_id,
+          child_name,
+          classroom.uid,
+          classroom.code
+        )
+    } else if (child_kind %in% 'Network') {
+      # recurse
+      child_assc <- get_classrooms_from_network(
+        child_id,
+        triton.classroom,
+        triton.team,
+        triton.organization,
+        triton.network
+      )
+
+      child_name <- triton.network %>%
+        filter(network.uid == child_id) %>%
+        pull(network.name)
+
+      to_add <- child_assc %>%
+        mutate(
+          network.uid = network_id,
+          # !! to reference the variable, not the column name
+          child_id = !!child_id,
+          child_name = !!child_name
+        )
+    }
+
+    classroom_assc <- rbind(classroom_assc, to_add)
+  }
+
+  distinct(classroom_assc, child_id, classroom.uid, .keep_all = TRUE)
 }

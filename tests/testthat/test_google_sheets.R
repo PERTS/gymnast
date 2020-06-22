@@ -18,6 +18,9 @@ if (grepl("tests/testthat$", getwd())) {
 
 library(testthat)
 
+bootstrap <- modules::use("R/bootstrap.R")
+bootstrap$install_module_imports()
+
 gs <- import_module("google_sheets")
 
 # Put your credentials here in order to run integration tests.

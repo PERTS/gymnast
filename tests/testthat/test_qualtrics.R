@@ -18,6 +18,9 @@ if (grepl("tests/testthat$", getwd())) {
 
 library(testthat)
 
+bootstrap <- modules::use("R/bootstrap.R")
+bootstrap$install_module_imports()
+
 q <- import_module("qualtrics")
 
 test_that("creates fake responses", {

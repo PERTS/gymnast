@@ -16,6 +16,9 @@ if (grepl("tests/testthat$", getwd())) {
   setwd("../..")  # root dir of gymnast repo
 }
 
+bootstrap <- modules::use("R/bootstrap.R")
+bootstrap$install_module_imports()
+
 json_utils <- import_module("json_utils")
 
   # expect_true(all(expected_cols %in% names(fake_df)))
