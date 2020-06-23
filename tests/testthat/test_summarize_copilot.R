@@ -20,9 +20,6 @@ library(testthat)
 
 modules::import("dplyr", `%>%`, 'tribble')
 
-bootstrap <- modules::use("R/bootstrap.R")
-bootstrap$install_module_imports()
-
 summarize_copilot <- import_module("summarize_copilot")
 sql <- import_module("sql")
 
