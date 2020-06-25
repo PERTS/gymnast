@@ -54,16 +54,25 @@ describe('get_classrooms_from_organization', {
     child_assc <- summarize_copilot$get_classrooms_from_organization(
       c('Organization_M', 'Organization_N', 'Organization_O', 'Team_ignored'),
       tables$classroom,
-      tables$team
+      tables$team,
+      tables$organization
     )
 
-    expected <- tribble(
-      ~organization.uid, ~team.uid, ~classroom.uid, ~classroom.code,
-      'Organization_M',  'Team_A',  'Classroom_A',  'alpha fox',
-      'Organization_M',  'Team_C',  'Classroom_C',  'charlie fox',
-      'Organization_N',  'Team_A',  'Classroom_A',  'alpha fox',
-      'Organization_O',  'Team_B',  'Classroom_B',  'beta fox'
+    expected1 <- tribble(
+      ~parent_id,        ~parent_name, ~child_id, ~child_name, ~team.uid,
+      'Organization_M',  'Org M',      'Team_A',  'Team A',    'Team_A',
+      'Organization_M',  'Org M',      'Team_C',  'Team C',    'Team_C',
+      'Organization_N',  'Org N',      'Team_A',  'Team A',    'Team_A',
+      'Organization_O',  'Org O',      'Team_B',  'Team B',    'Team_B',
     )
+    expected2 <- tribble(
+      ~team.name, ~classroom.uid, ~classroom.code,
+       'Team A',   'Classroom_A',  'alpha fox',
+       'Team C',   'Classroom_C',  'charlie fox',
+       'Team A',   'Classroom_A',  'alpha fox',
+       'Team B',   'Classroom_B',  'beta fox'
+    )
+    expected = cbind(expected1, expected2)
 
     expect_equal(child_assc, expected)
   })
@@ -79,20 +88,26 @@ describe('get_classrooms_from_network', {
       tables$network
     )
 
-    expected <- tribble(
-      ~network.uid, ~child_id,        ~child_name, ~classroom.uid, ~classroom.code,
-      # alpha fox listed TWICE, b/c it must be included in two different
-      # network children: Org M and N.
-      'Network_X',  'Organization_M', 'Org M',     'Classroom_A',  'alpha fox',
-      'Network_X',  'Organization_M', 'Org M',     'Classroom_C',  'charlie fox',
-      'Network_X',  'Organization_N', 'Org N',     'Classroom_A',  'alpha fox'
+    # alpha fox listed TWICE, b/c it must be included in two different
+    # network children: Org M and N.
+    expected1 <- tribble(
+      ~parent_id,   ~parent_name,     ~child_id,        ~child_name, ~team.uid,
+      'Network_X',  'Simple Network', 'Organization_M', 'Org M',     'Team_A',
+      'Network_X',  'Simple Network', 'Organization_M', 'Org M',     'Team_C',
+      'Network_X',  'Simple Network', 'Organization_N', 'Org N',     'Team_A',
     )
+    expected2 <- tribble(
+      ~team.name, ~classroom.uid, ~classroom.code,
+      'Team A',   'Classroom_A',  'alpha fox',
+      'Team C',   'Classroom_C',  'charlie fox',
+      'Team A',   'Classroom_A',  'alpha fox'
+    )
+    expected = cbind(expected1, expected2)
 
     expect_equal(classroom_assc, expected)
   })
 
   it('meta network', {
-    # print(tables$network)
     classroom_assc <- summarize_copilot$get_classrooms_from_network(
       c('Network_Y', 'Team_ignored'),
       tables$classroom,
@@ -101,14 +116,18 @@ describe('get_classrooms_from_network', {
       tables$network
     )
 
-    print(classroom_assc)
-
-    expected <- tribble(
-      ~network.uid, ~child_id,   ~child_name,      ~classroom.uid, ~classroom.code,
-      # alpha fox only listed once, although a member via both Org M and N.
-      'Network_Y',  'Network_X', 'Simple Network', 'Classroom_A',  'alpha fox',
-      'Network_Y',  'Network_X', 'Simple Network', 'Classroom_C',  'charlie fox'
+    # alpha fox only listed once, although a member via both Org M and N.
+    expected1 <- tribble(
+      ~parent_id,   ~parent_name,   ~child_id,   ~child_name,      ~team.uid,
+      'Network_Y',  'Meta Network', 'Network_X', 'Simple Network', 'Team_A',
+      'Network_Y',  'Meta Network', 'Network_X', 'Simple Network', 'Team_C',
     )
+    expected2 <- tribble(
+      ~team.name, ~classroom.uid, ~classroom.code,
+      'Team A',   'Classroom_A',  'alpha fox',
+      'Team C',   'Classroom_C',  'charlie fox'
+    )
+    expected = cbind(expected1, expected2)
 
     expect_equal(classroom_assc, expected)
   })

@@ -522,20 +522,31 @@ map_responses_to_cycles_orig <- function(response_data_merged, cycle_tbl) {
 
 get_classrooms_from_organization <- function(organization_ids,
                                              triton.classroom,
-                                             triton.team) {
-
+                                             triton.team,
+                                             triton.organization) {
   team_org_assoc <- triton.team %>%
     json_utils$expand_string_array_column(team.organization_ids) %>%
     rename(organization.uid = "team.organization_ids") %>%
-    filter(organization.uid %in% organization_ids)
+    filter(organization.uid %in% organization_ids) %>%
+    left_join(triton.organization, by = 'organization.uid')
 
   team_org_class <- team_org_assoc %>%
     left_join(triton.classroom, by = c(team.uid = 'classroom.team_id'))
 
   team_org_class %>%
+    mutate(
+      parent_id = organization.uid,
+      parent_name = organization.name,
+      child_id = team.uid,
+      child_name = team.name
+    ) %>%
     select(
-      organization.uid,
+      parent_id,
+      parent_name,
+      child_id,
+      child_name,
       team.uid,
+      team.name,
       classroom.uid,
       classroom.code
     )
@@ -553,15 +564,19 @@ get_classrooms_from_network <- function (network_ids,
 
   # Structure of df to return.
   classroom_assc <- tibble(
-    network.uid = character(),
+    parent_id = character(),
+    parent_name = character(),
     child_id = character(),
     child_name = character(),
+    team.uid = character(),
+    team.name = character(),
     classroom.uid = character(),
     classroom.code = character(),
   )
 
   for (x in sequence(length(network_assc$network.uid))) {
     network_id <- network_assc$network.uid[x]
+    network_name <- network_assc$network.name[x]
     child_id <- network_assc$network.association_ids[x]
     child_kind <- perts_ids$get_kind(child_id)
 
@@ -569,20 +584,13 @@ get_classrooms_from_network <- function (network_ids,
       cl <- get_classrooms_from_organization(
         child_id,
         triton.classroom,
-        triton.team
+        triton.team,
+        triton.organization
       )
 
       to_add <- cl %>%
-        left_join(triton.organization, by = 'organization.uid') %>%
-        rename(child_id = organization.uid, child_name = organization.name) %>%
-        mutate(network.uid = network_id) %>%
-        select(
-          network.uid,
-          child_id,
-          child_name,
-          classroom.uid,
-          classroom.code
-        )
+        mutate(child_id = parent_id, child_name = parent_name) %>%
+        mutate(parent_id = network_id, parent_name = network_name)
     } else if (child_kind %in% 'Network') {
       # recurse
       child_assc <- get_classrooms_from_network(
@@ -599,7 +607,8 @@ get_classrooms_from_network <- function (network_ids,
 
       to_add <- child_assc %>%
         mutate(
-          network.uid = network_id,
+          parent_id = network_id,
+          parent_name = network_name,
           # !! to reference the variable, not the column name
           child_id = !!child_id,
           child_name = !!child_name
