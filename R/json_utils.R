@@ -52,7 +52,7 @@ parse_numeric_array <- function (json_array) {
   return(as.numeric(result))
 }
 
-expand_vector_column_ <- function (df, column_name) {
+expand_vector_column_ <- function (df, column_name, as_type = NULL) {
   # Take a data frame that has a column where the elements have length > 1
   # and multiply the rows for each element in the vector.
   #
@@ -72,6 +72,10 @@ expand_vector_column_ <- function (df, column_name) {
   # 5 3 by
 
   if (nrow(df) == 0) {
+    if (!is.null(as_type)) {
+      df[[column_name]] <- as_type(df[[column_name]])
+    }
+
     return(df)
   }
 
@@ -116,6 +120,10 @@ expand_vector_column_ <- function (df, column_name) {
     bound <- do.call(rbind, dfs_to_bind)
   }
 
+  if (!is.null(as_type)) {
+    bound[[column_name]] <- as_type(bound[[column_name]])
+  }
+
   return(tibble::as.tibble(bound))
 }
 
@@ -140,7 +148,7 @@ expand_string_array_column <- function (df, column_name) {
   # tidy once again. Make sure to convert the nse argument
   # (an "expression") into a string for easier processing
   # downstream.
-  return(expand_vector_column_(parsed_df, deparse(col_expr)))
+  return(expand_vector_column_(parsed_df, deparse(col_expr), as.character))
 }
 
 expand_numeric_array_column <- function (df, column_name) {
@@ -157,7 +165,7 @@ expand_numeric_array_column <- function (df, column_name) {
   # tidy once again. Make sure to convert the nse argument
   # (an "expression") into a string for easier processing
   # downstream.
-  return(expand_vector_column_(parsed_df, deparse(col_expr)))
+  return(expand_vector_column_(parsed_df, deparse(col_expr), as.numeric))
 }
 
 widen_object_column <- function(df, column_name) {

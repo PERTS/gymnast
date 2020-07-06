@@ -190,6 +190,16 @@ describe("expand_string_array_column", {
 
     expect_equal(actual, expected)
   })
+
+  it("has correct type when df has zero rows", {
+    df <- dplyr::tibble(a = character(), j = character())
+
+    actual <- json_utils$expand_string_array_column(df, j)
+
+    expected <- dplyr::tibble(a = character(), j = character())
+
+    expect_equal(actual, expected)
+  })
 })
 
 describe("expand_numeric_array_column", {
@@ -209,6 +219,16 @@ describe("expand_numeric_array_column", {
       a = c(1, 1, 1,  2,    3,    3),
       j = c(4, 5, 6, NA, 10.1, -5e5)
     )
+
+    expect_equal(actual, expected)
+  })
+
+  it("has correct type when df has zero rows", {
+    df <- dplyr::tibble(a = character(), j = character())
+
+    actual <- json_utils$expand_numeric_array_column(df, j)
+
+    expected <- dplyr::tibble(a = character(), j = numeric())
 
     expect_equal(actual, expected)
   })
