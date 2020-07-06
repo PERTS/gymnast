@@ -18,14 +18,14 @@ if (grepl("tests/testthat$", getwd())) {
 
 library(testthat)
 
-modules::import("dplyr", `%>%`, 'tribble')
+modules::import("dplyr", `%>%`, 'filter', 'tibble', 'tribble')
 
 summarize_copilot <- import_module("summarize_copilot")
 sql <- import_module("sql")
 
 tables <- sql$prefix_tables(list(
   classroom = tribble(
-    ~uid,          ~name,     ~team_id, ~code,      
+    ~uid,          ~name,     ~team_id, ~code,
     'Classroom_A', 'Class A', 'Team_A', 'alpha fox',
     'Classroom_B', 'Class B', 'Team_B', 'beta fox',
     'Classroom_C', 'Class C', 'Team_C', 'charlie fox'
@@ -75,6 +75,61 @@ describe('get_classrooms_from_organization', {
     expected = cbind(expected1, expected2)
 
     expect_equal(child_assc, expected)
+  })
+
+  it('returns zero rows if no ru ids found', {
+    child_assc <- summarize_copilot$get_classrooms_from_organization(
+      c('Organization_DNE', 'Team_ignored'),
+      tables$classroom,
+      tables$team,
+      tables$organization
+    )
+
+    expected <- tibble(
+      parent_id = character(),
+      parent_name = character(),
+      child_id = character(),
+      child_name = character(),
+      team.uid = character(),
+      team.name = character(),
+      classroom.uid = character(),
+      classroom.code = character()
+    )
+
+    expect_equal(child_assc, expected)
+  })
+
+  it('warns if classroom table is empty', {
+    expect_warning(
+      summarize_copilot$get_classrooms_from_organization(
+        character(),
+        filter(tables$classroom, classroom.uid %in% 'does not exist'),
+        tables$team,
+        tables$organization
+      )
+    )
+  })
+
+  it('warns if team table is empty', {
+    expect_warning(
+      summarize_copilot$get_classrooms_from_organization(
+        character(),
+        tables$classroom,
+        filter(tables$team, team.uid %in% 'does not exist'),
+        tables$organization
+      )
+    )
+  })
+
+  it('warns if organization table is empty', {
+    expect_warning(
+      summarize_copilot$get_classrooms_from_organization(
+        character(),
+        tables$classroom,
+        tables$team,
+        filter(tables$organization, organization.uid %in% 'does not exist')
+      )
+    )
   })
 })
 
@@ -130,5 +185,77 @@ describe('get_classrooms_from_network', {
     expected = cbind(expected1, expected2)
 
     expect_equal(classroom_assc, expected)
+  })
+
+
+  it('returns zero rows if no ru ids found', {
+    child_assc <- summarize_copilot$get_classrooms_from_network(
+      c('Network_DNE', 'Team_ignored'),
+      tables$classroom,
+      tables$team,
+      tables$organization,
+      tables$network
+    )
+
+    expected <- tibble(
+      parent_id = character(),
+      parent_name = character(),
+      child_id = character(),
+      child_name = character(),
+      team.uid = character(),
+      team.name = character(),
+      classroom.uid = character(),
+      classroom.code = character()
+    )
+
+    expect_equal(child_assc, expected)
+  })
+
+  it('warns if classroom table is empty', {
+    expect_warning(
+      summarize_copilot$get_classrooms_from_network(
+        character(),
+        filter(tables$classroom, classroom.uid %in% 'does not exist'),
+        tables$team,
+        tables$organization,
+        tables$network
+      )
+    )
+  })
+
+  it('warns if team table is empty', {
+    expect_warning(
+      summarize_copilot$get_classrooms_from_network(
+        character(),
+        tables$classroom,
+        filter(tables$team, team.uid %in% 'does not exist'),
+        tables$organization,
+        tables$network
+      )
+    )
+  })
+
+  it('warns if organization table is empty', {
+    expect_warning(
+      summarize_copilot$get_classrooms_from_network(
+        character(),
+        tables$classroom,
+        tables$team,
+        filter(tables$organization, organization.uid %in% 'does not exist'),
+        tables$network
+      )
+    )
+  })
+
+  it('warns if network table is empty', {
+    expect_warning(
+      summarize_copilot$get_classrooms_from_network(
+        character(),
+        tables$classroom,
+        tables$team,
+        tables$organization,
+        filter(tables$network, network.uid %in% 'does not exist')
+      )
+    )
   })
 })
