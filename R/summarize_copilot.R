@@ -524,6 +524,16 @@ get_classrooms_from_organization <- function(organization_ids,
                                              triton.classroom,
                                              triton.team,
                                              triton.organization) {
+  platform_tables <- list(triton.classroom, triton.team, triton.organization)
+  for (table in platform_tables) {
+    if (nrow(table) == 0) {
+      warning(
+        "summarize_copilot$get_classrooms_from_organization() received " %+%
+        "a platform table with zero rows."
+      )
+    }
+  }
+
   team_org_assoc <- triton.team %>%
     json_utils$expand_string_array_column(team.organization_ids) %>%
     rename(organization.uid = "team.organization_ids") %>%
@@ -557,6 +567,21 @@ get_classrooms_from_network <- function (network_ids,
                                          triton.team,
                                          triton.organization,
                                          triton.network) {
+  platform_tables <- list(
+    triton.classroom,
+    triton.team,
+    triton.organization,
+    triton.network
+  )
+  for (table in platform_tables) {
+    if (nrow(table) == 0) {
+      warning(
+        "summarize_copilot$get_classrooms_from_organization() received " %+%
+        "a platform table with zero rows."
+      )
+    }
+  }
+
   # Long form relationship table, unique by network-child
   network_assc <- triton.network %>%
     filter(network.uid %in% network_ids) %>%
