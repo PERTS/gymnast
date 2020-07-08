@@ -552,6 +552,14 @@ get_classrooms_from_organization <- function(organization_ids,
         "a platform table with zero rows."
       )
     }
+    for (col in names(table)) {
+      if (!grepl('\\.', col)) {
+        stop(
+          "summarize_copilot$get_classrooms_from_organization() received " %+%
+          "unprefixed column names."
+        )
+      }
+    }
   }
 
   team_org_assoc <- triton.team %>%
@@ -596,9 +604,17 @@ get_classrooms_from_network <- function (network_ids,
   for (table in platform_tables) {
     if (nrow(table) == 0) {
       warning(
-        "summarize_copilot$get_classrooms_from_organization() received " %+%
+        "summarize_copilot$get_classrooms_from_network() received " %+%
         "a platform table with zero rows."
       )
+    }
+    for (col in names(table)) {
+      if (!grepl('\\.', col)) {
+        stop(
+          "summarize_copilot$get_classrooms_from_network() received " %+%
+          "unprefixed column names."
+        )
+      }
     }
   }
 

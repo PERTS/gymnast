@@ -18,7 +18,15 @@ if (grepl("tests/testthat$", getwd())) {
 
 library(testthat)
 
-modules::import("dplyr", `%>%`, 'filter', 'select', 'tibble', 'tribble')
+modules::import(
+  'dplyr',
+  `%>%`,
+  'filter',
+  'rename',
+  'select',
+  'tibble',
+  'tribble'
+)
 
 summarize_copilot <- import_module("summarize_copilot")
 sql <- import_module("sql")
@@ -232,6 +240,17 @@ describe('get_classrooms_from_organization', {
       )
     )
   })
+
+  it('stops if tables don\'t have prefixed column names', {
+    expect_error(
+      summarize_copilot$get_classrooms_from_organization(
+        character(),
+        tables$classroom %>% rename(uid = classroom.uid),
+        tables$team,
+        tables$organization,
+      )
+    )
+  })
 })
 
 describe('get_classrooms_from_network', {
@@ -356,6 +375,18 @@ describe('get_classrooms_from_network', {
         tables$team,
         tables$organization,
         filter(tables$network, network.uid %in% 'does not exist')
+      )
+    )
+  })
+
+  it('stops if tables don\'t have prefixed column names', {
+    expect_error(
+      summarize_copilot$get_classrooms_from_network(
+        character(),
+        tables$classroom,
+        tables$team,
+        tables$organization,
+        tables$network %>% rename(uid = network.uid)
       )
     )
   })
