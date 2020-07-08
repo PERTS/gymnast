@@ -167,6 +167,15 @@ team_cycle_class_participation <- function(tcc,
   return(tcc_ppn)
 }
 
+team_user <- function (triton.team, triton.user) {
+  # Represents team membership, or users who either created or been invited to
+  # a team.
+  triton.user %>%
+    json_utils$expand_string_array_column(user.owned_teams) %>%
+    rename(team.uid = user.owned_teams) %>%
+    right_join(triton.team, by = 'team.uid')
+}
+
 team_organization <- function(triton.team, triton.organization) {
   triton.team %>%
     json_utils$expand_string_array_column(team.organization_ids) %>%
@@ -176,11 +185,11 @@ team_organization <- function(triton.team, triton.organization) {
 }
 
 organization_user <- function(triton.organization, triton.user) {
+  # Represents org/community membership, i.e. community admins.
   triton.user %>%
     json_utils$expand_string_array_column(user.owned_organizations) %>%
     rename(organization.uid = user.owned_organizations) %>%
     right_join(triton.organization, by = 'organization.uid')
-
 }
 
 team_organization_user <- function(triton.team,

@@ -70,6 +70,28 @@ tables <- sql$prefix_tables(list(
   )
 ))
 
+describe('team_user', {
+  it('default case', {
+    tu <- summarize_copilot$team_user(
+      tables$team,
+      tables$user
+    )
+
+    expected <- tribble(
+      ~team.uid, ~user.uid,
+      'Team_A',  'User_A',
+      'Team_B',  'User_A',
+      'Team_C',  NA,
+      'Team_D',  NA
+    )
+
+    expect_equal(
+      tu %>% select(team.uid, user.uid),
+      expected
+    )
+  })
+})
+
 describe('team_organization', {
   it('default case', {
     team_org <- summarize_copilot$team_organization(
