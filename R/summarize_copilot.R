@@ -12,6 +12,7 @@ modules::import(
   "n",
   "pull",
   "rename",
+  "right_join",
   "select",
   "summarise",
   "tibble"
@@ -166,6 +167,47 @@ team_cycle_class_participation <- function(tcc,
   return(tcc_ppn)
 }
 
+team_user <- function (triton.team, triton.user) {
+  # Represents team membership, or users who either created or been invited to
+  # a team.
+  triton.user %>%
+    json_utils$expand_string_array_column(user.owned_teams) %>%
+    rename(team.uid = user.owned_teams) %>%
+    right_join(triton.team, by = 'team.uid')
+}
+
+team_organization <- function(triton.team, triton.organization) {
+  triton.team %>%
+    json_utils$expand_string_array_column(team.organization_ids) %>%
+    rename(organization.uid = "team.organization_ids") %>%
+    # team-org level
+    left_join(triton.organization, by = 'organization.uid')
+}
+
+organization_user <- function(triton.organization, triton.user) {
+  # Represents org/community membership, i.e. community admins.
+  triton.user %>%
+    json_utils$expand_string_array_column(user.owned_organizations) %>%
+    rename(organization.uid = user.owned_organizations) %>%
+    right_join(triton.organization, by = 'organization.uid')
+}
+
+team_organization_user <- function(triton.team,
+                                   triton.organization,
+                                   triton.user) {
+  admin_assc <- organization_user(
+    triton.organization %>% select(organization.uid),
+    triton.user
+  ) %>%
+    # Drop users who aren't admin on any organizations, otherwise users
+    # associated with org "NA" will get joined to teams associated with org "NA"
+    # which is wrong.
+    filter(!is.na(user.uid))
+
+  team_organization(triton.team, triton.organization) %>%
+    left_join(admin_assc, by = 'organization.uid')
+}
+
 team_community_names <- function(triton.team,
                                  triton.organization,
                                  triton.user) {
@@ -175,19 +217,13 @@ team_community_names <- function(triton.team,
   # * community_names
   # * community_admin_names
   # * community_admin_emails
-  user_org_assc <- triton.user %>%
-    json_utils$expand_string_array_column(user.owned_organizations) %>%
-    # Drop users who aren't admin on any organizations, otherwise users
-    # associated with org "NA" will get joined to teams associated with org "NA"
-    # which is wrong.
-    filter(!is.na(user.owned_organizations)) %>%
-    rename(organization.uid = user.owned_organizations)
+  tou <- team_organization_user(
+    triton.team,
+    triton.organization,
+    triton.user
+  )
 
-  team_org_assoc <- triton.team %>%
-    json_utils$expand_string_array_column(team.organization_ids) %>%
-    rename(organization.uid = "team.organization_ids")
-
-  if (all(is.na(team_org_assoc$organization.uid))) {
+  if (all(is.na(tou$organization.uid))) {
     # There are no communities to process. Add the expected columns as NA.
     return(triton.team %>%
       select(team.uid) %>%
@@ -199,14 +235,7 @@ team_community_names <- function(triton.team,
     )
   }
 
-  team_org_assoc %>%
-    # team-org level
-    left_join(
-      triton.organization,
-      by = c("organization.uid")
-    ) %>%
-    # team-org-user level
-    left_join(user_org_assc, by = "organization.uid") %>%
+  tou %>%
     group_by(team.uid) %>%
     summarise(
       community_names = paste(
@@ -532,6 +561,14 @@ get_classrooms_from_organization <- function(organization_ids,
         "a platform table with zero rows."
       )
     }
+    for (col in names(table)) {
+      if (!grepl('\\.', col)) {
+        stop(
+          "summarize_copilot$get_classrooms_from_organization() received " %+%
+          "unprefixed column names."
+        )
+      }
+    }
   }
 
   team_org_assoc <- triton.team %>%
@@ -576,9 +613,17 @@ get_classrooms_from_network <- function (network_ids,
   for (table in platform_tables) {
     if (nrow(table) == 0) {
       warning(
-        "summarize_copilot$get_classrooms_from_organization() received " %+%
+        "summarize_copilot$get_classrooms_from_network() received " %+%
         "a platform table with zero rows."
       )
+    }
+    for (col in names(table)) {
+      if (!grepl('\\.', col)) {
+        stop(
+          "summarize_copilot$get_classrooms_from_network() received " %+%
+          "unprefixed column names."
+        )
+      }
     }
   }
 

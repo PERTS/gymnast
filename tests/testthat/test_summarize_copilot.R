@@ -18,12 +18,32 @@ if (grepl("tests/testthat$", getwd())) {
 
 library(testthat)
 
-modules::import("dplyr", `%>%`, 'filter', 'tibble', 'tribble')
+modules::import(
+  'dplyr',
+  `%>%`,
+  'filter',
+  'rename',
+  'select',
+  'tibble',
+  'tribble'
+)
 
 summarize_copilot <- import_module("summarize_copilot")
 sql <- import_module("sql")
 
 tables <- sql$prefix_tables(list(
+  user = cbind(
+    tribble(
+      ~uid,     ~owned_teams,          ~owned_organizations,
+      'User_A', '["Team_A","Team_B"]', '[]',
+      'User_B', '[]',                  '["Organization_M","Organization_N"]'
+    ),
+    tribble(
+      ~name,         ~email,
+      'Team Member', 'a@a.com',
+      'Org Admin',   'b@b.com'
+    )
+  ),
   classroom = tribble(
     ~uid,          ~name,     ~team_id, ~code,
     'Classroom_A', 'Class A', 'Team_A', 'alpha fox',
@@ -34,7 +54,8 @@ tables <- sql$prefix_tables(list(
     ~uid,     ~name,    ~organization_ids,
     'Team_A', 'Team A', '["Organization_M", "Organization_N"]',
     'Team_B', 'Team B', '["Organization_O"]',
-    'Team_C', 'Team C', '["Organization_M"]'
+    'Team_C', 'Team C', '["Organization_M"]',
+    'Team_D', 'Team D', '[]'
   ),
   organization = tribble(
     ~uid,             ~name,
@@ -48,6 +69,116 @@ tables <- sql$prefix_tables(list(
     'Network_Y', 'Meta Network',   '["Network_X"]'
   )
 ))
+
+describe('team_user', {
+  it('default case', {
+    tu <- summarize_copilot$team_user(
+      tables$team,
+      tables$user
+    )
+
+    expected <- tribble(
+      ~team.uid, ~user.uid,
+      'Team_A',  'User_A',
+      'Team_B',  'User_A',
+      'Team_C',  NA,
+      'Team_D',  NA
+    )
+
+    expect_equal(
+      tu %>% select(team.uid, user.uid),
+      expected
+    )
+  })
+})
+
+describe('team_organization', {
+  it('default case', {
+    team_org <- summarize_copilot$team_organization(
+      tables$team,
+      tables$organization
+    )
+
+    expected <- tribble(
+      ~team.uid, ~organization.uid,
+      'Team_A',  'Organization_M',
+      'Team_A',  'Organization_N',
+      'Team_B',  'Organization_O',
+      'Team_C',  'Organization_M',
+      'Team_D',  NA
+    )
+
+    expect_equal(
+      team_org %>% select(team.uid, organization.uid),
+      expected
+    )
+  })
+})
+
+describe('organization_user', {
+  it('default case', {
+    org_user <- summarize_copilot$organization_user(
+      tables$organization,
+      tables$user
+    )
+
+    expected <- tribble(
+      ~organization.uid, ~user.uid,
+      'Organization_M',  'User_B',
+      'Organization_N',  'User_B',
+      'Organization_O',  NA
+    )
+
+    expect_equal(
+      org_user %>% select(organization.uid, user.uid),
+      expected
+    )
+  })
+})
+
+describe('team_organization_user', {
+  it('default case', {
+    tou <- summarize_copilot$team_organization_user(
+      tables$team,
+      tables$organization,
+      tables$user
+    )
+
+    expected <- tribble(
+      ~team.uid, ~organization.uid, ~organization.name, ~user.uid,
+      'Team_A',  'Organization_M',  'Org M',            'User_B',
+      'Team_A',  'Organization_N',  'Org N',            'User_B',
+      'Team_B',  'Organization_O',  'Org O',            NA,
+      'Team_C',  'Organization_M',  'Org M',            'User_B',
+      'Team_D',  NA,                NA,                 NA
+    )
+
+    expect_equal(
+      tou %>% select(team.uid, organization.uid, organization.name, user.uid),
+      expected
+    )
+  })
+})
+
+describe('team_community_names', {
+  it('default case', {
+    comm_names <- summarize_copilot$team_community_names(
+      tables$team,
+      tables$organization,
+      tables$user
+    )
+
+    expected <- tribble(
+      ~team.uid, ~community_names, ~community_admin_names, ~community_admin_emails,
+      'Team_A',  'Org M, Org N',   'Org Admin',            'b@b.com',
+      'Team_B',  'Org O',          '',                     '',
+      'Team_C',  'Org M',          'Org Admin',            'b@b.com',
+      'Team_D',  '',               '',                     ''
+    )
+
+    expect_equal(comm_names, expected)
+  })
+})
 
 describe('get_classrooms_from_organization', {
   it('default case', {
@@ -103,7 +234,7 @@ describe('get_classrooms_from_organization', {
     expect_warning(
       summarize_copilot$get_classrooms_from_organization(
         character(),
-        filter(tables$classroom, classroom.uid %in% 'does not exist'),
+        tables$classroom[integer(), ],
         tables$team,
         tables$organization
       )
@@ -115,7 +246,7 @@ describe('get_classrooms_from_organization', {
       summarize_copilot$get_classrooms_from_organization(
         character(),
         tables$classroom,
-        filter(tables$team, team.uid %in% 'does not exist'),
+        tables$team[integer(), ],
         tables$organization
       )
     )
@@ -127,7 +258,18 @@ describe('get_classrooms_from_organization', {
         character(),
         tables$classroom,
         tables$team,
-        filter(tables$organization, organization.uid %in% 'does not exist')
+        tables$organization[integer(), ]
+      )
+    )
+  })
+
+  it('stops if tables don\'t have prefixed column names', {
+    expect_error(
+      summarize_copilot$get_classrooms_from_organization(
+        character(),
+        tables$classroom %>% rename(uid = classroom.uid),
+        tables$team,
+        tables$organization,
       )
     )
   })
@@ -215,7 +357,7 @@ describe('get_classrooms_from_network', {
     expect_warning(
       summarize_copilot$get_classrooms_from_network(
         character(),
-        filter(tables$classroom, classroom.uid %in% 'does not exist'),
+        tables$classroom[integer(), ],
         tables$team,
         tables$organization,
         tables$network
@@ -228,7 +370,7 @@ describe('get_classrooms_from_network', {
       summarize_copilot$get_classrooms_from_network(
         character(),
         tables$classroom,
-        filter(tables$team, team.uid %in% 'does not exist'),
+        tables$team[integer(), ],
         tables$organization,
         tables$network
       )
@@ -241,7 +383,7 @@ describe('get_classrooms_from_network', {
         character(),
         tables$classroom,
         tables$team,
-        filter(tables$organization, organization.uid %in% 'does not exist'),
+        tables$organization[integer(), ],
         tables$network
       )
     )
@@ -254,7 +396,19 @@ describe('get_classrooms_from_network', {
         tables$classroom,
         tables$team,
         tables$organization,
-        filter(tables$network, network.uid %in% 'does not exist')
+        tables$network[integer(), ]
+      )
+    )
+  })
+
+  it('stops if tables don\'t have prefixed column names', {
+    expect_error(
+      summarize_copilot$get_classrooms_from_network(
+        character(),
+        tables$classroom,
+        tables$team,
+        tables$organization,
+        tables$network %>% rename(uid = network.uid)
       )
     )
   })
