@@ -212,7 +212,7 @@ describe('get_classrooms_from_organization', {
     expect_warning(
       summarize_copilot$get_classrooms_from_organization(
         character(),
-        filter(tables$classroom, classroom.uid %in% 'does not exist'),
+        tables$classroom[integer(), ],
         tables$team,
         tables$organization
       )
@@ -224,7 +224,7 @@ describe('get_classrooms_from_organization', {
       summarize_copilot$get_classrooms_from_organization(
         character(),
         tables$classroom,
-        filter(tables$team, team.uid %in% 'does not exist'),
+        tables$team[integer(), ],
         tables$organization
       )
     )
@@ -236,7 +236,7 @@ describe('get_classrooms_from_organization', {
         character(),
         tables$classroom,
         tables$team,
-        filter(tables$organization, organization.uid %in% 'does not exist')
+        tables$organization[integer(), ]
       )
     )
   })
@@ -335,7 +335,7 @@ describe('get_classrooms_from_network', {
     expect_warning(
       summarize_copilot$get_classrooms_from_network(
         character(),
-        filter(tables$classroom, classroom.uid %in% 'does not exist'),
+        tables$classroom[integer(), ],
         tables$team,
         tables$organization,
         tables$network
@@ -348,7 +348,7 @@ describe('get_classrooms_from_network', {
       summarize_copilot$get_classrooms_from_network(
         character(),
         tables$classroom,
-        filter(tables$team, team.uid %in% 'does not exist'),
+        tables$team[integer(), ],
         tables$organization,
         tables$network
       )
@@ -361,7 +361,7 @@ describe('get_classrooms_from_network', {
         character(),
         tables$classroom,
         tables$team,
-        filter(tables$organization, organization.uid %in% 'does not exist'),
+        tables$organization[integer(), ],
         tables$network
       )
     )
@@ -374,7 +374,7 @@ describe('get_classrooms_from_network', {
         tables$classroom,
         tables$team,
         tables$organization,
-        filter(tables$network, network.uid %in% 'does not exist')
+        tables$network[integer(), ]
       )
     )
   })
