@@ -9,7 +9,7 @@
 ###     Depends on util.R already being loaded.
 ###
 ###############################################################
-
+library("dplyr")
 STANDARD_SECOND_ROW_QUALTRICS_COLUMNS <- c(
   "ResponseID"
   ,"ResponseSet"
@@ -66,7 +66,7 @@ qc.insert_hidden_column_names <- function(qdf_char,
       best_column_names <- qc.enumerate_duplicates(best_column_names)
       # throw a warning so that the user can fix duplicated column names manually if desired.
       warning("Your function for pulling column names from the first row " %+%
-                "resulted in duplicate column names: " %+% paste0(dup_col_names, collapse = ", ") %+% 
+                "resulted in duplicate column names: " %+% paste0(dup_col_names, collapse = ", ") %+%
                 ". Numeric suffixes were added to differentiate these columns " %+%
                 "in the cleaned output.")
     }
@@ -80,12 +80,12 @@ qc.enumerate_duplicates <- function(column_names, sep = "."){
   # don't get messed up. (e.g., col, col, col... becomes col.1, col.2, etc.)
   # note that the "dot-number" convention above parallels R's default behavior
   # for handling duplicate column names.
-  
+
   # make a data.frame so that enumerated values can be grouped by column name
-  # (e.g., to produce col1.1, col2.1, col1.2, col2.2 
+  # (e.g., to produce col1.1, col2.1, col1.2, col2.2
   # instead of col1.1, col2.2, col1.3, col2.4)
-  
-  # note that this operation relies on the fact that dplyr::group_by 
+
+  # note that this operation relies on the fact that dplyr::group_by
   # does not change the order of columns in the data.frame. If that
   # property is ever broken, then this operation will not work!
   duplicated_names_df <- data.frame(
