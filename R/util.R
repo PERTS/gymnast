@@ -319,6 +319,11 @@ clean_percent <- function(numerator, denominator, blank_value = 0) {
   ifelse(is_blank, blank_value, raw_pct)
 }
 
+str_percent <- function(numerator, denominator, blank_value = 'N/A') {
+  raw_pct <- clean_percent(numerator, denominator, blank_value = NA)
+  ifelse(is.na(raw_pct), blank_value, paste0(as.character(raw_pct), '%'))
+}
+
 
 ###############################################################
 ###
