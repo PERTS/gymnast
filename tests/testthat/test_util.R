@@ -44,4 +44,20 @@ describe('str_percent', {
   it('handles negative values', {
     expect_identical(util$str_percent(-1, 2), '-50%')
   })
+
+  it('handles non-unitary vectors', {
+    numerator <- c(-1, 0, 1)
+    denominator <- c(100, 100, 0)
+    expect_identical(
+      util$str_percent(numerator, denominator),
+      c('-1%', '0%', 'N/A')
+    )
+  })
+
+  it('can be used with dfs and pipes', {
+    d <- data.frame(a = c(1, 2, 3), b = c(2,3,4)) %>%
+      dplyr::mutate(pct_ab = util$str_percent(a, b))
+
+    expect_identical(d$pct_ab, c('50%', '67%', '75%'))
+  })
 })
