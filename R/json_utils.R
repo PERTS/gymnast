@@ -315,3 +315,19 @@ widen_object_column <- function(df, column_name) {
 
   return(tibble::as.tibble(wide))
 }
+
+to_json <- function(x) {
+  # Uses PERTS' favorite conventions to translate R to JSON strings.
+  #
+  # * Unboxes vectors and lists, because R has no primitives, and generally
+  #   we like primitives in JSON. Note that to ensure your possibly-length-one
+  #   vector is represented as a JSON array, as you do, wrap it in `I()`, e.g.
+  #   list(my_array = I(team_ids))
+  # * Translates R `NULL` to JSON `null`
+  # * Does away with the `json` R class, which is the default output of
+  #   jsonlite::toJSON, and just makes it a normal character.
+  #
+  # Returns a length-1 character.
+  #
+  as.character(jsonlite::toJSON(x, auto_unbox = TRUE, null = 'null'))
+}
