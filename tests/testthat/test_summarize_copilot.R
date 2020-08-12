@@ -21,6 +21,8 @@ library(testthat)
 modules::import(
   'dplyr',
   `%>%`,
+  'arrange',
+  'as_tibble',
   'filter',
   'rename',
   'select',
@@ -187,7 +189,7 @@ describe('get_classrooms_from_organization', {
       tables$classroom,
       tables$team,
       tables$organization
-    )
+    ) %>% arrange(parent_id, child_id)
 
     expected1 <- tribble(
       ~parent_id,        ~parent_name, ~child_id, ~child_name, ~team.uid,
@@ -203,7 +205,9 @@ describe('get_classrooms_from_organization', {
        'Team A',   'Classroom_A',  'alpha fox',
        'Team B',   'Classroom_B',  'beta fox'
     )
-    expected = cbind(expected1, expected2)
+    expected = cbind(expected1, expected2) %>%
+      as_tibble() %>%
+      arrange(parent_id, child_id)
 
     expect_equal(child_assc, expected)
   })
@@ -299,7 +303,7 @@ describe('get_classrooms_from_network', {
       'Team C',   'Classroom_C',  'charlie fox',
       'Team A',   'Classroom_A',  'alpha fox'
     )
-    expected = cbind(expected1, expected2)
+    expected = as_tibble(cbind(expected1, expected2))
 
     expect_equal(classroom_assc, expected)
   })
@@ -324,7 +328,7 @@ describe('get_classrooms_from_network', {
       'Team A',   'Classroom_A',  'alpha fox',
       'Team C',   'Classroom_C',  'charlie fox'
     )
-    expected = cbind(expected1, expected2)
+    expected = as_tibble(cbind(expected1, expected2))
 
     expect_equal(classroom_assc, expected)
   })
