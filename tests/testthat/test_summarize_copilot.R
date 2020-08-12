@@ -24,6 +24,7 @@ modules::import(
   'arrange',
   'as_tibble',
   'filter',
+  'mutate',
   'rename',
   'select',
   'tibble',
@@ -420,29 +421,29 @@ describe('get_classrooms_from_network', {
 })
 
 describe('map_responses_to_cycles', {
+  response_tbl <- tribble(
+    ~participant_id, ~created,              ~code,
+    'Participant_1', '2020-01-01 12:00:00', 'trout viper', # Team Viper
+    'Participant_2', '2020-01-15 12:00:00', 'bass viper', # Team Viper
+    'Participant_3', '2020-01-01 12:00:00', 'fancy fox' # Team Fox
+  )
+
+  triton.cycle <- tribble(
+    ~uid,       ~team_id,     ~start_date,  ~end_date,    ~ordinal,
+    'Cycle_1',  'Team_Viper', '2020-01-01', '2020-01-14', 1,
+    'Cycle_2',  'Team_Viper', '2020-01-15', '2020-01-30', 2,
+    'Cycle_3',  'Team_Fox',   '2020-01-01', '2020-01-14', 1,
+    'Cycle_4',  'Team_Fox',   '2020-01-15', '2020-01-30', 2
+  ) %>% util$prefix_columns('cycle')
+
+  triton.classroom <- tribble(
+    ~team_id,     ~code,
+    'Team_Viper', 'trout viper',
+    'Team_Viper', 'bass viper',
+    'Team_Fox',   'fancy fox'
+  ) %>% util$prefix_columns('classroom')
+
   it('handles multiple team ids', {
-    response_tbl <- tribble(
-      ~participant_id, ~created,              ~code,
-      'Participant_1', '2020-01-01 12:00:00', 'trout viper', # Team Viper
-      'Participant_2', '2020-01-15 12:00:00', 'bass viper', # Team Viper
-      'Participant_3', '2020-01-01 12:00:00', 'fancy fox' # Team Fox
-    )
-
-    triton.cycle <- tribble(
-      ~uid,       ~team_id,     ~start_date,  ~end_date,    ~ordinal,
-      'Cycle_1',  'Team_Viper', '2020-01-01', '2020-01-14', 1,
-      'Cycle_2',  'Team_Viper', '2020-01-15', '2020-01-30', 2,
-      'Cycle_3',  'Team_Fox',   '2020-01-01', '2020-01-14', 1,
-      'Cycle_4',  'Team_Fox',   '2020-01-15', '2020-01-30', 2
-    ) %>% util$prefix_columns('cycle')
-
-    triton.classroom <- tribble(
-      ~team_id,     ~code,
-      'Team_Viper', 'trout viper',
-      'Team_Viper', 'bass viper',
-      'Team_Fox',   'fancy fox'
-    ) %>% util$prefix_columns('classroom')
-
     actual <- summarize_copilot$map_responses_to_cycles(
       response_tbl, triton.cycle, triton.classroom)
 
@@ -456,5 +457,35 @@ describe('map_responses_to_cycles', {
       as_tibble()
 
     expect_equal(actual, expected)
+  })
+
+  it('prevents overwriting column: cycle_id', {
+    expect_error(
+      summarize_copilot$map_responses_to_cycles(
+        mutate(response_tbl, cycle_id = 'foo'),
+        triton.cycle,
+        triton.classroom
+      )
+    )
+  })
+
+  it('prevents overwriting column: created_date', {
+    expect_error(
+      summarize_copilot$map_responses_to_cycles(
+        mutate(response_tbl, created_date = 'foo'),
+        triton.cycle,
+        triton.classroom
+      )
+    )
+  })
+
+  it('prevents overwriting column: cycle_ordinal', {
+    expect_error(
+      summarize_copilot$map_responses_to_cycles(
+        mutate(response_tbl, cycle_ordinal = 'foo'),
+        triton.cycle,
+        triton.classroom
+      )
+    )
   })
 })

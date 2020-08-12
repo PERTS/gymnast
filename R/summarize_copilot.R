@@ -338,6 +338,11 @@ map_responses_to_cycles <- function(response_tbl,
   # * created_date
   # * cycle_ordinal
 
+  added_cols <- c('cycle_id', 'created_date', 'cycle_ordinal')
+  if (any(added_cols %in% names(response_tbl))) {
+    stop("map_responses_to_cycles would overwrite columns")
+  }
+
   missing_codes <- unique(
     response_tbl$code[!response_tbl$code %in% triton.classroom$classroom.code]
   )
