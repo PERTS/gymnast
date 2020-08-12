@@ -326,22 +326,18 @@ map_responses_to_cycles <- function(response_tbl,
   # Tag each row with the appropriate cycle, based on date. Could be used to
   # tag pd or survey responses.
   #
-  # response_tbl must be indexed by participant response and have colum `code`.
-  # Note that both neptune.participant_data and saturn.response have these
-  # properties.
+  # response_tbl must be indexed by participant response and have columns
+  # `code` and `created`. Note that both neptune.participant_data and
+  # saturn.response have these properties.
   #
-  # triton.cycle and triton.classroom come directly from the triton db, but must
-  # be filtered to one team.
+  # triton.cycle and triton.classroom come directly from the triton db
   #
   # Returns response level data with added cols:
   # * classroom.*
+  # * cycle_id
+  # * created_date
   # * cycle_ordinal
 
-  bad_class_teams <- length(unique(triton.classroom$classroom.team_id)) > 1
-  bad_cycle_teams <- length(unique(triton.cycle$cycle.team_id)) > 1
-  if (bad_class_teams | bad_cycle_teams) {
-    stop("Classes or cycles not filtered correctly.")
-  }
   missing_codes <- unique(
     response_tbl$code[!response_tbl$code %in% triton.classroom$classroom.code]
   )
@@ -361,6 +357,7 @@ map_responses_to_cycles <- function(response_tbl,
       created_date = created %>%
         strptime("%Y-%m-%d %H:%M:%S") %>%
         strftime("%Y-%m-%d"),
+      cycle_id = NA, # Populated below.
       cycle_ordinal = NA # Populated below.
     )
 
@@ -370,8 +367,10 @@ map_responses_to_cycles <- function(response_tbl,
     this_cycle <- triton.cycle[i, ]
     in_cycle <- (
       response_merged$created_date >= this_cycle$cycle.start_date &
-        response_merged$created_date <= this_cycle$cycle.end_date
+        response_merged$created_date <= this_cycle$cycle.end_date &
+        response_merged$classroom.team_id %in% this_cycle$cycle.team_id
     )
+    response_merged$cycle_id[in_cycle] <- this_cycle$cycle.uid
     response_merged$cycle_ordinal[in_cycle] <- this_cycle$cycle.ordinal
   }
 
