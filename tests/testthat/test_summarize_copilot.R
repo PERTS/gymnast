@@ -21,7 +21,10 @@ library(testthat)
 modules::import(
   'dplyr',
   `%>%`,
+  'arrange',
+  'as_tibble',
   'filter',
+  'mutate',
   'rename',
   'select',
   'tibble',
@@ -30,6 +33,7 @@ modules::import(
 
 summarize_copilot <- import_module("summarize_copilot")
 sql <- import_module("sql")
+util <- import_module("util")
 
 tables <- sql$prefix_tables(list(
   user = cbind(
@@ -187,7 +191,7 @@ describe('get_classrooms_from_organization', {
       tables$classroom,
       tables$team,
       tables$organization
-    )
+    ) %>% arrange(parent_id, child_id)
 
     expected1 <- tribble(
       ~parent_id,        ~parent_name, ~child_id, ~child_name, ~team.uid,
@@ -203,7 +207,9 @@ describe('get_classrooms_from_organization', {
        'Team A',   'Classroom_A',  'alpha fox',
        'Team B',   'Classroom_B',  'beta fox'
     )
-    expected = cbind(expected1, expected2)
+    expected = cbind(expected1, expected2) %>%
+      as_tibble() %>%
+      arrange(parent_id, child_id)
 
     expect_equal(child_assc, expected)
   })
@@ -299,7 +305,7 @@ describe('get_classrooms_from_network', {
       'Team C',   'Classroom_C',  'charlie fox',
       'Team A',   'Classroom_A',  'alpha fox'
     )
-    expected = cbind(expected1, expected2)
+    expected = as_tibble(cbind(expected1, expected2))
 
     expect_equal(classroom_assc, expected)
   })
@@ -324,7 +330,7 @@ describe('get_classrooms_from_network', {
       'Team A',   'Classroom_A',  'alpha fox',
       'Team C',   'Classroom_C',  'charlie fox'
     )
-    expected = cbind(expected1, expected2)
+    expected = as_tibble(cbind(expected1, expected2))
 
     expect_equal(classroom_assc, expected)
   })
@@ -409,6 +415,76 @@ describe('get_classrooms_from_network', {
         tables$team,
         tables$organization,
         tables$network %>% rename(uid = network.uid)
+      )
+    )
+  })
+})
+
+describe('map_responses_to_cycles', {
+  response_tbl <- tribble(
+    ~participant_id, ~created,              ~code,
+    'Participant_1', '2020-01-01 12:00:00', 'trout viper', # Team Viper
+    'Participant_2', '2020-01-15 12:00:00', 'bass viper', # Team Viper
+    'Participant_3', '2020-01-01 12:00:00', 'fancy fox' # Team Fox
+  )
+
+  triton.cycle <- tribble(
+    ~uid,       ~team_id,     ~start_date,  ~end_date,    ~ordinal,
+    'Cycle_1',  'Team_Viper', '2020-01-01', '2020-01-14', 1,
+    'Cycle_2',  'Team_Viper', '2020-01-15', '2020-01-30', 2,
+    'Cycle_3',  'Team_Fox',   '2020-01-01', '2020-01-14', 1,
+    'Cycle_4',  'Team_Fox',   '2020-01-15', '2020-01-30', 2
+  ) %>% util$prefix_columns('cycle')
+
+  triton.classroom <- tribble(
+    ~team_id,     ~code,
+    'Team_Viper', 'trout viper',
+    'Team_Viper', 'bass viper',
+    'Team_Fox',   'fancy fox'
+  ) %>% util$prefix_columns('classroom')
+
+  it('handles multiple team ids', {
+    actual <- summarize_copilot$map_responses_to_cycles(
+      response_tbl, triton.cycle, triton.classroom)
+
+    additional_columns <- tribble(
+      ~classroom.team_id, ~created_date, ~cycle_id, ~cycle_ordinal,
+      'Team_Viper',       '2020-01-01',  'Cycle_1', 1,
+      'Team_Viper',       '2020-01-15',  'Cycle_2', 2,
+      'Team_Fox',         '2020-01-01',  'Cycle_3', 1
+    )
+    expected <- cbind(response_tbl, additional_columns) %>%
+      as_tibble()
+
+    expect_equal(actual, expected)
+  })
+
+  it('prevents overwriting column: cycle_id', {
+    expect_error(
+      summarize_copilot$map_responses_to_cycles(
+        mutate(response_tbl, cycle_id = 'foo'),
+        triton.cycle,
+        triton.classroom
+      )
+    )
+  })
+
+  it('prevents overwriting column: created_date', {
+    expect_error(
+      summarize_copilot$map_responses_to_cycles(
+        mutate(response_tbl, created_date = 'foo'),
+        triton.cycle,
+        triton.classroom
+      )
+    )
+  })
+
+  it('prevents overwriting column: cycle_ordinal', {
+    expect_error(
+      summarize_copilot$map_responses_to_cycles(
+        mutate(response_tbl, cycle_ordinal = 'foo'),
+        triton.cycle,
+        triton.classroom
       )
     )
   })
