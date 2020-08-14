@@ -154,6 +154,26 @@ create_service <- function (
     # refer to qualtrics$fake_responses()
   }
 
+  query <- function (query_str) {
+    logging$info("saturn_service$query()")
+
+    conn <- sql$create_service(
+      ip,
+      dbname = db_name,
+      ssl_credentials = ssl_credentials,
+      password = password,
+      mysql_user = mysql_user
+    )
+
+    results <- conn$query(query_str)
+
+    conn$disconnect()
+
+    logging$info("saturn service query() got dimensions:", dim(results))
+
+    return(results)
+  }
+
   return(list(
     get_responses = ifelse(
       is.null(credentials),
@@ -164,6 +184,7 @@ create_service <- function (
       get_responses
     ),
     get_raw_responses = get_raw_responses,
-    fake_responses = fake_responses
+    fake_responses = fake_responses,
+    query = query
   ))
 }
