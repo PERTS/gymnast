@@ -540,3 +540,26 @@ ordinal <- function(vec){
   left_join(df, vec_to_ord, by="original") %>% pull(ordinal)
 }
 
+
+
+###############################################################
+###
+###     Dates and Times
+###
+###############################################################
+
+
+find_day_of_week <- function (increment, day_abbr) {
+  current_day <- Sys.Date()
+  for (i in 1:7) {
+    day_of_week <- current_day %>%
+      lubridate::wday(., label = TRUE)
+    if (day_of_week == day_abbr) {
+      return(current_day)
+    }
+    current_day <- current_day + increment
+  }
+}
+
+next_monday <- function() find_day_of_week(+1, "Mon")
+last_monday <- function() find_day_of_week(-1, "Mon")
