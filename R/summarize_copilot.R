@@ -372,7 +372,7 @@ map_responses_to_cycles <- function(response_tbl,
     this_cycle <- triton.cycle[i, ]
     in_cycle <- (
       response_merged$created_date >= this_cycle$cycle.start_date &
-        response_merged$created_date <= this_cycle$cycle.end_date &
+        response_merged$created_date <= this_cycle$cycle.extended_end_date &
         response_merged$classroom.team_id %in% this_cycle$cycle.team_id
     )
     response_merged$cycle_id[in_cycle] <- this_cycle$cycle.uid
