@@ -366,9 +366,16 @@ map_responses_to_cycles <- function(response_tbl,
       cycle_ordinal = NA # Populated below.
     )
 
+  # B/c we loop over every cycle, it's a big efficiency gain to make sure we're
+  # considering the minimum possible set of cycles.
+  potential_cycles <- triton.cycle %>%
+    filter(cycle.team_id %in% unique(response_merged$classroom.team_id)) %>%
+    filter(!util$is_blank(cycle.start_date)) %>%
+    filter(!util$is_blank(cycle.extended_end_date))
+
   # Fill in values of the cycle_ordinal column as their row matches various
   # cycle dates.
-  for (i in sequence(nrow(triton.cycle))) {
+  for (i in sequence(nrow(potential_cycles))) {
     this_cycle <- triton.cycle[i, ]
     in_cycle <- (
       response_merged$created_date >= this_cycle$cycle.start_date &
