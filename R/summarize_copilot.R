@@ -15,7 +15,8 @@ modules::import(
   "right_join",
   "select",
   "summarise",
-  "tibble"
+  "tibble",
+  "ungroup"
 )
 modules::import("lubridate", "ymd")
 modules::import("stringr", "str_pad")
@@ -98,6 +99,12 @@ team_cycle_class_participation <- function(tcc,
                                            triton.classroom,
                                            neptune.participant,
                                            neptune.participant_data) {
+  # Args:
+  #   tcc - see team_cycle_class()
+  #   triton.cycle - from db, include all cycles from tcc
+  #   triton.classroom - from db, include all classes from tcc
+  #   neptune.participant - from db, include all ppts from...
+  #   neptune.participant - from db, include all relevant survey responses
   if (nrow(neptune.participant_data) == 0) {
     logging$warning("No participation data!")
     tcc$num_completed_by_pd <- 0
@@ -130,27 +137,7 @@ team_cycle_class_participation <- function(tcc,
   # nevertheless may later be legitimately be counted as cycle participation if
   # cycles dates in copilot change to encompass it.
 
-  # Assign a cycle ordinal to each response row, one team at a time, since
-  # different teams will have different cycle dates and different numbers of
-  # cycles.
-  pd_w_cycle <- NULL
-  for (team_id in unique(tcc$team.uid)) {
-    team_pd <- filter(ppn, participant.organization_id %in% team_id)
-    team_cycle <- filter(triton.cycle, cycle.team_id %in% team_id)
-    team_class <- filter(triton.classroom, classroom.team_id %in% team_id)
-
-    if (nrow(team_pd) == 0 || nrow(team_class) == 0) {
-      # Either no participation, no classrooms, or both.
-      next
-    }
-
-    to_bind <- map_responses_to_cycles(team_pd, team_cycle, team_class)
-    if (is.null(pd_w_cycle)) {
-      pd_w_cycle <- to_bind
-    } else {
-      pd_w_cycle <- rbind(pd_w_cycle, to_bind)
-    }
-  }
+  pd_w_cycle <- map_responses_to_cycles(ppn, triton.cycle, triton.classroom)
 
   # code-cycle (or classroom-cycle) level participation
   code_cycle_ppn <- pd_w_cycle %>%
