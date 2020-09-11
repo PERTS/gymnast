@@ -15,7 +15,8 @@ modules::import(
   "right_join",
   "select",
   "summarise",
-  "tibble"
+  "tibble",
+  "ungroup"
 )
 modules::import("lubridate", "ymd")
 modules::import("stringr", "str_pad")
@@ -96,9 +97,22 @@ team_cycle_class <- function(team_class, triton.cycle) {
 team_cycle_class_participation <- function(tcc,
                                            triton.cycle,
                                            triton.classroom,
-                                           neptune.participant,
-                                           neptune.participant_data) {
-  if (nrow(neptune.participant_data) == 0) {
+                                           participant,
+                                           complete_participant_data) {
+  # Args:
+  #   tcc - see team_cycle_class()
+  #   triton.cycle - from db, include all cycles from tcc
+  #   triton.classroom - from db, include all classes from tcc
+  #   participant - df of participant-level info to join, with column
+  #     'participant.uid'. Might be from either neptune or triton dbs.
+  #   complete_participant_data - df of survey-response-level info, with
+  #     columns c('participant_data.participant_id', 'participant_data.code',
+  #       'participant_data.modified'), representing _complete_ survey
+  #       responses. Will be used to calculate column 'num_completed_by_pd' in
+  #       output. Might be from neptune db or saturn db.
+  #
+  # Returns: team-cycle-class-level df with added column 'num_completed_by_pd'.
+  if (nrow(complete_participant_data) == 0) {
     logging$warning("No participation data!")
     tcc$num_completed_by_pd <- 0
     return(tcc)
@@ -109,9 +123,9 @@ team_cycle_class_participation <- function(tcc,
   # won't appear here.
   # Returns team-cycle-class level data, with added cols:
   # * num_completed_by_pd ("pd" means from the participant_data table)
-  ppn <- neptune.participant_data %>%
+  ppn <- complete_participant_data %>%
     left_join(
-      neptune.participant,
+      participant,
       by = c(participant_data.participant_id = "participant.uid")
     ) %>%
     # We'll use the neptune participant data table like the saturn response
@@ -130,27 +144,7 @@ team_cycle_class_participation <- function(tcc,
   # nevertheless may later be legitimately be counted as cycle participation if
   # cycles dates in copilot change to encompass it.
 
-  # Assign a cycle ordinal to each response row, one team at a time, since
-  # different teams will have different cycle dates and different numbers of
-  # cycles.
-  pd_w_cycle <- NULL
-  for (team_id in unique(tcc$team.uid)) {
-    team_pd <- filter(ppn, participant.organization_id %in% team_id)
-    team_cycle <- filter(triton.cycle, cycle.team_id %in% team_id)
-    team_class <- filter(triton.classroom, classroom.team_id %in% team_id)
-
-    if (nrow(team_pd) == 0 || nrow(team_class) == 0) {
-      # Either no participation, no classrooms, or both.
-      next
-    }
-
-    to_bind <- map_responses_to_cycles(team_pd, team_cycle, team_class)
-    if (is.null(pd_w_cycle)) {
-      pd_w_cycle <- to_bind
-    } else {
-      pd_w_cycle <- rbind(pd_w_cycle, to_bind)
-    }
-  }
+  pd_w_cycle <- map_responses_to_cycles(ppn, triton.cycle, triton.classroom)
 
   # code-cycle (or classroom-cycle) level participation
   code_cycle_ppn <- pd_w_cycle %>%
@@ -354,6 +348,15 @@ map_responses_to_cycles <- function(response_tbl,
     )
   }
 
+  cycle_extended <- triton.cycle %>%
+    mutate(
+      cycle.extended_end_date = ifelse(
+        util$is_blank(cycle.extended_end_date),
+        cycle.end_date,
+        cycle.extended_end_date
+      )
+    )
+
   response_merged <- response_tbl %>%
     left_join(triton.classroom, by = c(code = "classroom.code")) %>%
     mutate(
@@ -366,10 +369,16 @@ map_responses_to_cycles <- function(response_tbl,
       cycle_ordinal = NA # Populated below.
     )
 
+  # B/c we loop over every cycle, it's a big efficiency gain to make sure we're
+  # considering the minimum possible set of cycles.
+  potential_cycles <- cycle_extended %>%
+    filter(cycle.team_id %in% unique(response_merged$classroom.team_id)) %>%
+    filter(!util$is_blank(cycle.start_date))
+
   # Fill in values of the cycle_ordinal column as their row matches various
   # cycle dates.
-  for (i in sequence(nrow(triton.cycle))) {
-    this_cycle <- triton.cycle[i, ]
+  for (i in sequence(nrow(potential_cycles))) {
+    this_cycle <- potential_cycles[i, ]
     in_cycle <- (
       response_merged$created_date >= this_cycle$cycle.start_date &
         response_merged$created_date <= this_cycle$cycle.extended_end_date &
