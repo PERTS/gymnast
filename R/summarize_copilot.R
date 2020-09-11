@@ -97,15 +97,22 @@ team_cycle_class <- function(team_class, triton.cycle) {
 team_cycle_class_participation <- function(tcc,
                                            triton.cycle,
                                            triton.classroom,
-                                           neptune.participant,
-                                           neptune.participant_data) {
+                                           participant,
+                                           complete_participant_data) {
   # Args:
   #   tcc - see team_cycle_class()
   #   triton.cycle - from db, include all cycles from tcc
   #   triton.classroom - from db, include all classes from tcc
-  #   neptune.participant - from db, include all ppts from...
-  #   neptune.participant - from db, include all relevant survey responses
-  if (nrow(neptune.participant_data) == 0) {
+  #   participant - df of participant-level info to join, with column
+  #     'participant.uid'. Might be from either neptune or triton dbs.
+  #   complete_participant_data - df of survey-response-level info, with
+  #     columns c('participant_data.participant_id', 'participant_data.code',
+  #       'participant_data.modified'), representing _complete_ survey
+  #       responses. Will be used to calculate column 'num_completed_by_pd' in
+  #       output. Might be from neptune db or saturn db.
+  #
+  # Returns: team-cycle-class-level df with added column 'num_completed_by_pd'.
+  if (nrow(complete_participant_data) == 0) {
     logging$warning("No participation data!")
     tcc$num_completed_by_pd <- 0
     return(tcc)
@@ -116,9 +123,9 @@ team_cycle_class_participation <- function(tcc,
   # won't appear here.
   # Returns team-cycle-class level data, with added cols:
   # * num_completed_by_pd ("pd" means from the participant_data table)
-  ppn <- neptune.participant_data %>%
+  ppn <- complete_participant_data %>%
     left_join(
-      neptune.participant,
+      participant,
       by = c(participant_data.participant_id = "participant.uid")
     ) %>%
     # We'll use the neptune participant data table like the saturn response
