@@ -5,8 +5,6 @@ modules::import("tidyr", "fill")
 logging <- import_module("logging")
 util <- import_module("util")
 
-helpers <- import_module("scripts/copilot/saturn_engagement_helpers")
-
 `%+%` <- paste0
 
 
