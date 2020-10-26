@@ -103,12 +103,12 @@ create_service <- function (
       ifelse(
         is.null(start_date),
         "",
-        paste0("\nAND created >= '", safe_start_date, "'")
+        paste0("\nAND modified >= '", safe_start_date, "'")
       ),
       ifelse(
         is.null(end_date),
         "",
-        paste0("\nAND created <= '", safe_end_date, "'")
+        paste0("\nAND modified <= '", safe_end_date, "'")
       ),
       ";
     ")
