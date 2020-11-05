@@ -562,6 +562,34 @@ map_responses_to_cycles_orig <- function(response_data_merged, cycle_tbl) {
   return(response_data_cycles_merged)
 }
 
+get_teams_from_organization <- function(organization_ids,
+                                        triton.team,
+                                        triton.organization) {
+  platform_tables <- list(triton.team, triton.organization)
+  for (table in platform_tables) {
+    if (nrow(table) == 0) {
+      warning(
+        "summarize_copilot$get_teams_from_organization() received " %+%
+        "a platform table with zero rows."
+      )
+    }
+    for (col in names(table)) {
+      if (!grepl('\\.', col)) {
+        stop(
+          "summarize_copilot$get_teams_from_organization() received " %+%
+          "unprefixed column names."
+        )
+      }
+    }
+  }
+
+  triton.team %>%
+    json_utils$expand_string_array_column(team.organization_ids) %>%
+    rename(organization.uid = "team.organization_ids") %>%
+    filter(organization.uid %in% organization_ids) %>%
+    left_join(triton.organization, by = 'organization.uid')
+}
+
 get_classrooms_from_organization <- function(organization_ids,
                                              triton.classroom,
                                              triton.team,
