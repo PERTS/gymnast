@@ -87,13 +87,13 @@ expand_vector_column_ <- function (df, column_name, as_type = NULL) {
     stop(paste0("Column '", column_name, "' not found."))
   }
 
-  bound <- tidyr::unchop(df, !!column_name, keep_empty = TRUE)
+  expanded <- tidyr::unchop(df, !!column_name, keep_empty = TRUE)
 
   if (!is.null(as_type)) {
-    bound[[column_name]] <- as_type(bound[[column_name]])
+    expanded[[column_name]] <- as_type(expanded[[column_name]])
   }
 
-  return(tibble::as.tibble(bound))
+  return(tibble::as.tibble(expanded))
 }
 
 expand_string_array_column <- function (df, column_name) {
