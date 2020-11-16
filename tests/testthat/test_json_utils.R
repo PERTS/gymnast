@@ -256,6 +256,19 @@ describe("widen_object_column", {
     expect_equal(actual, expected)
   })
 
+  it("handles empty objects", {
+    df <- dplyr::tibble(
+      a = 1,
+      j = '{}'
+    )
+
+    actual <- json_utils$widen_object_column(df, j)
+
+    expected <- dplyr::tibble(a = 1)
+
+    expect_equal(actual, expected)
+  })
+
   it("handles a 1-row data frame", {
     df <- dplyr::tibble(
       a = 1,

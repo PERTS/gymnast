@@ -14,6 +14,8 @@ google_api <- import_module('google_api')
 
 modules::import("dplyr", `%>%`)
 
+`%+%` <- paste0
+
 drop_unused_columns <- function (d) {
   unused <- c(
     'assc_school_list',
@@ -189,6 +191,77 @@ big_pipe <- function(project_id, project_credentials, download_pd = FALSE,
 # See http://stackoverflow.com/questions/27501775/retrieving-cached-oauth-token-with-packages-httr-twitter-and-streamr
 big_pipe.reset <- function() { saveRDS(NULL, '.httr-oauth') }
 
+
+get_column_names_by_type <- function(d, types) {
+  column_types <- sapply(d, class)
+  names(d)[column_types %in% types]
+}
+
+remove_obvious_garbage <- function(d) {
+  d[d$is_archived == FALSE & d$is_test == FALSE & d$deleted == FALSE, ]
+}
+
+
+
+rename_verbose_columns <- function(d) {
+  columns_to_rename <- names(d)[grepl("_list$", names(d))]
+  for (name in columns_to_rename) {
+    new_name <- substring(name, 0, nchar(name) - 5)  # strip ending "_list"
+    d[[new_name]] <- d[[name]]
+  }
+  d[!names(d) %in% columns_to_rename]
+}
+
+fix_nested_data_frames <- function(d) {
+  #   BigQuery has been screwing with me and changing how Email and Text
+  # types are imported by changing them into "Record" types. We need to un-
+  # screw any such columns.
+  #   This is relatively easy fix because a Record column is itself a data
+  # frame. We just overwrite it with one of the nested data frame's columns
+  # to get a simple character vector.
+
+  # Document known record columns, their column name, and their nested column
+  # that contains the data we want.
+  known_df_cols <- list(
+    login_email = 'email',
+    aggregation_json = 'text'
+  )
+  # Identify columns that are actually data frames.
+  df_cols <- get_column_names_by_type(d, "data.frame")
+  # Try to fix them all, but give a warning if a new, unknown type shows up.
+  for (col in df_cols) {
+    if (col %in% names(known_df_cols)) {
+      nested_col <- known_df_cols[[col]]
+      d[[col]] <- d[[col]][[nested_col]]
+    } else {
+      stop("Column " %+% col %+% " is a nested data frame, but isn't " %+%
+           "known to BigPipe so it cannot be simplified. Please choose " %+%
+           "the sub-column to keep and add it to `known_df_cols` in " %+%
+           "big_pipe.R")
+    }
+  }
+
+  return(d)
+}
+
+reduce_to_first_element <- function(list_column) {
+  sapply(list_column, function(x) ifelse(length(x) > 0, x[[1]], NA))
+}
+
+fix_nested_lists <- function(d) {
+  # Some of the columns have elements which are simple flat lists.
+  # These we want to reduce to the first element.
+
+  # Find all the columns that are list objects.
+  list_cols <- get_column_names_by_type(d, "list")
+
+  for (col in list_cols) {
+    d[[col]] <- reduce_to_first_element(d[[col]])
+  }
+
+  return(d)
+}
+
 clean_platform_table <- function(nested_df) {
   # Function to clean a platform table, agnostic as to kind/type of table (e.g.
   # User vs. Classroom) and to version of the platform (e.g. Yellowstone vs.
@@ -198,75 +271,6 @@ clean_platform_table <- function(nested_df) {
   # Every other case is a simple, single-valued parent-child association, which
   # we perfer to store as a primitive value rather than a list.
 
-  get_column_names_by_type <- function(d, types) {
-    column_types <- sapply(d, class)
-    names(d)[column_types %in% types]
-  }
-
-  remove_obvious_garbage <- function(d) {
-    d[d$is_archived == FALSE & d$is_test == FALSE & d$deleted == FALSE, ]
-  }
-
-
-
-  rename_verbose_columns <- function(d) {
-    columns_to_rename <- names(d)[grepl("_list$", names(d))]
-    for (name in columns_to_rename) {
-      new_name <- substring(name, 0, nchar(name) - 5)  # strip ending "_list"
-      d[[new_name]] <- d[[name]]
-    }
-    d[!names(d) %in% columns_to_rename]
-  }
-
-  fix_nested_data_frames <- function(d) {
-    #   BigQuery has been screwing with me and changing how Email and Text
-    # types are imported by changing them into "Record" types. We need to un-
-    # screw any such columns.
-    #   This is relatively easy fix because a Record column is itself a data
-    # frame. We just overwrite it with one of the nested data frame's columns
-    # to get a simple character vector.
-
-    # Document known record columns, their column name, and their nested column
-    # that contains the data we want.
-    known_df_cols <- list(
-      login_email = 'email',
-      aggregation_json = 'text'
-    )
-    # Identify columns that are actually data frames.
-    df_cols <- get_column_names_by_type(d, "data.frame")
-    # Try to fix them all, but give a warning if a new, unknown type shows up.
-    for (col in df_cols) {
-      if (col %in% names(known_df_cols)) {
-        nested_col <- known_df_cols[[col]]
-        d[[col]] <- d[[col]][[nested_col]]
-      } else {
-        stop("Column " %+% col %+% " is a nested data frame, but isn't " %+%
-             "known to BigPipe so it cannot be simplified. Please choose " %+%
-             "the sub-column to keep and add it to `known_df_cols` in " %+%
-             "big_pipe.R")
-      }
-    }
-
-    return(d)
-  }
-
-  reduce_to_first_element <- function(list_column) {
-    sapply(list_column, function(x) ifelse(length(x) > 0, x[[1]], NA))
-  }
-
-  fix_nested_lists <- function(d) {
-    # Some of the columns have elements which are simple flat lists.
-    # These we want to reduce to the first element.
-
-    # Find all the columns that are list objects.
-    list_cols <- get_column_names_by_type(d, "list")
-
-    for (col in list_cols) {
-      d[[col]] <- reduce_to_first_element(d[[col]])
-    }
-
-    return(d)
-  }
 
   nested_df %>%
     remove_obvious_garbage() %>%
