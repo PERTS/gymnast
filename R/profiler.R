@@ -75,6 +75,7 @@ printable_report <- function(profile_name = .DEFAULT_NAME) {
 
   report <- c(
     "",
+    paste0("Profile: ", profile_name),
     # Width of message column should match .MAX_MESSAGE_LENGTH
     "Message                        Run Time  Total time",
     "---------------------------------------------------"
