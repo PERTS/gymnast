@@ -83,48 +83,17 @@ expand_vector_column_ <- function (df, column_name, as_type = NULL) {
     df <- dplyr::ungroup(df)
   }
 
-  vector_column <- df[[column_name]]
-  if (is.null(vector_column)) {
+  if (is.null(df[[column_name]])) {
     stop(paste0("Column '", column_name, "' not found."))
   }
 
-  dfs_to_bind <- list()
-  for (r in 1:nrow(df)) {
-    current_vector <- vector_column[[r]]
-
-    if (length(current_vector) %in% 0) {
-      expanded <- df[r, ]
-      expanded[[column_name]] <- NA
-    } else {
-      # Expand the current row of the data frame to repeat to the same dimension
-      # as the vector.
-      expanded <- df %>% dplyr::slice(rep(r, each = length(current_vector)))
-
-      # Append the vector (which was a cell) as a _column_, now that the
-      # dimensions are correct.
-      expanded[[column_name]] <- current_vector
-    }
-
-    # Data frames ARE lists, so just concatenating them to our collection
-    # `dfs_to_bind` would actually concatenate the _columns_ of the data frame
-    # to the list. Wrapping it in list() forces R to treat the whole df as a
-    # discrete object.
-    dfs_to_bind <- c(dfs_to_bind, list(expanded))
-  }
-
-  if (length(dfs_to_bind) %in% 0) {
-    bound <- df
-  } else if (length(dfs_to_bind) %in% 1) {
-    bound <- dfs_to_bind[[1]]
-  } else {
-    bound <- do.call(rbind, dfs_to_bind)
-  }
+  expanded <- tidyr::unchop(df, !!column_name, keep_empty = TRUE)
 
   if (!is.null(as_type)) {
-    bound[[column_name]] <- as_type(bound[[column_name]])
+    expanded[[column_name]] <- as_type(expanded[[column_name]])
   }
 
-  return(tibble::as.tibble(bound))
+  return(tibble::as.tibble(expanded))
 }
 
 expand_string_array_column <- function (df, column_name) {
