@@ -170,8 +170,14 @@ prefix_tables <- function (tables) {
   return(tables)
 }
 
-create_service <- function (...) {
-  service_connection <- connect(...)
+create_service <- function (password_file_name = NULL, ...) {
+  if (!is.null(password_file_name)) {
+    paths = util$find_crypt_paths(list(password = password_file_name))
+    password = readLines(paths$password)
+  } else {
+    password = NULL
+  }
+  service_connection <- connect(password = password, ...)
 
   return(list(
     disconnect = function (...) disconnect(service_connection, ...),
@@ -185,14 +191,15 @@ create_service <- function (...) {
 create_neptune_service <- function () {
   # Requires that perts_crypt.vc be mounted.
   return(create_service(
-    server_ip = '104.198.23.91',
+    server_ip = '34.123.13.210',
     dbname = 'neptune',
     ssl_file_names = list(
-      key = "neptuneplatform_analysis-replica_2019.key",
-      cert = "neptuneplatform_analysis-replica_2019.cert",
-      ca = "neptuneplatform_analysis-replica_2019.ca"
+      key = "neptune_replica_client-key.pem",
+      cert = "neptune_replica_client-cert.pem",
+      ca = "neptune_replica_server-ca.pem"
     ),
-    mysql_user = 'readonly'
+    mysql_user = 'readonly',
+    password_file_name = 'neptune_replica_readonly_password.txt'
   ))
 }
 
