@@ -170,15 +170,21 @@ prefix_tables <- function (tables) {
   return(tables)
 }
 
-create_service <- function (password_file_name = NULL, ...) {
-  if (!is.null(password_file_name)) {
-    paths = util$find_crypt_paths(list(password = password_file_name))
-    password = readLines(paths$password)
-  } else {
-    password = NULL
-  }
-  service_connection <- connect(password = password, ...)
+create_service <- function (...) {
+  # Capture the flexible arguments so we can modify them.
+  args <- list(...)
 
+  # If a password file is specificed (but the password itself is not), look
+  # up the content of that file and use it as the password.
+  if (is.null(args$password) && !is.null(args$password_file_name)) {
+    paths = util$find_crypt_paths(list(password = args$password_file_name))
+    args$password = readLines(paths$password)
+  }
+
+  # Create the connection with the adjusted arguments.
+  service_connection <- do.call(connect, args)
+
+  # Embed the connection in the service for easy calling.
   return(list(
     disconnect = function (...) disconnect(service_connection, ...),
     query = function (...) query(service_connection, ...),
