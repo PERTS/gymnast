@@ -1,0 +1,9 @@
+subset_value,subset_type,disadv,ascend20,elevate20,mset19
+Female,gender,TRUE,TRUE,TRUE,TRUE
+Male,gender,FALSE,TRUE,TRUE,TRUE
+Race Struct. Adv. ,race,FALSE,TRUE,TRUE,TRUE
+Race Struct. Disadv.,race,TRUE,TRUE,TRUE,TRUE
+Not Target Grp.,target_group,FALSE,FALSE,TRUE,FALSE
+Target Grp.,target_group,TRUE,FALSE,TRUE,FALSE
+Low Fin. Str.,financial_stress,FALSE,TRUE,FALSE,TRUE
+High Fin. Str.,financial_stress,TRUE,TRUE,FALSE,TRUE

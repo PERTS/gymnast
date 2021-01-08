@@ -182,10 +182,9 @@ describe("expand_string_array_column", {
 
     actual <- json_utils$expand_string_array_column(df, j)
 
-    expected <- data.frame(
+    expected <- dplyr::tibble(
       a = c(    1,     1,     1,  2,    3,     3),
-      j = c("foo", "bar", "baz", NA, "hi", "bye"),
-      stringsAsFactors = FALSE
+      j = c("foo", "bar", "baz", NA, "hi", "bye")
     )
 
     expect_equal(actual, expected)
