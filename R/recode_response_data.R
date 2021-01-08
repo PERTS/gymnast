@@ -323,3 +323,17 @@ check_recoded_subsets <- function(
     )
   }
 }
+
+
+get_present_metrics <- function(response_data, all_metrics){
+  # response_data is a response-level dataset (long by response ID, with survey
+  # metrics and composites as columns)
+  # function returns a vector of metrics that are present in the data
+  column_is_blank <- response_data %>%
+    util$apply_columns(function(x) all(util$is_blank(x))) %>%
+    unlist %>%
+    unname()
+  blank_columns <- names(response_data[column_is_blank])
+  present_metrics <- setdiff(all_metrics, blank_columns)
+  return(present_metrics)
+}

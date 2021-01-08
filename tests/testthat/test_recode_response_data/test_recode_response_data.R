@@ -342,3 +342,20 @@ describe('compute_scale_composites', {
   })
 
 })
+
+describe('get_present_metrics', {
+
+  all_metrics <- c("complete_metric", "missing_metric", "partially_present_metric")
+  response_data <- data.frame(
+    participant_id = 1:20,
+    complete_metric = sample(1:6, 20, replace = T),
+    missing_metric = NA,
+    partially_present_metric = sample(c(1:6), 20, replace = T)
+  ) %>%
+    dplyr::mutate(partially_present_metric = ifelse(participant_id %in% 1, NA, partially_present_metric))
+  present_metrics <- recode_response_data$get_present_metrics(response_data, all_metrics)
+
+  it('returns a vector of all the metric elements that appear as not-completely-blank in data', {
+    expect_equal(sort(present_metrics), c("complete_metric", "partially_present_metric"))
+  })
+})
