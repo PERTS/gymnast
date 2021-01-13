@@ -10,6 +10,8 @@
 ###
 ###############################################################
 library("dplyr")
+util_legacy <- import_module("util_legacy")
+
 STANDARD_SECOND_ROW_QUALTRICS_COLUMNS <- c(
   "ResponseID"
   ,"ResponseSet"
@@ -89,7 +91,7 @@ qc.enumerate_duplicates <- function(column_names, sep = "."){
   # does not change the order of columns in the data.frame. If that
   # property is ever broken, then this operation will not work!
   duplicated_names_df <- data.frame(
-    duplicated_name = column_names[util.duplicated_all(column_names)]
+    duplicated_name = column_names[util_legacy$util.duplicated_all(column_names)]
   ) %>%
     group_by(duplicated_name) %>%
     mutate(
@@ -233,14 +235,14 @@ qc.clean_qualtrics <- function(
   # takes a Qualtrics data.frame, a boolean indicating whether unnamed columns
   # should be removed, a function (qc.extract_delimited, by default), and
   # optional arguments to be passed to a user-created function fun
-  qdf_char <- util.to_character(qdf)
-  qdf_unicode <- util.to_ascii(qdf_char)
+  qdf_char <- util_legacy$util.to_character(qdf)
+  qdf_unicode <- util_legacy$util.to_ascii(qdf_char)
   qdf_rn <- qc.rename_columns(qdf_unicode,
     remove_unnamed_columns,
     extract_column_name=extract_column_name,
     ...)
   qdf_row_removed <- qdf_rn[-1,]
-  qdf_clean <- util.as_numeric_if_number(qdf_row_removed)
+  qdf_clean <- util_legacy$util.as_numeric_if_number(qdf_row_removed)
   return(qdf_clean)
 }
 
