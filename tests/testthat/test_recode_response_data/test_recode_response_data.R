@@ -111,6 +111,7 @@ describe('define_race_disadvantage', {
         race_example1_adv = c(FALSE, TRUE)
       )
     recoded <- recode_response_data$define_race_disadvantage(rd, race_config)
+    names(recoded) <- NULL
     expect_identical(recoded, c(TRUE, FALSE))
   })
 
