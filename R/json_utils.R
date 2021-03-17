@@ -93,7 +93,7 @@ expand_vector_column_ <- function (df, column_name, as_type = NULL) {
     expanded[[column_name]] <- as_type(expanded[[column_name]])
   }
 
-  return(tibble::as.tibble(expanded))
+  return(tibble::as_tibble(expanded))
 }
 
 expand_string_array_column <- function (df, column_name) {
@@ -282,7 +282,7 @@ widen_object_column <- function(df, column_name) {
     }
   }
 
-  return(tibble::as.tibble(wide))
+  return(tibble::as_tibble(wide))
 }
 
 to_json <- function(x) {
