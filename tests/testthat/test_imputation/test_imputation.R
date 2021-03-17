@@ -428,4 +428,75 @@ describe('imputation', {
 
   })
 
+  it('extends time scope beyond individual questions', {
+    # On March 15, we found a bug where the function is (still) applying the
+    # time scope variable only to particular questions. So if John is the
+    # only student in the PERTS Network who takes the survey in the week of
+    # March 7 (week_start == "2021-03-07"), and John only does half of the
+    # survey questions, this triggers imputation for all participants for
+    # the questions he completed, but not for the questions he didn't complete.
+    # So there would be no data for the week of 3/7 for those participants.
+
+    rd <- data.frame(
+      week_start = as.Date(c("2021-02-28", "2021-03-07")),
+      participant_id = c("Participant_1", "Participant_1"),
+      q1 = c(2, 3),
+      q2 = c(4, NA),
+      parent_id = "Network_1"
+    )
+
+    rdi <- imputation$impute_to_time_ordinal(
+      response_data = rd,
+      imputation_index = c("participant_id", "parent_id"),
+      time_ordinal_column = "week_start",
+      cols_to_impute = c("q1", "q2"),
+      time_ordinal_scope_vars = "parent_id"
+    )
+
+    # assert that the imputed value for Participant_1 for q2 for 2021-03-07
+    # should be 4
+    actual_q2_w2 <- rdi %>%
+      filter(week_start %in% as.Date("2021-03-07"),
+             question_code %in% "q2") %>%
+      pull(value_imputed)
+    expect_equal(actual_q2_w2, 4)
+  })
+
+  it('imputes across time units and participants', {
+    rd <- data.frame(
+      week_start = as.Date(c("2021-02-28", "2021-02-28", "2021-03-07")),
+      participant_id = c("Participant_1", "Participant_2", "Participant_1"),
+      q1 = c(2, 1, 3),
+      q2 = c(4, 2, NA),
+      parent_id = "Network_1"
+    )
+
+    rdi <- imputation$impute_to_time_ordinal(
+      response_data = rd,
+      imputation_index = c("participant_id", "parent_id"),
+      time_ordinal_column = "week_start",
+      cols_to_impute = c("q1", "q2"),
+      time_ordinal_scope_vars = "parent_id"
+    )
+
+    # The fact that participant 1 answered q1 at time 2 should trigger
+    # imputation of ALL questions (q1 and q2) for ALL participants (1 and 2)
+    # into time 2.
+    actual_w2 <- rdi %>%
+      filter(week_start %in% as.Date("2021-03-07")) %>%
+      select(
+        participant_id,
+        question_code,
+        value_imputed
+      )
+    expected_w2 <- dplyr::tribble(
+      ~participant_id, ~question_code, ~value_imputed,
+      "Participant_1", "q1",           3,
+      "Participant_1", "q2",           4,
+      "Participant_2", "q1",           1,
+      "Participant_2", "q2",           2,
+    )
+    expect_equal(actual_w2, expected_w2)
+  })
+
 })

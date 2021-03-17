@@ -105,30 +105,37 @@ impute_to_time_ordinal <- function(
     ungroup()
 
   # In what time ordinals did each unit actively collect data?
-  # If a student is missing data from a question_code in a week in which
+  # If a student is missing data from a a week in which
   # their unit was collecting data, data will need to be imputed for that
-  # question_code x time ordinal combination for that student.
+  # time ordinal combination for that student/code.
   active_time_ordinals <- responses_melted_last %>%
-    # take all values of the combined index, EXCLUDING participants
-    select(all_of(time_ordinal_scope_vars), time_ordinal_column, question_code) %>%
+    # take all values of the combined index, EXCLUDING participants (because we
+    # want to impute over participants)
+    select(all_of(time_ordinal_scope_vars), time_ordinal_column) %>%
     distinct()
+
+  active_questions <- responses_melted_last %>%
+    select(all_of(time_ordinal_scope_vars), question_code) %>%
+    distinct()
+
   # @to-do: should this table include question_code?
   user_on_imputation_index <- response_data %>%
     select(all_of(imputation_index)) %>%
     distinct()
 
-  # for imputation, you need every combination of active time_ordinal for a user x var
-  imputation_base <- inner_join(
-    active_time_ordinals,
-    user_on_imputation_index,
-    by = time_ordinal_scope_vars
-  )
+  # for imputation, you need every combination of active time_ordinal for a user x time_ordinal
+  # and the expanded grid of questions
+  imputation_base <- user_on_imputation_index %>%
+    inner_join(active_time_ordinals,
+               by = time_ordinal_scope_vars) %>%
+    inner_join(active_questions,
+               by = time_ordinal_scope_vars)
 
   # rmv = responses, melted, variables
   rmv <- left_join(
     imputation_base,
     responses_melted_last,
-    by=c(imputation_index, "time_ordinal_column","question_code"))
+    by=c(imputation_index, "time_ordinal_column", "question_code"))
 
   # rmvi = responses, melted, variables
   imputed_melted <- rmv %>%
