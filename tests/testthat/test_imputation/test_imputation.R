@@ -429,13 +429,13 @@ describe('imputation', {
   })
 
   it('extends time scope beyond individual questions', {
-    # On March 15, we found a bug where the function is (still) applying the
-    # time scope variable only to particular questions. So if John is the
-    # only student in the PERTS Network who takes the survey in the week of
-    # March 7 (week_start == "2021-03-07"), and John only does half of the
-    # survey questions, this triggers imputation for all participants for
-    # the questions he completed, but not for the questions he didn't complete.
-    # So there would be no data for the week of 3/7 for those participants.
+    # Imputation should happen across all time for what questions are active, not
+    # within units of time independently. A question answered by anyone at time
+    # ordinal 1 but missing entirely for time ordinal 2 SHOULD be imputed in
+    # time ordinal 2. So if John takes the survey in the week of March 7
+    # (week_start == "2021-03-07"), and but only answers half of the survey
+    # questions, his responses to the questions he didn't answer should be
+    # carried forward from the previous observation.
 
     rd <- data.frame(
       week_start = as.Date(c("2021-02-28", "2021-03-07")),
