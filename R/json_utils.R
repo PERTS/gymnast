@@ -93,19 +93,23 @@ expand_vector_column_ <- function (df, column_name, as_type = NULL) {
     expanded[[column_name]] <- as_type(expanded[[column_name]])
   }
 
-  return(tibble::as.tibble(expanded))
+  return(tibble::as_tibble(expanded))
 }
 
 expand_string_array_column <- function (df, column_name) {
   # Accept NSE column name.
-  col_expr <- substitute(column_name)
+  # See http://adv-r.had.co.nz/Computing-on-the-language.html
+  col <- deparse(substitute(column_name))
+  if (length(col) > 1) {
+    stop("Unexpected length > 1 in NSE column name.")
+  }
 
   # Parse each json array as a vector. N.B. this results in a
   # data frame where each cell in this column can have length
   # greater than 1, which is "untidy".
   parsed_df <- df
-  parsed_df[[col_expr]] <- sapply(
-    df[[col_expr]],
+  parsed_df[[col]] <- sapply(
+    df[[col]],
     parse_string_array,
     # Don't use the default behavior of sapply:
     # "should the result be simplified to a vector, matrix or higher dimensional array if possible?"
@@ -117,24 +121,28 @@ expand_string_array_column <- function (df, column_name) {
   # tidy once again. Make sure to convert the nse argument
   # (an "expression") into a string for easier processing
   # downstream.
-  return(expand_vector_column_(parsed_df, deparse(col_expr), as.character))
+  return(expand_vector_column_(parsed_df, col, as.character))
 }
 
 expand_numeric_array_column <- function (df, column_name) {
   # Accept NSE column name.
-  col_expr <- substitute(column_name)
+  # See http://adv-r.had.co.nz/Computing-on-the-language.html
+  col <- deparse(substitute(column_name))
+  if (length(col) > 1) {
+    stop("Unexpected length > 1 in NSE column name.")
+  }
 
   # Parse each json array as a vector. N.B. this results in a
   # data frame where each cell in this column can have length
   # greater than 1, which is "untidy".
   parsed_df <- df
-  parsed_df[[col_expr]] <- sapply(df[[col_expr]], parse_numeric_array)
+  parsed_df[[col]] <- sapply(df[[col]], parse_numeric_array)
 
   # Expand/melt this untidy state into a longer form table,
   # tidy once again. Make sure to convert the nse argument
   # (an "expression") into a string for easier processing
   # downstream.
-  return(expand_vector_column_(parsed_df, deparse(col_expr), as.numeric))
+  return(expand_vector_column_(parsed_df, col, as.numeric))
 }
 
 widen_object_column <- function(df, column_name) {
@@ -163,16 +171,16 @@ widen_object_column <- function(df, column_name) {
   #   wide_responses <- widen_object_column(saturn_response_tbl, answers)
 
   # Accept NSE column name.
-  col_expr <- substitute(column_name)
+  col <- deparse(substitute(column_name))
 
   if (nrow(df) %in% 0) {
     return(df)
   }
 
-  if (!as.character(col_expr) %in% names(df)) {
+  if (!col %in% names(df)) {
     stop(paste0(
       "json_utils$widen_object_column: column ",
-      as.character(col_expr),
+      col,
       " not found in data frame."
     ))
   }
@@ -186,7 +194,7 @@ widen_object_column <- function(df, column_name) {
 
     # Make a 1-row temporary data frame for every element EXCEPT the one with
     # JSON data. We'll expand that one and assign new columns to the df.
-    col_keep <- !names(row) %in% as.character(col_expr)
+    col_keep <- !names(row) %in% col
     df_args <- as.list(row[col_keep])
     df_args$stringsAsFactors = FALSE
     row_df <- do.call(data.frame, df_args)
@@ -195,7 +203,7 @@ widen_object_column <- function(df, column_name) {
     tryCatch(
       {
         parsed_object <- jsonlite::fromJSON(
-          row[[col_expr]],
+          row[[col]],
           # jsonlite may think that some structures, like
           # '[{"a": 1, "b": 2}, {"a": 3, "b": 4}]'
           # should be returned as data frames; if we happe to have one of these,
@@ -206,8 +214,8 @@ widen_object_column <- function(df, column_name) {
       },
       error = function (e) {
         print(e)
-        print(methods::is(row[[col_expr]]))
-        print(row[[col_expr]])
+        print(methods::is(row[[col]]))
+        print(row[[col]])
         print(row)
         return(list())
       }
@@ -222,7 +230,7 @@ widen_object_column <- function(df, column_name) {
         "json_utils$widen_object_column: object didn't parse to a list. Type: ",
         typeof(parsed_object),
         " JSON string: ",
-        row[[col_expr]]
+        row[[col]]
       ))
     }
 
@@ -282,7 +290,7 @@ widen_object_column <- function(df, column_name) {
     }
   }
 
-  return(tibble::as.tibble(wide))
+  return(tibble::as_tibble(wide))
 }
 
 to_json <- function(x) {
