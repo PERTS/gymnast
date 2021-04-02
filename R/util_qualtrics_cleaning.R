@@ -246,6 +246,14 @@ qc.clean_qualtrics <- function(
   return(qdf_clean)
 }
 
+
+  qc.convert_to_legacy <- function(qdf){
+    # Input: raw new formatted Qualtrics dataset
+    # Output: legacy formatted Qualtrics dataset
+    qdf_clean <- qdf[-2,]
+    return(qdf_clean)
+  }
+
 qc.rbind_inprogress <- function(inprogress_qdf, clean_qdf){
   # Takes an in-progress Qualtrics dataset (inprogress_qdf), cleans it,
   # replaces its column names with those of the cleaned Qualtrics dataset
