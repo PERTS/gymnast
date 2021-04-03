@@ -1,10 +1,10 @@
 # packages: DBI, RMySQL
 
-util <- import_module('util')
+util <- import_module("util")
 
-connect <- function (server_ip, dbname = NA, ssl_file_names = list(),
-                     ssl_credentials = list(), password = NULL,
-                     mysql_user = "readonly") {
+connect <- function(server_ip, dbname = NA, ssl_file_names = list(),
+                    ssl_credentials = list(), password = NULL,
+                    mysql_user = "readonly") {
   # Get a connection to a MySQL database.
   #
   # Args:
@@ -29,20 +29,20 @@ connect <- function (server_ip, dbname = NA, ssl_file_names = list(),
 
   ssl_paths <- NULL
   if (length(ssl_file_names) > 0) {
-    ssl_paths <- util$find_crypt_paths(ssl_file_names, max_depth=4)
+    ssl_paths <- util$find_crypt_paths(ssl_file_names, max_depth = 4)
   } else if (length(ssl_credentials) > 0) {
-    if(file.exists(CNF_PATH)) unlink(CNF_PATH, force = T)
+    if (file.exists(CNF_PATH)) unlink(CNF_PATH, force = T)
     ssl_paths <- list()
     toWrite <- list(
-      ca = paste0(dbname,"_ca.pem"),
-      cert = paste0(dbname,"_cert.pem"),
-      key = paste0(dbname,"_key.pem")
+      ca = paste0(dbname, "_ca.pem"),
+      cert = paste0(dbname, "_cert.pem"),
+      key = paste0(dbname, "_key.pem")
     )
     for (k in names(toWrite)) {
       temp_path <- paste0(getwd(), "/", toWrite[[k]])
       # if files already exist, delete them
       for (path in temp_path) {
-        if(file.exists(path)) {
+        if (file.exists(path)) {
           print(paste0("removing ", path))
           unlink(path, force = T)
         }
@@ -103,12 +103,12 @@ connect <- function (server_ip, dbname = NA, ssl_file_names = list(),
 
 disconnect <- RMySQL::dbDisconnect
 
-disconnect_all <- function () {
+disconnect_all <- function() {
   # there might be an issue with number of open connection. Check discussion here:
   # https://stackoverflow.com/questions/32139596/cannot-allocate-a-new-connection-16-connections-already-opened-rmysql
   all_conns <- RMySQL::dbListConnections(RMySQL::MySQL())
 
-  for(conn in all_conns) {
+  for (conn in all_conns) {
     RMySQL::dbDisconnect(conn)
   }
 
@@ -120,7 +120,7 @@ disconnect_all <- function () {
 # This sends lots of annoying warnings about various fields getting imported
 # as various types, e.g. "Unsigned INTEGER in col 8 imported as numeric".
 # We're happy with how the package handles types and never want these warnings.
-query <- function (...) {
+query <- function(...) {
   result <- NULL
   suppressWarnings({
     result <- DBI::dbGetQuery(...)
@@ -131,13 +131,13 @@ query <- function (...) {
 
 escape_strings <- RMySQL::dbEscapeStrings
 
-row_to_values <- function (conn, row) {
+row_to_values <- function(conn, row) {
   # `row` example: c(5, "5", foo", NA)
   # `value_literals example: c("5", "5", 'foo'", "NULL")
   # returns length-1 character: "(5, 5, 'foo', NULL)"
   value_literals <- ifelse(
     is.na(row),
-    'NULL',
+    "NULL",
     ifelse(
       !is.na(as.numeric(row)),
       as.character(row),
@@ -147,11 +147,11 @@ row_to_values <- function (conn, row) {
   return(paste0("(", paste0(value_literals, collapse = ","), ")"))
 }
 
-get_table <- function (conn, table_name) {
+get_table <- function(conn, table_name) {
   query(conn, paste0("SELECT * FROM `", table_name, "`"))
 }
 
-prefix_tables <- function (tables) {
+prefix_tables <- function(tables) {
   # Useful if using the BigPipe convention of storing a series of dataframes in a
   # named list, named by their table.
   #
@@ -170,7 +170,7 @@ prefix_tables <- function (tables) {
   return(tables)
 }
 
-create_service <- function (...) {
+create_service <- function(...) {
   # Capture the flexible arguments so we can modify them.
   args <- list(...)
 
@@ -192,59 +192,59 @@ create_service <- function (...) {
 
   # Embed the connection in the service for easy calling.
   return(list(
-    disconnect = function (...) disconnect(service_connection, ...),
-    query = function (...) query(service_connection, ...),
-    escape_strings = function (...) escape_strings(service_connection, ...),
-    row_to_values = function (...) row_to_values(service_connection, ...),
-    get_table = function (...) get_table(service_connection, ...)
+    disconnect = function(...) disconnect(service_connection, ...),
+    query = function(...) query(service_connection, ...),
+    escape_strings = function(...) escape_strings(service_connection, ...),
+    row_to_values = function(...) row_to_values(service_connection, ...),
+    get_table = function(...) get_table(service_connection, ...)
   ))
 }
 
-create_neptune_service <- function () {
+create_neptune_service <- function() {
   # Requires that perts_crypt.vc be mounted.
   return(create_service(
-    server_ip = '34.123.13.210',
-    dbname = 'neptune',
+    server_ip = "34.123.13.210",
+    dbname = "neptune",
     ssl_file_names = list(
       key = "neptune_replica_client-key.pem",
       cert = "neptune_replica_client-cert.pem",
       ca = "neptune_replica_server-ca.pem"
     ),
-    mysql_user = 'readonly',
-    password_file_name = 'neptune_replica_readonly_password.txt',
+    mysql_user = "readonly",
+    password_file_name = "neptune_replica_readonly_password.txt",
     password = NULL
   ))
 }
 
-create_triton_service <- function () {
+create_triton_service <- function() {
   # Requires that perts_crypt.vc be mounted.
   return(create_service(
-    server_ip = '35.188.76.62',
-    dbname = 'triton',
+    server_ip = "35.188.76.62",
+    dbname = "triton",
     ssl_file_names = list(
-      ca = 'triton_sql_production-01-analysis-replica.ca',
-      key = 'triton_sql_production-01-analysis-replica.key',
-      cert = 'triton_sql_production-01-analysis-replica.cert'
+      ca = "triton_sql_production-01-analysis-replica.ca",
+      key = "triton_sql_production-01-analysis-replica.key",
+      cert = "triton_sql_production-01-analysis-replica.cert"
     ),
-    mysql_user = 'readonly'
+    mysql_user = "readonly"
   ))
 }
 
-create_neptune_test_service <- function () {
+create_neptune_test_service <- function() {
   return(create_service(
-    server_ip = '127.0.0.1',
-    dbname = 'neptune-test-rserve',
-    mysql_user = 'neptune',
-    password = 'neptune'
+    server_ip = "127.0.0.1",
+    dbname = "neptune-test-rserve",
+    mysql_user = "neptune",
+    password = "neptune"
   ))
 }
 
-create_triton_test_service <- function () {
+create_triton_test_service <- function() {
   # Requires that perts_crypt.vc be mounted.
   return(create_service(
-    server_ip = '127.0.0.1',
-    dbname = 'triton-test-rserve',
-    mysql_user = 'triton',
-    password = 'triton'
+    server_ip = "127.0.0.1",
+    dbname = "triton-test-rserve",
+    mysql_user = "triton",
+    password = "triton"
   ))
 }
