@@ -117,7 +117,7 @@ disconnect_all <- function () {
   return(length(all_conns))
 }
 
-# This sends lots of annoying warnings about various fields geting imported
+# This sends lots of annoying warnings about various fields getting imported
 # as various types, e.g. "Unsigned INTEGER in col 8 imported as numeric".
 # We're happy with how the package handles types and never want these warnings.
 query <- function (...) {
@@ -176,10 +176,16 @@ create_service <- function (...) {
 
   # If a password file is specificed (but the password itself is not), look
   # up the content of that file and use it as the password.
+  print(args$password)
+  print(args$password_file_name)
   if (is.null(args$password) && !is.null(args$password_file_name)) {
-    paths = util$find_crypt_paths(list(password = args$password_file_name))
-    args$password = readLines(paths$password)
+    print("looking for pw file")
+    paths <- util$find_crypt_paths(list(password = args$password_file_name))
+    print(paths)
+    args$password <- readLines(paths$password)
+    args$password_file_name <- NULL
   }
+  print(args)
 
   # Create the connection with the adjusted arguments.
   service_connection <- do.call(connect, args)
@@ -205,7 +211,8 @@ create_neptune_service <- function () {
       ca = "neptune_replica_server-ca.pem"
     ),
     mysql_user = 'readonly',
-    password_file_name = 'neptune_replica_readonly_password.txt'
+    password_file_name = 'neptune_replica_readonly_password.txt',
+    password = NULL
   ))
 }
 
