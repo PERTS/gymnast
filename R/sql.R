@@ -176,16 +176,11 @@ create_service <- function(...) {
 
   # If a password file is specificed (but the password itself is not), look
   # up the content of that file and use it as the password.
-  print(args$password)
-  print(args$password_file_name)
   if (is.null(args$password) && !is.null(args$password_file_name)) {
-    print("looking for pw file")
     paths <- util$find_crypt_paths(list(password = args$password_file_name))
-    print(paths)
     args$password <- readLines(paths$password)
     args$password_file_name <- NULL
   }
-  print(args)
 
   # Create the connection with the adjusted arguments.
   service_connection <- do.call(connect, args)
