@@ -221,7 +221,9 @@ create_triton_service <- function() {
       key = "triton_sql_production-01-analysis-replica.key",
       cert = "triton_sql_production-01-analysis-replica.cert"
     ),
-    mysql_user = "readonly"
+    mysql_user = "readonly",
+    password_file_name = "triton_replica_readonly_password.txt",
+    password = NULL
   ))
 }
 
