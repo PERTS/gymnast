@@ -70,7 +70,8 @@ tables <- sql$prefix_tables(list(
   network = tribble(
     ~uid,        ~name,            ~association_ids,
     'Network_X', 'Simple Network', '["Organization_M", "Organization_N"]',
-    'Network_Y', 'Meta Network',   '["Network_X"]'
+    'Network_Y', 'Meta Network',   '["Network_X"]',
+    'Network_Z', 'Overlapping Network', '["Organization_M", "Organization_O"]'
   )
 ))
 
@@ -282,6 +283,7 @@ describe('get_classrooms_from_organization', {
 })
 
 describe('get_classrooms_from_network', {
+
   it('simple network', {
     classroom_assc <- summarize_copilot$get_classrooms_from_network(
       c('Network_X', 'Team_ignored'),
@@ -417,6 +419,43 @@ describe('get_classrooms_from_network', {
         tables$network %>% rename(uid = network.uid)
       )
     )
+  })
+
+  it('supports a single child assigned to two networks', {
+    # when a single child belongs to more than one parent, all parent/child
+    # combinations should be included in the final assc table
+    classroom_assc <- summarize_copilot$get_classrooms_from_network(
+      c('Network_X', 'Network_Z'),
+      tables$classroom,
+      tables$team,
+      tables$organization,
+      tables$network
+    )
+
+    # alpha fox listed TWICE, b/c it must be included in two different
+    # network children: Org M and N.
+    expected1 <- tribble(
+      ~parent_id,   ~parent_name,     ~child_id,        ~child_name, ~team.uid,
+      'Network_X',  'Simple Network', 'Organization_M', 'Org M',     'Team_A',
+      'Network_X',  'Simple Network', 'Organization_M', 'Org M',     'Team_C',
+      'Network_X',  'Simple Network', 'Organization_N', 'Org N',     'Team_A',
+      'Network_Z',  'Overlapping Network', 'Organization_M', 'Org M',     'Team_A',
+      'Network_Z',  'Overlapping Network', 'Organization_M', 'Org M',     'Team_C',
+      'Network_Z',  'Overlapping Network', 'Organization_O', 'Org O',     'Team_B'
+    )
+    expected2 <- tribble(
+      ~team.name, ~classroom.uid, ~classroom.code,
+      'Team A',   'Classroom_A',  'alpha fox',
+      'Team C',   'Classroom_C',  'charlie fox',
+      'Team A',   'Classroom_A',  'alpha fox',
+      'Team A',   'Classroom_A',  'alpha fox',
+      'Team C',   'Classroom_C',  'charlie fox',
+      'Team B',   'Classroom_B',  'beta fox'
+    )
+    expected = as_tibble(cbind(expected1, expected2))
+    print(classroom_assc)
+
+    expect_equal(classroom_assc, expected)
   })
 })
 
