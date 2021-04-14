@@ -670,5 +670,10 @@ get_classrooms_from_network <- function (network_ids,
     classroom_assc <- rbind(classroom_assc, to_add)
   }
 
-  unique(classroom_assc)
+  # Network associations are serialized in the database and aren't
+  # guaranteed to be unique, e.g. you could have association_ids
+  # as ["Org_A","Org_B","Org_A"]. Protect against duplicated
+  # relationships by calling unique().
+
+  return(unique(classroom_assc))
 }
