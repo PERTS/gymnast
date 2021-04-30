@@ -623,7 +623,9 @@ get_classrooms_from_network <- function (network_ids,
     classroom.uid = character(),
     classroom.code = character(),
   )
-
+  # We iterate over all elements in network_assc$network.uid rather than the
+  # unique elements in network_assc$network id because we want to go through each
+  # row in the data.frame; that is, each network/child combination.
   for (x in sequence(length(network_assc$network.uid))) {
     network_id <- network_assc$network.uid[x]
     network_name <- network_assc$network.name[x]
@@ -664,9 +666,14 @@ get_classrooms_from_network <- function (network_ids,
           child_name = !!child_name
         )
     }
-
+    # save the added rows
     classroom_assc <- rbind(classroom_assc, to_add)
   }
 
-  distinct(classroom_assc, child_id, classroom.uid, .keep_all = TRUE)
+  # Network associations are serialized in the database and aren't
+  # guaranteed to be unique, e.g. you could have association_ids
+  # as ["Org_A","Org_B","Org_A"]. Protect against duplicated
+  # relationships by calling unique().
+
+  return(unique(classroom_assc))
 }
