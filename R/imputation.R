@@ -71,6 +71,16 @@ impute_to_time_ordinal <- function(
     stop("The time ordinal column was not found in the response data: " %+% time_ordinal_column)
   }
 
+  index_is_duplicated <- response_data %>%
+    select(all_of(c(imputation_index, time_ordinal_column))) %>%
+    duplicated()
+
+  if(any(index_is_duplicated)){
+    stop("Your imputation_index did not specify unique values within the time_ordinal column. " %+%
+           "No imputation can be performed until your response_data object contains " %+%
+           "unique values of " %+% paste0(c(imputation_index, time_ordinal_column), collapse = ", "))
+  }
+
   # handle NSE by hard-coding `time_ordinal_column` as the values in "time_ordinal_column"
   response_data$time_ordinal_column <- response_data[[time_ordinal_column]]
   melt_ids <- c(imputation_index, "time_ordinal_column")
