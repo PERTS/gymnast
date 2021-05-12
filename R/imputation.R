@@ -61,6 +61,16 @@ impute_to_time_ordinal <- function(
            "so these are required to appear in the imputation_index.")
   }
 
+  if(!all(imputation_index %in% names(response_data))){
+    missing_cols <- imputation_index[!imputation_index %in% names(response_data)]
+    stop("The following columns in the imputation index were not found in the response data: " %+%
+           paste0(missing_cols))
+  }
+
+  if(!time_ordinal_column %in% names(response_data)){
+    stop("The time ordinal column was not found in the response data: " %+% time_ordinal_column)
+  }
+
   # handle NSE by hard-coding `time_ordinal_column` as the values in "time_ordinal_column"
   response_data$time_ordinal_column <- response_data[[time_ordinal_column]]
   melt_ids <- c(imputation_index, "time_ordinal_column")

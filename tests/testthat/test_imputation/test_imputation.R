@@ -499,6 +499,48 @@ describe('imputation', {
     expect_equal(actual_w2, expected_w2)
   })
 
+  it('throws an informative error when imputation index columns are not present', {
+    rd <- data.frame(
+      week_start = as.Date(c("2021-02-28", "2021-03-07")),
+      participant_id = c("Participant_1", "Participant_1"),
+      q1 = c(2, 3),
+      q2 = c(4, 3)
+    )
+
+    expect_error(
+      imputation$impute_to_time_ordinal(
+        response_data = rd,
+        imputation_index = c("participant_id", "parent_id"),
+        time_ordinal_column = "week_start",
+        cols_to_impute = c("q1", "q2"),
+        time_ordinal_scope_vars = "parent_id"
+      ),
+      regexp = "columns in the imputation index were not found"
+    )
+
+  })
+
+  it('throws an informative error when time ordinal columns are not present', {
+    rd <- data.frame(
+      participant_id = c("Participant_1", "Participant_1"),
+      q1 = c(2, 3),
+      q2 = c(4, 3),
+      parent_id = "Network_1"
+    )
+
+    expect_error(
+      imputation$impute_to_time_ordinal(
+        response_data = rd,
+        imputation_index = c("participant_id", "parent_id"),
+        time_ordinal_column = "week_start",
+        cols_to_impute = c("q1", "q2"),
+        time_ordinal_scope_vars = "parent_id"
+      ),
+      regexp = "time ordinal column was not found"
+    )
+
+  })
+
   it('checks the uniqueness of the imputation index and throws an error if it is not unique', {
     rd <- data.frame(
       week_start = as.Date(c("2021-02-28", "2021-03-07", "2021-03-07")),
