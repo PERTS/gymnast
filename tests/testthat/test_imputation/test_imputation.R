@@ -541,7 +541,7 @@ describe('imputation', {
 
   })
 
-  it('checks the uniqueness of the imputation index and throws an error if it is not unique', {
+  it('checks the uniqueness of the imputation index within the time ordinal and throws an error if it is not unique', {
     rd <- data.frame(
       week_start = as.Date(c("2021-02-28", "2021-03-07", "2021-03-07")),
       participant_id = c("Participant_1", "Participant_1", "Participant_1"),
@@ -549,8 +549,9 @@ describe('imputation', {
       q2 = c(4, 3, 4),
       parent_id = "Network_1"
     )
-    imputation_index_and_time_ordinal = c("participant_id", "parent_id", "week_start")
+
     # prove that the last row duplicates values of the imputation index within time ordinal
+    imputation_index_and_time_ordinal = c("participant_id", "parent_id", "week_start")
     expect_equal(duplicated(rd[c(imputation_index_and_time_ordinal)]), c(FALSE, FALSE, TRUE))
 
     expect_error(imputation$impute_to_time_ordinal(
