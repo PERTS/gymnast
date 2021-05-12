@@ -64,7 +64,7 @@ impute_to_time_ordinal <- function(
   if(!all(imputation_index %in% names(response_data))){
     missing_cols <- imputation_index[!imputation_index %in% names(response_data)]
     stop("The following columns in the imputation index were not found in the response data: " %+%
-           paste0(missing_cols))
+           paste0(missing_cols, collapse = ", "))
   }
 
   if(!time_ordinal_column %in% names(response_data)){
