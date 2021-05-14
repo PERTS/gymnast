@@ -61,6 +61,26 @@ impute_to_time_ordinal <- function(
            "so these are required to appear in the imputation_index.")
   }
 
+  if(!all(imputation_index %in% names(response_data))){
+    missing_cols <- imputation_index[!imputation_index %in% names(response_data)]
+    stop("The following columns in the imputation index were not found in the response data: " %+%
+           paste0(missing_cols, collapse = ", "))
+  }
+
+  if(!time_ordinal_column %in% names(response_data)){
+    stop("The time ordinal column was not found in the response data: " %+% time_ordinal_column)
+  }
+
+  index_is_duplicated <- response_data %>%
+    select(all_of(c(imputation_index, time_ordinal_column))) %>%
+    duplicated()
+
+  if(any(index_is_duplicated)){
+    stop("Your imputation_index did not specify unique values within the time_ordinal column. " %+%
+           "No imputation can be performed until your response_data object contains " %+%
+           "unique values of " %+% paste0(c(imputation_index, time_ordinal_column), collapse = ", "))
+  }
+
   # handle NSE by hard-coding `time_ordinal_column` as the values in "time_ordinal_column"
   response_data$time_ordinal_column <- response_data[[time_ordinal_column]]
   melt_ids <- c(imputation_index, "time_ordinal_column")
@@ -93,28 +113,17 @@ impute_to_time_ordinal <- function(
     filter(!is.na(value)) %>%
     rename(question_code = variable)
 
-  # retain only one response if a participant
-  # has multiple responses in a given level of time_ordinal_column
-  responses_melted_last <- responses_melted %>%
-    group_by(.dots = c(imputation_index, "time_ordinal_column", "question_code")) %>%
-    # For medium-quality reasons, we don't care which value we select within the
-    # time ordinal within participants, because the data should have been
-    # filtered to complete responses already. In the future it might be great to
-    # have a principled way of selecting these, though.
-    summarise(value = last(value)) %>%
-    ungroup()
-
   # In what time ordinals did each unit actively collect data?
   # If a student is missing data from a a week in which
   # their unit was collecting data, data will need to be imputed for that
   # time ordinal combination for that student/code.
-  active_time_ordinals <- responses_melted_last %>%
+  active_time_ordinals <- responses_melted %>%
     # take all values of the combined index, EXCLUDING participants (because we
     # want to impute over participants)
     select(all_of(time_ordinal_scope_vars), time_ordinal_column) %>%
     distinct()
 
-  active_questions <- responses_melted_last %>%
+  active_questions <- responses_melted %>%
     select(all_of(time_ordinal_scope_vars), question_code) %>%
     distinct()
 
@@ -134,7 +143,7 @@ impute_to_time_ordinal <- function(
   # rmv = responses, melted, variables
   rmv <- left_join(
     imputation_base,
-    responses_melted_last,
+    responses_melted,
     by=c(imputation_index, "time_ordinal_column", "question_code"))
 
   # rmvi = responses, melted, variables
