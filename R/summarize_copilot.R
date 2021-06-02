@@ -304,17 +304,6 @@ map_responses_to_cycles <- function(response_tbl,
     stop("map_responses_to_cycles would overwrite columns")
   }
 
-  missing_codes <- unique(
-    response_tbl$code[!response_tbl$code %in% triton.classroom$classroom.code]
-  )
-  if (length(missing_codes) > 0) {
-    logging$info(
-      "These participation codes don't appear in Copilot, most likely from",
-      "deleted classrooms: ",
-      missing_codes
-    )
-  }
-
   cycle_extended <- triton.cycle %>%
     mutate(
       cycle.extended_end_date = ifelse(
