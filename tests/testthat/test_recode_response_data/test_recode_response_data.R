@@ -18,9 +18,10 @@ if (grepl('tests/testthat/test_recode_response_data$', getwd())) {
 }
 
 library(testthat)
-modules::import("dplyr", `%>%`)
+modules::import("dplyr")
 modules::import("tibble")
 util <- import_module("util")
+perts_ids <- import_module("perts_ids")
 recode_response_data <- import_module("recode_response_data")
 `%+%` <- paste0
 
@@ -345,22 +346,75 @@ describe('compute_scale_composites', {
 })
 
 
+describe('validate_participant_tbl', {
+
+  it('stops when required columns are missing', {
+
+    participant_tbl <- data.frame(
+      participant.uid = replicate(20, perts_ids$create_uid("Participant")),
+      participant.stripped_student_id = 1:20
+    )
+
+    required_columns <- c("participant.uid", "participant.stripped_student_id")
+    expect_error(recode_response_data$validate_participant_tbl(select(
+      participant_tbl, -participant.uid
+    )))
+    expect_error(recode_response_data$validate_participant_tbl(select(
+      participant_tbl, -participant.stripped_student_id
+    )))
+
+  })
+
+  it('stops when participant_tbl contains no data', {
+    participant_tbl_no_data <- data.frame(matrix(ncol = 2, nrow = 0)) %>%
+      stats::setNames(c("participant.uid", "participant.stripped_student_id"))
+    expect_error(recode_response_data$validate_participant_tbl(participant_tbl_no_data),
+                 regexp = "contains no data")
+  })
+
+  it('stops when participant.uid field does not contain valid participant ids', {
+    participant_tbl_correct_ids <- data.frame(
+      participant.uid = replicate(20, perts_ids$create_uid("Participant")),
+      participant.stripped_student_id = 1:20
+    )
+    participant_tbl_non_ids <- data.frame(
+      participant.uid = 1:20,
+      participant.stripped_student_id = 1:20
+    )
+    participant_tbl_wrong_ids <- data.frame(
+      participant.uid = replicate(20, perts_ids$create_uid("Classroom")),
+      participant.stripped_student_id = 1:20
+    )
+    # should throw no error for the correct ids
+    recode_response_data$validate_participant_tbl(participant_tbl_correct_ids)
+    # but should throw an error for non-PERTS-ids
+    expect_error(recode_response_data$validate_participant_tbl(participant_tbl_non_ids),
+                 regexp = "values were found in the participant.uid field that were not PERTS ids")
+    # and for the wrong kind of PERTS ids
+    expect_error(recode_response_data$validate_participant_tbl(participant_tbl_wrong_ids),
+                 regexp = "the participant.uid field contains ids that are not participant_ids")
+  })
+
+})
+
+
 describe('get_logins_for_participants', {
-  
+
   it('returns a vector of the same length as the input vector', {
-    
+
+
   })
-  
+
   it('stops if the input vector includes invalid participant_ids', {
-    
+
   })
-  
+
   it('stops if participant_ids are not found on the roster', {
-    
+
   })
-  
+
   it('returns values that are hashes', {
-    
+
   })
-  
+
 })

@@ -5,6 +5,7 @@ modules::import("stats", "setNames")
 logging <- import_module("logging")
 scale_computation <- import_module("scale_computation")
 util <- import_module("util")
+perts_ids <- import_module("perts_ids")
 
 
 `%+%` <- paste0
@@ -179,7 +180,7 @@ recode_response_data <- function(
       response_data_recoded$in_target_group
     )
   }
-  
+
   # @to-do here retrieve login_hash values
 
   # now recode to categoricals based on the subset config
@@ -330,13 +331,41 @@ check_recoded_subsets <- function(
   }
 }
 
+validate_participant_tbl <- function(participant_tbl){
+
+  # validate properties of the participant_tbl before using it. Nothing is
+  # returned from this function but errors are thrown if it doesnt meet
+  # expectations
+
+  required_columns <- c("participant.uid", "participant.stripped_student_id")
+  missing_columns <- setdiff(required_columns, names(participant_tbl))
+  if(length(missing_columns) > 0){
+    stop("The following columns are missing from participant_tbl: " %+%
+           paste0(missing_columns, collapse = ", "))
+  }
+
+  if(nrow(participant_tbl) == 0){
+    stop("participant_tbl contains no data")
+  }
+
+  is_perts_id <- sapply(participant_tbl$participant.uid, perts_ids$is_long_uid)
+  if(!all(is_perts_id)){
+    stop("values were found in the participant.uid field that were not PERTS ids")
+  }
+  id_types <- sapply(participant_tbl$participant.uid, perts_ids$get_kind)
+  if(!all(id_types %in% "Participant")){
+    stop("the participant.uid field contains ids that are not participant_ids")
+  }
+
+}
+
 
 get_logins_for_participants <- function(participant_ids, participant_tbl){
   # @to-do this function takes a vector of participant_ids and a
   # participant_tbl, and links through the participant_tbl to a login_id
   # corresponding to each participant_id. Hashed login_id values are returned
   # because Sarah is too paranoid to use real ids for any calculation ever
-  
+
   # takes a vector of length(participant_ids) and uses the participants_tbl to
   # look up their login_id value. Returns a vector of distinct, hashed
   # login_ids.
