@@ -1,4 +1,4 @@
-modules::import("dplyr", `%>%`, "filter", "one_of", "rename", "select")
+modules::import("dplyr")
 modules::import("lubridate", "floor_date")
 modules::import("stats", "setNames")
 modules::import("digest")
@@ -396,8 +396,35 @@ salt_n_hash <- function(x,salt){
     unlist()
 }
 
-resolve_conflicting_demographics <- function(login_hashes, demog_vector){
-  # @to-do this function takes as its input a vector of login hashes and a
-  # vector of demographic data, and returns an updated vector of demographic
-  # data with conflicting entries marked as "NA"
+resolve_conflicting_demographics <- function(ids, demog_vector){
+  # This function takes as its input a vector of ids and a vector of
+  # demographic data, and returns an updated vector of demographic data with
+  # conflicting entries for the same id marked as "NA". We do this at
+  # the recoding step rather than downstream so that conflicts created by
+  # students entering different responses to demographic questions across
+  # surveys doesnt result in inconsistent numbers across reports.
+
+  unconflicted_demog <- demog_vector
+  crosswalk <- data.frame(
+    id = ids,
+    demog = demog_vector
+  )
+
+  potential_conflicts <- crosswalk %>%
+    group_by(id) %>%
+    mutate(n_instances = n()) %>%
+    filter(n_instances > 1)
+
+  resolved_demog_df <- potential_conflicts %>%
+    summarise(keep_nonblank_value = n_distinct(id, na.rm = T) == 1)
+
+  keep_nonblank_ids <- resolved_demog_df$id[resolved_demog_df$keep_nonblank_value]
+  to_resolve <- potential_conflicts %>%
+    filter(id %in% keep_nonblank_ids)
+
+  unknown <- potential_conflicts %>%
+    filter(!id %in% keep_nonblank_ids)
+
+  return(unconflicted_demog)
+
 }

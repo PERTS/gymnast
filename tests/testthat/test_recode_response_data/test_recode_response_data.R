@@ -465,15 +465,54 @@ describe('get_logins_for_participants', {
 
   })
 
-  it('stops if the input vector includes invalid participant_ids', {
+})
+
+describe('resolve_conflicting_demographics', {
+
+  it('returns the existing value when values DONT conflict', {
+
+    logins <- c(1, 2, 3, 3, 4, 5)
+    gender_cat <- c("Boy/Man", "Girl/Woman", "Girl/Woman", "Girl/Woman",
+                    "Boy/Man", "Boy/Man")
+    login_hashes <- recode_response_data$salt_n_hash(logins, "salt")
+
+    # prove that the third and fourth login hash value are duplicated
+    expect_equal(login_hashes[3], login_hashes[4])
+    # and that the third and fourth login hash value are identical
+    expect_equal(gender_cat[3], gender_cat[4])
+
+    unconflicted_demog <- recode_response_data$resolve_conflicting_demographics(
+      login_hashes,
+      gender_cat
+    )
+    expect_equal(unconflicted_demog, gender_cat)
 
   })
 
-  it('stops if participant_ids are not found on the roster', {
+  it('returns the shared non-blank value when the only conflict is a blank', {
+    logins <- c(1, 2, 3, 3)
+    gender_cat <- c("Boy/Man", "Girl/Woman", NA, "Girl/Woman")
+    login_hashes <- recode_response_data$salt_n_hash(logins, "salt")
+
+    # prove that the third and fourth login hash value are duplicated
+    expect_equal(login_hashes[3], login_hashes[4])
+    # prove that the fourth value is non-blank
+    expect_false(is.na(gender_cat[4]))
+    # and that the third value is blank
+    expect_true(is.na(gender_cat[3]))
+
+    # the blank value should be filled in with "Girl/Woman"
+    expected_unconflicted_demog <- c("Boy/Man", "Girl/Woman", "Girl/Woman", "Girl/Woman")
+
+    unconflicted_demog <- recode_response_data$resolve_conflicting_demographics(
+      login_hashes,
+      gender_cat
+    )
+    expect_equal(unconflicted_demog, expected_unconflicted_demog)
 
   })
 
-  it('returns values that are hashes', {
+  it('returns NA when two non-blank values conflict', {
 
   })
 
