@@ -1,6 +1,7 @@
 modules::import("dplyr", `%>%`, "filter", "one_of", "rename", "select")
 modules::import("lubridate", "floor_date")
 modules::import("stats", "setNames")
+modules::import("digest")
 
 logging <- import_module("logging")
 scale_computation <- import_module("scale_computation")
@@ -369,8 +370,31 @@ get_logins_for_participants <- function(participant_ids, participant_tbl){
   # takes a vector of length(participant_ids) and uses the participants_tbl to
   # look up their login_id value. Returns a vector of distinct, hashed
   # login_ids.
+  validate_participant_tbl(participant_tbl)
+
+  logins <- util$recode(participant_ids,
+                        originals = participant_tbl$participant.uid,
+                        replacements = participant_tbl$participant.stripped_student_id)
+
+  # hash with a randomly chosen salt (we dont care about the actual values
+  # because we dont need to look them up)
+  hashed_logins <- salt_n_hash(logins, salt = sample(letters, 1))
+
+  # should return blanks for any participants not found on the roster
+  missing_participants <- setdiff(participant_ids, participant_tbl$participant.uid)
+  if(length(missing_participants) > 0){
+    hashed_logins[logins %in% missing_participants] <- NA
+  }
+  return(hashed_logins)
+
 }
 
+salt_n_hash <- function(x,salt){
+  # a function which encrypts a vector of strings
+  paste0(x,salt) %>%
+    lapply(., digest, algo = "sha256") %>%
+    unlist()
+}
 
 resolve_conflicting_demographics <- function(login_hashes, demog_vector){
   # @to-do this function takes as its input a vector of login hashes and a

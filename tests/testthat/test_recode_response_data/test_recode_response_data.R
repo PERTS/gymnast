@@ -400,8 +400,68 @@ describe('validate_participant_tbl', {
 
 describe('get_logins_for_participants', {
 
-  it('returns a vector of the same length as the input vector', {
+  it('returns a vector of the same length as the input vector when overlap is perfect', {
 
+    participant_tbl <- data.frame(
+      participant.uid = replicate(20, perts_ids$create_uid("Participant")),
+      participant.stripped_student_id = 1:20
+    )
+    participant_ids <- participant_tbl$participant.uid
+    hashed_logins <- recode_response_data$get_logins_for_participants(
+      participant_ids,
+      participant_tbl
+    )
+
+    expect_equal(length(hashed_logins), length(participant_ids))
+
+  })
+
+  it('returns a vector of the same length as the input vector when rostered ids dont appear in the data', {
+    participant_tbl <- data.frame(
+      participant.uid = replicate(20, perts_ids$create_uid("Participant")),
+      participant.stripped_student_id = 1:20
+    )
+    participant_ids <- participant_tbl$participant.uid[1:10]
+    hashed_logins <- recode_response_data$get_logins_for_participants(
+      participant_ids,
+      participant_tbl
+    )
+
+    expect_equal(length(hashed_logins), length(participant_ids))
+
+  })
+
+
+  it('returns a vector of the same length as the input vector when participant_ids are not found on the roster', {
+    # these values should be blank in the output
+    participant_tbl <- data.frame(
+      participant.uid = replicate(20, perts_ids$create_uid("Participant")),
+      participant.stripped_student_id = 1:20
+    )
+    new_participant <- perts_ids$create_uid("Participant")
+    participant_ids <- c(participant_tbl$participant.uid, new_participant)
+    hashed_logins <- recode_response_data$get_logins_for_participants(
+      participant_ids,
+      participant_tbl
+    )
+    expect_equal(length(hashed_logins), length(participant_ids))
+    expect_equal(hashed_logins[21], as.character(NA))
+  })
+
+  it('returns values that are hashes instead of the original values', {
+    participant_tbl <- data.frame(
+      participant.uid = replicate(20, perts_ids$create_uid("Participant")),
+      participant.stripped_student_id = 1:20
+    )
+    new_participant <- perts_ids$create_uid("Participant")
+    participant_ids <- c(participant_tbl$participant.uid, new_participant)
+    hashed_logins <- recode_response_data$get_logins_for_participants(
+      participant_ids,
+      participant_tbl
+    )
+    sample_hash <- hashed_logins[1]
+    # should be a character vector of length-64 elements
+    expect_equal(nchar(sample_hash), 64)
 
   })
 
