@@ -179,6 +179,8 @@ recode_response_data <- function(
       response_data_recoded$in_target_group
     )
   }
+  
+  # @to-do here retrieve login_hash values
 
   # now recode to categoricals based on the subset config
   for(type in subset_types){
@@ -188,6 +190,10 @@ recode_response_data <- function(
       originals = subset_rows$disadv,
       replacements = subset_rows$subset_value
     )
+    # @sg to-do there needs to be a step here to resolve discrepancies across individual humans' data entry
+    # first_pass <- do what's done above
+    # second_pass <- resolve_conflicting_demographics(first_pass, hashed_logins)
+    # response_data_recoded[[type %+% "_cat]] <- second_pass
   }
 
   ##### compute composites (where appropriate)
@@ -322,4 +328,23 @@ check_recoded_subsets <- function(
         length(affected_teams) %+% " team[s])"
     )
   }
+}
+
+
+get_logins_for_participants <- function(participant_ids, participant_tbl){
+  # @to-do this function takes a vector of participant_ids and a
+  # participant_tbl, and links through the participant_tbl to a login_id
+  # corresponding to each participant_id. Hashed login_id values are returned
+  # because Sarah is too paranoid to use real ids for any calculation ever
+  
+  # takes a vector of length(participant_ids) and uses the participants_tbl to
+  # look up their login_id value. Returns a vector of distinct, hashed
+  # login_ids.
+}
+
+
+resolve_conflicting_demographics <- function(login_hashes, demog_vector){
+  # @to-do this function takes as its input a vector of login hashes and a
+  # vector of demographic data, and returns an updated vector of demographic
+  # data with conflicting entries marked as "NA"
 }

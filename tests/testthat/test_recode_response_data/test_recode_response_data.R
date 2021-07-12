@@ -343,3 +343,24 @@ describe('compute_scale_composites', {
   })
 
 })
+
+
+describe('get_logins_for_participants', {
+  
+  it('returns a vector of the same length as the input vector', {
+    
+  })
+  
+  it('stops if the input vector includes invalid participant_ids', {
+    
+  })
+  
+  it('stops if participant_ids are not found on the roster', {
+    
+  })
+  
+  it('returns values that are hashes', {
+    
+  })
+  
+})
