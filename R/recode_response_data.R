@@ -194,6 +194,8 @@ recode_response_data <- function(
     )
     # @sg to-do there needs to be a step here to resolve discrepancies across individual humans' data entry
     # first_pass <- do what's done above
+    # BUT DON'T DO second_pass for target groups, because those can vary
+    # meaningfully by classroom
     # second_pass <- resolve_conflicting_demographics(first_pass, hashed_logins)
     # response_data_recoded[[type %+% "_cat]] <- second_pass
   }
