@@ -61,3 +61,58 @@ describe('str_percent', {
     expect_identical(d$pct_ab, c('50%', '67%', '75%'))
   })
 })
+
+describe("is_interger",{
+  it('returns error for characters', {
+    char_str <- "a"
+    expect_error(util$is_integer(char_str))
+
+  })
+  it('returns true for intergers', {
+    zero <- 0
+    hun <- 100
+    neg <- -30
+
+    expect_true(util$is_integer(zero))
+    expect_true(util$is_integer(hun))
+    expect_true(util$is_integer(neg))
+
+  })
+
+  it('returns false for numeric non-intergers', {
+
+    ni <- 0.1
+    frac <- 3/5
+    neg_ni <- -30.1
+
+    expect_false(util$is_integer(ni))
+    expect_false(util$is_integer(frac))
+    expect_false(util$is_integer(neg_ni))
+
+  })
+
+})
+
+describe("is_valid_percent",{
+
+  it('returns true for properly formated data', {
+
+    cor_pct <- c("99%","-3%", "—", "0%")
+    expect_true(util$is_valid_percent(cor_pct))
+
+  })
+
+  it('returns false for pcts beyond 99% to - 99%', {
+
+    oor_pct <- c("199%","-300%", "—", "0%")
+    expect_false(util$is_valid_percent(oor_pct))
+
+  })
+
+  it('returns error for numeric strings', {
+    num_pct <- c(99,-30, "—", 0)
+    expect_error(util$is_integer(num_pct))
+
+  })
+
+})
