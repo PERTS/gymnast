@@ -60,4 +60,8 @@ describe('str_percent', {
 
     expect_identical(d$pct_ab, c('50%', '67%', '75%'))
   })
+
+  it('does not return a pct sign when asked not to',{
+    expect_equal(util$str_percent(1, 2, use_percent_sign = FALSE), '50')
+  })
 })
