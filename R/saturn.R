@@ -175,14 +175,7 @@ create_service <- function (
   }
 
   return(list(
-    get_responses = ifelse(
-      is.null(credentials),
-      function (...) {
-        print("saturn service has no credentials, returning empty data frame.")
-        return(data.frame())
-      },
-      get_responses
-    ),
+    get_responses = get_responses,
     get_raw_responses = get_raw_responses,
     fake_responses = fake_responses,
     query = query
