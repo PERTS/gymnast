@@ -70,11 +70,16 @@ describe('str_percent', {
 describe('datetime_to_iso_string', {
   it('returns current time by default', {
     datetime_str <- util$datetime_to_iso_string()
-    expect_true(is.character(datetime_str))
     expect_true(grepl(
       '^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$',
       datetime_str
     ))
+
+    # There will be some tiny difference between the result and the comparison
+    # time so just test that it's within a tolerance.
+    datetime <- strptime(datetime_str, "%Y-%m-%dT%H:%M:%SZ", tz = "GMT")
+    seconds_difference <- difftime(Sys.time(), datetime, units = "secs")
+    expect_true(seconds_difference < 1)
   })
 
   it('returns given datetime, formatted', {
