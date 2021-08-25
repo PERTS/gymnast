@@ -7,10 +7,11 @@ context('util.R')
 # * Open a terminal window
 # * Change to the gymnast directory
 # * Run this command:
-#   Rscript -e "testthat::auto_test('R', 'tests/testthat')"
+#   Rscript -e "testthat::test_file('tests/testthat/test_util.R')"
 #
-# The test runner will watch your code files and re-run your tests when you
-# change something. Get all those yummy green checks!
+# This will run all the tests in this file once. Run the command again after
+# changes. Sadly, testthat::auto_test() was broken some time at or before
+# version 3.0.4.
 
 if (grepl('tests/testthat$', getwd())) {
   setwd('../..')  # root dir of gymnast repo
