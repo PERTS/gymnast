@@ -564,3 +564,9 @@ find_day_of_week <- function (increment, day_abbr) {
 
 next_monday <- function() find_day_of_week(+1, "Mon")
 last_monday <- function() find_day_of_week(-1, "Mon")
+
+datetime_to_iso_string <- function (datetime = Sys.time()) {
+  # Takes optional POSIXct (e.g. Sys.time()), defaults to current time.
+  # Returns length-1 character, ISO 8601 format, in UTC.
+  format(datetime, format="%Y-%m-%dT%H:%M:%SZ", tz="GMT")
+}
