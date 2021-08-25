@@ -65,3 +65,29 @@ describe('str_percent', {
     expect_equal(util$str_percent(1, 2, use_percent_sign = FALSE), '50')
   })
 })
+
+describe('datetime_to_iso_string', {
+  it('returns current time by default', {
+    datetime_str <- util$datetime_to_iso_string()
+    expect_true(is.character(datetime_str))
+    expect_true(grepl(
+      '^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$',
+      datetime_str
+    ))
+  })
+
+  it('returns given datetime, formatted', {
+    # Starting with a timezone-agnostic value here to prove that the function
+    # does actually use UTC.
+
+    datetime = as.POSIXct(1127056501, origin = "1970-01-01")
+
+    # On my system this prints:
+    # > [1] "2005-09-18 08:15:01 PDT"
+
+    expect_identical(
+      util$datetime_to_iso_string(datetime),
+      '2005-09-18T15:15:01Z'
+    )
+  })
+})
