@@ -65,7 +65,8 @@ describe("str_percent", {
 describe("is_interger", {
   it("returns error for characters", {
     char_str <- "a"
-    expect_error(util$is_integer(char_str))
+    expect_false(util$is_integer(char_str))
+
   })
   it("returns true for intergers", {
     zero <- 0
@@ -90,17 +91,23 @@ describe("is_interger", {
 
 describe("is_valid_percent", {
   it("returns true for properly formated data", {
-    cor_pct <- c("99%", "-3%", "—", "0%")
-    expect_true(util$is_valid_percent(cor_pct))
+    expect_true(util$is_valid_percent("99%"))
+    expect_true(util$is_valid_percent("-3%"))
+    expect_true(util$is_valid_percent("—"))
+    expect_true(util$is_valid_percent("0%"))
   })
 
-  it("returns false for pcts beyond 99% to - 99%", {
-    oor_pct <- c("199%", "-300%", "—", "0%")
-    expect_false(util$is_valid_percent(oor_pct))
+  it("handels values beyond beyond 99% to - 99%, (up to 9999%)", {
+
+    expect_true(util$is_valid_percent("199%"))
+    expect_true(util$is_valid_percent("9999%"))
+    expect_true(util$is_valid_percent("-300%"))
+
   })
 
   it("returns error for numeric strings", {
-    num_pct <- c(99, -30, "—", 0)
-    expect_error(util$is_integer(num_pct))
+    expect_false(util$is_valid_percent(99))
+    expect_false(util$is_valid_percent(-30))
+    expect_false(util$is_valid_percent(0))
   })
 })

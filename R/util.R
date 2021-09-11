@@ -308,8 +308,12 @@ as_numeric_if_number <- function(x) {
 }
 
 is_integer <- function(num) {
-  if (is.numeric(num) & num %% 1 == 0) {
-    return(TRUE)
+  if (is.numeric(num)) {
+    if (num %% 1 == 0) {
+      return(TRUE)
+    } else {
+        return(FALSE)
+      }
   } else {
     return(FALSE)
   }
@@ -320,14 +324,15 @@ is_valid_percent <- function(str_pct_vec) {
   # ^              # beginning of string
   # (              # either/or group
   #     -?         # optional minus sign
-  #     1?         # optional hundreds digit
+  #     [1-9]?     # optional thousands digit
+  #     [1-9]?     # optional hundreds digit
   #     [0-9]{1,2} # some number 1 through 99
   #     %          # literal percent sign
   #   |            # OR
   #     —          # em dash
   # )              # close group
   # $              # end of string
-  cor_format <- grepl("^(-?1?[0-9]{1,2}%|—)$", str_pct_vec)
+  cor_format <- grepl("^(-?[1-9]?[1-9]?[0-9]{1,2}%|—)$", str_pct_vec)
 
   if (all(cor_format == TRUE)) {
     return(TRUE)
