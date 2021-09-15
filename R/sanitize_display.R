@@ -13,8 +13,8 @@ expand_subsets_agm_df <- function(
   desired_subset_config,
   time_ordinal_column,
   combined_index = c("reporting_unit_id", "metric", "subset_value"),
-  unpropagated_fields = c("pct_good", "se", "n"),
-  cols_varying_by_subset_type = c("grand_mean")
+  unpropagated_fields = c("pct_good", "se", "n", "disadv"),
+  cols_varying_by_subset_type = c("p", "grand_mean")
 ){
   # this function expands the agm objects to include ALL subset_values specified
   # by the desired_subset_config.
@@ -56,15 +56,6 @@ expand_subsets_agm_df <- function(
       "desired_subset_config. This allows merging on that key. " %+%
       "Please fix the config file or the agm values before proceeding. "
     )
-  }
-  # make sure the unpropagated_fields are valid
-  unpropagated_fields <- c(unpropagated_fields, "subset_value")
-  missing_unpropagated <- unpropagated_fields[
-    !unpropagated_fields %in% names(agm_df_ungrouped)
-  ]
-  if(length(missing_unpropagated) > 0){
-    stop("In expand_subsets_agm_df, some unpropagated fields were missing: " %+%
-           paste0(missing_unpropagated, collapse = ", "))
   }
 
   # identify which subsets need to be propagated. Which ones are missing from
