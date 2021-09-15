@@ -266,6 +266,90 @@ describe('expand_subsets_agm_df',{
       )
     )
   })
+
+  it('propagates accurately when an entire subset_type is missing', {
+
+    agm <- data.frame(
+      reporting_unit_id = "Organization_1",
+      reporting_unit_type = "child_id",
+      subset_type = c("race", "race", "All Students"),
+      subset_value = c("Race Struct. Disadv.", "Race Struct. Adv. ", "All Students"),
+      pct_good = c(.5, .5, .5),
+      metric = "item1",
+      cycle_ordinal = 1,
+      se = .01,
+      n = c(10, 10, 20)
+    )
+
+    subset_config <- data.frame(
+      subset_type = c("race", "race", "gender", "gender"),
+      subset_value = c("Race Struct. Disadv.", "Race Struct. Adv. ",
+                       "Girl/Woman", "Boy/Man")
+    )
+
+    # gender is NOT one of the subset_types in agm
+    expect_false("gender" %in% agm$subset_type)
+
+    # but gender IS one of the subset_types in the subset_config
+    expect_true("gender" %in% subset_config$subset_type)
+
+    agm_expanded <- sanitize_display$expand_subsets_agm_df(
+      agm_df_ungrouped = agm,
+      desired_subset_config = subset_config,
+      time_ordinal_column = "cycle_ordinal"
+    )
+
+    # reporting_unit_type is one of the fields that's supposed to be propagated.
+    # It's a stand-in for similar fields that are also supposed to be propagated.
+    expected_reporting_unit_type <- rep("child_id", nrow(agm_expanded))
+    actual_reporting_unit_type <- agm_expanded$reporting_unit_type
+
+    expect_equal(expected_reporting_unit_type, actual_reporting_unit_type)
+
+  })
+
+  it('propagates accurately when the "All Students" row is missing', {
+    agm <- data.frame(
+      reporting_unit_id = "Organization_1",
+      reporting_unit_type = "child_id",
+      subset_type = c("race", "race"),
+      subset_value = c("Race Struct. Disadv.", "Race Struct. Adv. "),
+      pct_good = c(.5, .5),
+      metric = "item1",
+      cycle_ordinal = 1,
+      se = .01,
+      n = c(10, 10)
+    )
+
+    subset_config <- data.frame(
+      subset_type = c("race", "race", "gender", "gender"),
+      subset_value = c("Race Struct. Disadv.", "Race Struct. Adv. ",
+                       "Girl/Woman", "Boy/Man")
+    )
+
+    # All Students is NOT one of the subset_types in agm
+    expect_false("All Students" %in% agm$subset_type)
+
+    agm_expanded <- sanitize_display$expand_subsets_agm_df(
+      agm_df_ungrouped = agm,
+      desired_subset_config = subset_config,
+      time_ordinal_column = "cycle_ordinal"
+    )
+
+    # "All Students" IS in agm_expanded$subset_type and subset_value
+    expect_true("All Students" %in% agm_expanded$subset_type)
+    expect_true("All Students" %in% agm_expanded$subset_value)
+
+    # reporting_unit_type is one of the fields that's supposed to be propagated.
+    # It's a stand-in for similar fields that are also supposed to be propagated.
+    expected_reporting_unit_type <- rep("child_id", nrow(agm_expanded))
+    actual_reporting_unit_type <- agm_expanded$reporting_unit_type
+
+    expect_equal(expected_reporting_unit_type, actual_reporting_unit_type)
+
+
+  })
+
 })
 
 
