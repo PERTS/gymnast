@@ -121,35 +121,38 @@ expand_subsets_agm_df <- function(
                                 subset_type))
 
 
-  # add the propagated values to the new_subsets_df
-  propagated_values_df_base <- agm_df_ungrouped %>%
-    dplyr::select(-dplyr::one_of(unpropagated_fields)) %>%
+  # some values get propagated by subset_type in addition to the combined index.
+  # For example, grand_mean may contain values like "Masked" which should only
+  # be propagated within subset_type (Girl/Woman AND Boy/Man might get masked,
+  # but we shouldn't carry the "masked" value over to Race Struct. Adv. or Race
+  # Struct. Disadv., because those might not be masked!)
+  cols_to_propagate <- setdiff(names(agm_df_ungrouped),
+                               c(unpropagated_fields, comb_index_time))
+  index_sans_sv <- setdiff(comb_index_time, "subset_value")
+  propagated_by_subset_cols <- intersect(cols_to_propagate, cols_varying_by_subset_type)
+  propagated_by_index_cols <- setdiff(cols_to_propagate,
+                                      c(propagated_by_subset_cols, "subset_type"))
+
+  propagated_by_index_df <- agm_df_ungrouped %>%
+    select(all_of(c(index_sans_sv, propagated_by_index_cols))) %>%
     unique()
 
-  # some columns vary by subset_type and some don't. For totally missing
-  # subset_types, we'll only propagate the columns that don't vary by
-  # subset_type
-
-  # add any missing subset_types to the propagated_values_df. If subset_types
-  # are totally missing from the data. The subset_type "All Students" is always
-  # missing.
-  missing_subset_types <- c(setdiff(desired_subset_config$subset_type,
-                                  propagated_values_df_base$subset_type),
-                            "All Students")
-  propagated_values_across_subset_type <- propagated_values_df_base %>%
-    dplyr::select(-any_of(c(cols_varying_by_subset_type, "subset_type"))) %>%
-    tidyr::expand_grid(., subset_type = missing_subset_types)
-
-  propagated_values_df <- bind_rows(propagated_values_df_base,
-                                    propagated_values_across_subset_type)
-
+  propagated_by_subset_df <- agm_df_ungrouped %>%
+    select(all_of(c(index_sans_sv, propagated_by_subset_cols, "subset_type"))) %>%
+    unique()
 
   new_subsets_propagated <- new_subsets_grid %>%
     dplyr::left_join(
       .,
-      propagated_values_df,
-      by = c(expand_vars, "subset_type"),
-      suffix = c("", "_propagated")
+      propagated_by_index_df,
+      by = index_sans_sv,
+      suffix = c("", "_propagated_index")
+    ) %>%
+    left_join(
+      .,
+      propagated_by_subset_df,
+      by = c(index_sans_sv, "subset_type"),
+      suffix = c("", "_propagated_suffix")
     ) %>%
     dplyr::mutate(n = 0)
 
