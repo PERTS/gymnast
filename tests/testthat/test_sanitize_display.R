@@ -124,7 +124,7 @@ describe('expand_subsets_agm_df',{
   agm <- sanitize_display$simulate_agm(subset_config_no_male)
   agm_expanded <- agm %>%
     sanitize_display$expand_subsets_agm_df(
-      subset_config_default,
+      desired_subset_config = subset_config_default,
       time_ordinal_column = "cycle_name"
     )
   default_combined_index <- c("reporting_unit_id", "cycle_name", "subset_value", "metric")
