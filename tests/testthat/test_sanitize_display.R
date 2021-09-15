@@ -350,6 +350,55 @@ describe('expand_subsets_agm_df',{
 
   })
 
+  it('propagates accurately when a subset_type is missing just from a reporting unit', {
+
+    agm <- data.frame(
+      reporting_unit_id = c("Organization_1", "Organization_1",
+                            "Organization_2", "Organization_2",
+                            "Organization_2", "Organization_2"),
+      reporting_unit_type = "child_id",
+      subset_type = c("race", "race", "race", "race", "gender", "gender"),
+      subset_value = c("Race Struct. Disadv.", "Race Struct. Adv. ",
+                       "Race Struct. Disadv.", "Race Struct. Adv. ",
+                       "Boy/Man", "Girl/Woman"),
+      pct_good = .5,
+      metric = "item1",
+      cycle_ordinal = 1,
+      se = .01,
+      n = 10
+    )
+
+    org1_agm <- agm %>% filter(reporting_unit_id %in% "Organization_1")
+    org2_agm <- agm %>% filter(reporting_unit_id %in% "Organization_2")
+
+    # gender is in org 2 but not org 1
+    expect_true("gender" %in% org2_agm$subset_type)
+    expect_false("gender" %in% org1_agm$subset_type)
+
+    subset_config <- data.frame(
+      subset_type = c("race", "race", "gender", "gender"),
+      subset_value = c("Race Struct. Disadv.", "Race Struct. Adv. ",
+                       "Girl/Woman", "Boy/Man")
+    )
+
+    # and gender IS in the subset config
+    expect_true("gender" %in% subset_config$subset_type)
+
+    agm_expanded <- sanitize_display$expand_subsets_agm_df(
+      agm_df_ungrouped = agm,
+      desired_subset_config = subset_config,
+      time_ordinal_column = "cycle_ordinal"
+    )
+
+    # reporting_unit_type is one of the fields that's supposed to be propagated.
+    # It's a stand-in for similar fields that are also supposed to be propagated.
+    expected_reporting_unit_type <- rep("child_id", nrow(agm_expanded))
+    actual_reporting_unit_type <- agm_expanded$reporting_unit_type
+
+    expect_equal(expected_reporting_unit_type, actual_reporting_unit_type)
+
+  })
+
 })
 
 
