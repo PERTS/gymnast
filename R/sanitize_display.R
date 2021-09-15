@@ -4,7 +4,7 @@
 logging <- import_module("logging")
 util <- import_module("util")
 
-modules::import('dplyr', `%>%`)
+modules::import('dplyr')
 
 `%+%` <- paste0
 
@@ -13,7 +13,8 @@ expand_subsets_agm_df <- function(
   desired_subset_config,
   time_ordinal_column,
   combined_index = c("reporting_unit_id", "metric", "subset_value"),
-  unpropagated_fields = c("pct_good", "se", "n")
+  unpropagated_fields = c("pct_good", "se", "n"),
+  cols_varying_by_subset_type = c("grand_mean")
 ){
   # this function expands the agm objects to include ALL subset_values specified
   # by the desired_subset_config.
@@ -21,6 +22,10 @@ expand_subsets_agm_df <- function(
   # should be added
   # Subset_values added by expansion will have NA
   # values in the pct_good and se fields, "0" values in the n field and contain
+  # cols_varying_by_subset_type is a string vector identifying any columns that
+  # MUST be propagated within subset_type. An example is grand_mean, which is
+  # "Masked" for some subset_types but not others. Don't want to propagate
+  # "Masked" from gender to race subset_values!
 
   # first make sure the combined_index is valid
   combined_index <- c(combined_index, time_ordinal_column)
@@ -108,12 +113,45 @@ expand_subsets_agm_df <- function(
     desired_subset_config[c("subset_type", "subset_value")],
     by = "subset_value"
   ) %>%
-  dplyr::select(-present)
+    dplyr::select(-present) %>%
+    ungroup() %>%
+    # Back-fill the subset_type field to match what's in the subset_value field
+    # when subset_value is "All Students." This is pretty hacky, but necessary
+    # because "All Students" does not appear in the subset_config, and thus
+    # there's nowhere else to take this value from. We also know the subset_type
+    # for "All Student" will always be "All Students." When we change this
+    # string for Catalyze, the principle will be the same — whatever string we
+    # replace "All Students" with (e.g., "All Respondents") will still not live
+    # in the subset_config and thus will still need to be back-filled here. So
+    # at that point we'll replace the hard-coded "All Students" string with a
+    # variable that can take any value, but the back-filling will stay the same.
+    mutate(subset_type = ifelse(subset_value %in% "All Students",
+                                subset_value,
+                                subset_type))
+
 
   # add the propagated values to the new_subsets_df
-  propagated_values_df <- agm_df_ungrouped %>%
+  propagated_values_df_base <- agm_df_ungrouped %>%
     dplyr::select(-dplyr::one_of(unpropagated_fields)) %>%
     unique()
+
+  # some columns vary by subset_type and some don't. For totally missing
+  # subset_types, we'll only propagate the columns that don't vary by
+  # subset_type
+
+  # add any missing subset_types to the propagated_values_df. If subset_types
+  # are totally missing from the data. The subset_type "All Students" is always
+  # missing.
+  missing_subset_types <- c(setdiff(desired_subset_config$subset_type,
+                                  propagated_values_df_base$subset_type),
+                            "All Students")
+  propagated_values_across_subset_type <- propagated_values_df_base %>%
+    dplyr::select(-any_of(c(cols_varying_by_subset_type, "subset_type"))) %>%
+    tidyr::expand_grid(., subset_type = missing_subset_types)
+
+  propagated_values_df <- bind_rows(propagated_values_df_base,
+                                    propagated_values_across_subset_type)
+
 
   new_subsets_propagated <- new_subsets_grid %>%
     dplyr::left_join(
@@ -126,7 +164,6 @@ expand_subsets_agm_df <- function(
 
   agm_expanded <- util$rbind_union(list(
     agm_df_ungrouped, new_subsets_propagated
-
   ))
   return(agm_expanded)
 
