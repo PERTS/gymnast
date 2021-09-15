@@ -28,8 +28,8 @@ expand_subsets_agm_df <- function(
   # "Masked" from gender to race subset_values!
 
   # first make sure the combined_index is valid
-  combined_index <- c(combined_index, time_ordinal_column)
-  missing_index <- combined_index[!combined_index %in% names(agm_df_ungrouped)]
+  comb_index_time <- c(combined_index, time_ordinal_column)
+  missing_index <- comb_index_time[!comb_index_time %in% names(agm_df_ungrouped)]
   if(length(missing_index) > 0){
     stop(
       "In expand_subsets_agm_df, some indexes were missing: " %+%
@@ -37,7 +37,7 @@ expand_subsets_agm_df <- function(
     )
   }
 
-  if(!any(combined_index %in% "subset_value")){
+  if(!any(comb_index_time %in% "subset_value")){
     stop("In expand_subsets_agm_df, subset_value must appear in the combined index.")
   }
 
@@ -61,20 +61,20 @@ expand_subsets_agm_df <- function(
   # identify which subsets need to be propagated. Which ones are missing from
   # some combination of the index variables?
 
-  expand_vars <- combined_index[!combined_index %in% "subset_value"]
+  expand_vars <- comb_index_time[!comb_index_time %in% "subset_value"]
   complete_subsets <- tidyr::expand_grid(
     agm_df_ungrouped[expand_vars],
     subset_value = c(desired_subset_config$subset_value, "All Students")
     ) %>%
     unique()
 
-  observed_subsets <- agm_df_ungrouped[combined_index] %>%
+  observed_subsets <- agm_df_ungrouped[comb_index_time] %>%
     dplyr::mutate(present = TRUE)
 
   merged_subsets <- dplyr::left_join(
     complete_subsets,
     observed_subsets,
-    by = combined_index,
+    by = comb_index_time,
     suffix = c("_complete", "_observed")
   )
   if(!nrow(merged_subsets) == nrow(complete_subsets)){
