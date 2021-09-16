@@ -399,6 +399,44 @@ describe('expand_subsets_agm_df',{
 
   })
 
+  it('throws an error when propagation by combined_index will lead to a duplicated index', {
+
+    # if there's a column set to be propagated that varies within the index,
+    # it will screw everything up and cause multiple duplicates of the index.
+    # Avoid this by throwing an error.
+
+    agm <- data.frame(
+      reporting_unit_id = "Organization_1",
+      subset_type = c("gender", "gender", "race", "race"),
+      subset_value = c("Boy/Man", "Girl/Woman",
+                       "Race Struct. Adv. ", "Race Struct. Disadv."),
+      pct_good = .5,
+      metric = "item1",
+      cycle_ordinal = 1,
+      extra_col = c(1, 1, 2, 2)
+    )
+
+    # the extra_col varies within the combined_index
+    ec_summary <- agm %>%
+      group_by(reporting_unit_id, metric, cycle_ordinal) %>%
+      summarise(n_distinct_extra_col = n_distinct(extra_col)) %>%
+      ungroup()
+
+    # note the two distinct values
+    expect_equal(ec_summary$n_distinct_extra_col, 2)
+
+
+    subset_config <- data.frame(subset_type = c("gender", "gender", "race", "race"),
+                                subset_value = c("Girl/Woman", "Boy/Man",
+                                                 "Race Struct. Adv. ", "Race Struct. Disadv."))
+
+    expect_error(sanitize_display$expand_subsets_agm_df(agm_df_ungrouped = agm,
+                                                        desired_subset_config = subset_config,
+                                                        time_ordinal_column = "cycle_ordinal"),
+                 regexp = "The columns set to be propagated by the combined index are not " %+%
+                   "unique within the combined index.")
+
+  })
 })
 
 
