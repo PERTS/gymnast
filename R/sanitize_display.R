@@ -159,6 +159,25 @@ expand_subsets_agm_df <- function(
            "and combined_index and try again.")
   }
 
+  # propagated_by_subset_df should have the same unique rows as those defined by
+  # the index_sans_sv plus subset_type. Throw an error if not because that, too,
+  # will eff everything up
+
+  expected_subset_df_nrows <- agm_df_ungrouped %>%
+    select(all_of(c(index_sans_sv, "subset_type"))) %>%
+    unique() %>%
+    nrow()
+
+  if(expected_subset_df_nrows != nrow(propagated_by_subset_df)){
+    stop("The columns set to be propagated by the combined index are not " %+%
+           "unique within the combined index plus subset_type. Subgroup expansion could not be " %+%
+           "performed. Please check the inputs to cols_varying_by_subset_type " %+%
+           "and combined_index and try again.")
+  }
+
+  ########################
+
+
   new_subsets_propagated <- new_subsets_grid %>%
     dplyr::left_join(
       .,
