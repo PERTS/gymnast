@@ -13,7 +13,7 @@ expand_subsets_agm_df <- function(
   desired_subset_config,
   time_ordinal_column,
   combined_index = c("reporting_unit_id", "metric", "subset_value"),
-  unpropagated_fields = c("pct_good", "se", "n", "disadv"),
+  unpropagated_fields = c("pct_good", "se", "n", "disadv", "mean_value"),
   cols_varying_by_subset_type = c("p", "grand_mean")
 ){
   # this function expands the agm objects to include ALL subset_values specified
