@@ -4,7 +4,7 @@
 logging <- import_module("logging")
 util <- import_module("util")
 
-modules::import('dplyr', `%>%`)
+modules::import('dplyr')
 
 `%+%` <- paste0
 
@@ -13,7 +13,8 @@ expand_subsets_agm_df <- function(
   desired_subset_config,
   time_ordinal_column,
   combined_index = c("reporting_unit_id", "metric", "subset_value"),
-  unpropagated_fields = c("pct_good", "se", "n")
+  unpropagated_fields = c("pct_good", "se", "n", "disadv", "mean_value"),
+  cols_varying_by_subset_type = c("p", "grand_mean")
 ){
   # this function expands the agm objects to include ALL subset_values specified
   # by the desired_subset_config.
@@ -21,10 +22,14 @@ expand_subsets_agm_df <- function(
   # should be added
   # Subset_values added by expansion will have NA
   # values in the pct_good and se fields, "0" values in the n field and contain
+  # cols_varying_by_subset_type is a string vector identifying any columns that
+  # MUST be propagated within subset_type. An example is grand_mean, which is
+  # "Masked" for some subset_types but not others. Don't want to propagate
+  # "Masked" from gender to race subset_values!
 
   # first make sure the combined_index is valid
-  combined_index <- c(combined_index, time_ordinal_column)
-  missing_index <- combined_index[!combined_index %in% names(agm_df_ungrouped)]
+  comb_index_time <- c(combined_index, time_ordinal_column)
+  missing_index <- comb_index_time[!comb_index_time %in% names(agm_df_ungrouped)]
   if(length(missing_index) > 0){
     stop(
       "In expand_subsets_agm_df, some indexes were missing: " %+%
@@ -32,7 +37,7 @@ expand_subsets_agm_df <- function(
     )
   }
 
-  if(!any(combined_index %in% "subset_value")){
+  if(!any(comb_index_time %in% "subset_value")){
     stop("In expand_subsets_agm_df, subset_value must appear in the combined index.")
   }
 
@@ -52,33 +57,24 @@ expand_subsets_agm_df <- function(
       "Please fix the config file or the agm values before proceeding. "
     )
   }
-  # make sure the unpropagated_fields are valid
-  unpropagated_fields <- c(unpropagated_fields, "subset_value")
-  missing_unpropagated <- unpropagated_fields[
-    !unpropagated_fields %in% names(agm_df_ungrouped)
-  ]
-  if(length(missing_unpropagated) > 0){
-    stop("In expand_subsets_agm_df, some unpropagated fields were missing: " %+%
-           paste0(missing_unpropagated, collapse = ", "))
-  }
 
   # identify which subsets need to be propagated. Which ones are missing from
   # some combination of the index variables?
 
-  expand_vars <- combined_index[!combined_index %in% "subset_value"]
+  expand_vars <- comb_index_time[!comb_index_time %in% "subset_value"]
   complete_subsets <- tidyr::expand_grid(
     agm_df_ungrouped[expand_vars],
     subset_value = c(desired_subset_config$subset_value, "All Students")
     ) %>%
     unique()
 
-  observed_subsets <- agm_df_ungrouped[combined_index] %>%
+  observed_subsets <- agm_df_ungrouped[comb_index_time] %>%
     dplyr::mutate(present = TRUE)
 
   merged_subsets <- dplyr::left_join(
     complete_subsets,
     observed_subsets,
-    by = combined_index,
+    by = comb_index_time,
     suffix = c("_complete", "_observed")
   )
   if(!nrow(merged_subsets) == nrow(complete_subsets)){
@@ -108,25 +104,97 @@ expand_subsets_agm_df <- function(
     desired_subset_config[c("subset_type", "subset_value")],
     by = "subset_value"
   ) %>%
-  dplyr::select(-present)
+    dplyr::select(-present) %>%
+    ungroup() %>%
+    # Back-fill the subset_type field to match what's in the subset_value field
+    # when subset_value is "All Students." This is pretty hacky, but necessary
+    # because "All Students" does not appear in the subset_config, and thus
+    # there's nowhere else to take this value from. We also know the subset_type
+    # for "All Student" will always be "All Students." When we change this
+    # string for Catalyze, the principle will be the same — whatever string we
+    # replace "All Students" with (e.g., "All Respondents") will still not live
+    # in the subset_config and thus will still need to be back-filled here. So
+    # at that point we'll replace the hard-coded "All Students" string with a
+    # variable that can take any value, but the back-filling will stay the same.
+    mutate(subset_type = ifelse(subset_value %in% "All Students",
+                                subset_value,
+                                subset_type))
 
-  # add the propagated values to the new_subsets_df
-  propagated_values_df <- agm_df_ungrouped %>%
-    dplyr::select(-dplyr::one_of(unpropagated_fields)) %>%
+
+  # some values get propagated by subset_type in addition to the combined index.
+  # For example, grand_mean may contain values like "Masked" which should only
+  # be propagated within subset_type (Girl/Woman AND Boy/Man might get masked,
+  # but we shouldn't carry the "masked" value over to Race Struct. Adv. or Race
+  # Struct. Disadv., because those might not be masked!)
+  cols_to_propagate <- setdiff(names(agm_df_ungrouped),
+                               c(unpropagated_fields, comb_index_time))
+  index_sans_sv <- setdiff(comb_index_time, "subset_value")
+  propagated_by_subset_cols <- intersect(cols_to_propagate, cols_varying_by_subset_type)
+  propagated_by_index_cols <- setdiff(cols_to_propagate,
+                                      c(propagated_by_subset_cols, "subset_type"))
+
+  propagated_by_index_df <- agm_df_ungrouped %>%
+    select(all_of(c(index_sans_sv, propagated_by_index_cols))) %>%
     unique()
+
+  propagated_by_subset_df <- agm_df_ungrouped %>%
+    select(all_of(c(index_sans_sv, propagated_by_subset_cols, "subset_type"))) %>%
+    unique()
+
+  ########################
+  # make sure propagation will not result in a duplicated index
+
+  # propagated_by_index_df should have the same number of unique rows as those
+  # defined by the index_sans_sv. Throw an error if not because that will eff
+  # everything up
+  expected_index_df_nrows <- agm_df_ungrouped %>%
+    select(all_of(index_sans_sv)) %>%
+    unique() %>%
+    nrow()
+
+  if(expected_index_df_nrows != nrow(propagated_by_index_df)){
+    stop("The columns set to be propagated by the combined index are not " %+%
+           "unique within the combined index. Subgroup expansion could not be " %+%
+           "performed. Please check the inputs to unpropagated_fields " %+%
+           "and combined_index and try again.")
+  }
+
+  # propagated_by_subset_df should have the same unique rows as those defined by
+  # the index_sans_sv plus subset_type. Throw an error if not because that, too,
+  # will eff everything up
+
+  expected_subset_df_nrows <- agm_df_ungrouped %>%
+    select(all_of(c(index_sans_sv, "subset_type"))) %>%
+    unique() %>%
+    nrow()
+
+  if(expected_subset_df_nrows != nrow(propagated_by_subset_df)){
+    stop("The columns set to be propagated by the combined index are not " %+%
+           "unique within the combined index plus subset_type. Subgroup expansion could not be " %+%
+           "performed. Please check the inputs to cols_varying_by_subset_type " %+%
+           "and combined_index and try again.")
+  }
+
+  ########################
+
 
   new_subsets_propagated <- new_subsets_grid %>%
     dplyr::left_join(
       .,
-      propagated_values_df,
-      by = c(expand_vars, "subset_type"),
-      suffix = c("", "_propagated")
+      propagated_by_index_df,
+      by = index_sans_sv,
+      suffix = c("", "_propagated_index")
+    ) %>%
+    left_join(
+      .,
+      propagated_by_subset_df,
+      by = c(index_sans_sv, "subset_type"),
+      suffix = c("", "_propagated_suffix")
     ) %>%
     dplyr::mutate(n = 0)
 
   agm_expanded <- util$rbind_union(list(
     agm_df_ungrouped, new_subsets_propagated
-
   ))
   return(agm_expanded)
 
