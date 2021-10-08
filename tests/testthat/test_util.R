@@ -97,3 +97,27 @@ describe('datetime_to_iso_string', {
     )
   })
 })
+
+describe('strip_token', {
+  it('converts to lower case', {
+    expect_identical(util$strip_token('ABC123'), 'abc123')
+  })
+
+  it('strips spaces in all locations', {
+    expect_identical(util$strip_token('  a  b  '), 'ab')
+  })
+
+  it('strips unusual whitespace: newlines, tabs', {
+    # \u00A0 is a non-breaking space
+    expect_identical(util$strip_token('\ta\rb\u00A0\n'), 'ab')
+  })
+
+  it('handles characters with no obvious case: chinese, emoji', {
+    # \u5c06 chinese ideograph related to Mahjong.
+    expect_identical(util$strip_token('a\u5c06🔥b'), 'ab')
+  })
+
+  it('handles a typical email address', {
+    expect_identical(util$strip_token('Student.001@school.edu'), 'student001schooledu')
+  })
+})
