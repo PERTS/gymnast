@@ -20,6 +20,7 @@ library(testthat)
 
 modules::import("dplyr", `%>%`)
 sanitize_display <- import_module("sanitize_display")
+`%+%` <- paste0
 
 # this is a mock-up of a subset_config object. In the pipeline,
 # the object is called `subsets`
@@ -368,8 +369,8 @@ describe('expand_subsets_agm_df',{
       n = 10
     )
 
-    org1_agm <- agm %>% filter(reporting_unit_id %in% "Organization_1")
-    org2_agm <- agm %>% filter(reporting_unit_id %in% "Organization_2")
+    org1_agm <- agm %>% dplyr::filter(reporting_unit_id %in% "Organization_1")
+    org2_agm <- agm %>% dplyr::filter(reporting_unit_id %in% "Organization_2")
 
     # gender is in org 2 but not org 1
     expect_true("gender" %in% org2_agm$subset_type)
@@ -418,9 +419,9 @@ describe('expand_subsets_agm_df',{
 
     # the extra_col varies within the combined_index
     ec_summary <- agm %>%
-      group_by(reporting_unit_id, metric, cycle_ordinal) %>%
-      summarise(n_distinct_extra_col = n_distinct(extra_col)) %>%
-      ungroup()
+      dplyr::group_by(reporting_unit_id, metric, cycle_ordinal) %>%
+      dplyr::summarise(n_distinct_extra_col = dplyr::n_distinct(extra_col)) %>%
+      dplyr::ungroup()
 
     # note the two distinct values
     expect_equal(ec_summary$n_distinct_extra_col, 2)
@@ -454,9 +455,9 @@ describe('expand_subsets_agm_df',{
 
     # the extra_col varies within the combined_index AND subset_type
     ec_summary <- agm %>%
-      group_by(reporting_unit_id, subset_type, metric, cycle_ordinal) %>%
-      summarise(n_distinct_extra_col = n_distinct(extra_col)) %>%
-      ungroup()
+      dplyr::group_by(reporting_unit_id, subset_type, metric, cycle_ordinal) %>%
+      dplyr::summarise(n_distinct_extra_col = dplyr::n_distinct(extra_col)) %>%
+      dplyr::ungroup()
 
     # note the two distinct values
     expect_equal(ec_summary$n_distinct_extra_col, 2)
