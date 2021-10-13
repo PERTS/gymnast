@@ -5,12 +5,13 @@ context("summarize_copilot.R")
 # To run these tests:
 #
 # * Open a terminal window
-# * Change to the rserve directory
+# * Change to the gymnast directory
 # * Run this command:
-#   Rscript -e "testthat::auto_test('R', 'tests/testthat')"
+#   Rscript -e "testthat::test_file('tests/testthat/test_summarize_copilot.R')"
 #
-# The test runner will watch your code files and re-run your tests when you
-# change something. Get all those yummy green checks!
+# This will run all the tests in this file once. Run the command again after
+# changes. Sadly, testthat::auto_test() was broken some time at or before
+# version 3.0.4.
 
 if (grepl("tests/testthat$", getwd())) {
   setwd("../..")  # root dir of gymnast repo
@@ -525,6 +526,33 @@ describe('map_responses_to_cycles', {
         triton.cycle,
         triton.classroom
       )
+    )
+  })
+})
+
+describe('strip_token', {
+  it('converts to lower case', {
+    expect_identical(summarize_copilot$strip_token('ABC123'), 'abc123')
+  })
+
+  it('strips spaces in all locations', {
+    expect_identical(summarize_copilot$strip_token('  a  b  '), 'ab')
+  })
+
+  it('strips unusual whitespace: newlines, tabs', {
+    # \u00A0 is a non-breaking space
+    expect_identical(summarize_copilot$strip_token('\ta\rb\u00A0\n'), 'ab')
+  })
+
+  it('handles characters with no obvious case: chinese, emoji', {
+    # \u5c06 chinese ideograph related to Mahjong.
+    expect_identical(summarize_copilot$strip_token('a\u5c06🔥b'), 'ab')
+  })
+
+  it('handles a typical email address', {
+    expect_identical(
+      summarize_copilot$strip_token('Student.001@school.edu'),
+      'student001schooledu'
     )
   })
 })

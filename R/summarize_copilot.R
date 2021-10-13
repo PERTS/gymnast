@@ -666,3 +666,12 @@ get_classrooms_from_network <- function (network_ids,
 
   return(unique(classroom_assc))
 }
+
+strip_token <- function (x) {
+    # Matches implementation on Copilot for converting the identifiers that
+    # participants enter in the portal to the `stripped_student_id` that is
+    # actually matched on.
+    # 1. Convert all characters to lower case.
+    # 2. Remove any characters that are not a letter or digit.
+    return(gsub("[^a-z0-9]", "", tolower(x)))
+}
