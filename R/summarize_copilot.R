@@ -675,3 +675,18 @@ strip_token <- function (x) {
     # 2. Remove any characters that are not a letter or digit.
     return(gsub("[^a-z0-9]", "", tolower(x)))
 }
+
+recently_modified_cycles <- function (triton.cycle, report_date, time_lag_threshold) {
+  activity_window_start_date <- as.character(
+    as.POSIXct(report_date) - as.difftime(time_lag_threshold, units="days"))
+
+  modified_schedule_team_ids <- triton.cycle %>%
+    # Consider cycles whose start date is before the report date (a Monday).
+    dplyr::filter(cycle.start_date < report_date) %>%
+    # Limit to cycles which have had their data changed recently
+    dplyr::filter(cycle.modified > activity_window_start_date) %>%
+    dplyr::pull(cycle.team_id) %>%
+    unique()
+
+  return(modified_schedule_team_ids)
+}
