@@ -36,7 +36,7 @@ stat_sum_df <- function(fun, geom="crossbar", ...) {
 dodge <- position_dodge( width=0.9 )
 
 # an error bar using bootstrapped confidence intervals, +/- 1 standard error
-se_error_bar <- stat_sum_df( fun="mean_cl_boot", fun.y="mean",
+se_error_bar <- stat_sum_df( fun="mean_cl_boot",
                                 geom="errorbar", width=.3,
                                 fun.args=list(conf.int=.68),
                                 position=dodge)
