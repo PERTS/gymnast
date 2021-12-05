@@ -332,7 +332,7 @@ is_valid_percent <- function(str_pct_vec) {
   #     —          # em dash
   # )              # close group
   # $              # end of string
-  cor_format <- grepl("^(-?[1-9]?[1-9]?[0-9]{1,2}%|—)$", str_pct_vec)
+  cor_format <- grepl("^(-?([1-9][0-9]*|0)%|—)$", str_pct_vec)
 
   if (all(cor_format == TRUE)) {
     return(TRUE)
