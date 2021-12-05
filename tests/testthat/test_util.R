@@ -63,7 +63,7 @@ describe("str_percent", {
 })
 
 describe("is_interger", {
-  it("returns error for characters", {
+  it("returns false for characters", {
     char_str <- "a"
     expect_false(util$is_integer(char_str))
 
@@ -102,6 +102,7 @@ describe("is_valid_percent", {
     expect_true(util$is_valid_percent("199%"))
     expect_true(util$is_valid_percent("9999%"))
     expect_true(util$is_valid_percent("-300%"))
+    expect_true(util$is_valid_percent("1000%"))
 
   })
 
@@ -109,5 +110,6 @@ describe("is_valid_percent", {
     expect_false(util$is_valid_percent(99))
     expect_false(util$is_valid_percent(-30))
     expect_false(util$is_valid_percent(0))
+    expect_false(util$is_valid_percent("01%"))
   })
 })
