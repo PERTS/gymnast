@@ -107,15 +107,10 @@ expand_subsets_agm_df <- function(
     dplyr::select(-present) %>%
     ungroup() %>%
     # Back-fill the subset_type field to match what's in the subset_value field
-    # when subset_value is "All." This is pretty hacky, but necessary
-    # because "All" does not appear in the subset_config, and thus
-    # there's nowhere else to take this value from. We also know the subset_type
-    # for "All Student" will always be "All." When we change this
-    # string for Catalyze, the principle will be the same — whatever string we
-    # replace "All" with (e.g., "All Respondents") will still not live
-    # in the subset_config and thus will still need to be back-filled here. So
-    # at that point we'll replace the hard-coded "All" string with a
-    # variable that can take any value, but the back-filling will stay the same.
+    # when subset_value is "All." This is pretty hacky, but necessary because
+    # "All" does not appear in the subset_config, and thus there's nowhere else
+    # to take this value from. We also know the subset_type for "All Students"
+    # or "All Respondents" will always be "All."
     mutate(subset_type = ifelse(subset_value %in% "All",
                                 subset_value,
                                 subset_type))
@@ -342,7 +337,7 @@ simulate_agm <- function(
   team_ids <- paste0("Team_", 1:n_teams)
   class_ids <- paste0("Classroom_", 1:n_classes)
 
-  # add all students to subset config
+  # add "all" to subset config
   subset_config_as <- util$rbind_union(list(
     subset_config,
     dplyr::tibble(subset_value = "All", subset_type = "All")
