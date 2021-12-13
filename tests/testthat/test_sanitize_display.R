@@ -20,6 +20,7 @@ library(testthat)
 
 modules::import("dplyr", `%>%`)
 sanitize_display <- import_module("sanitize_display")
+`%+%` <- paste0
 
 # this is a mock-up of a subset_config object. In the pipeline,
 # the object is called `subsets`
@@ -50,7 +51,7 @@ describe('simulate_agm', {
     agm <- sanitize_display$simulate_agm(subset_config_default)
     expect_equal(
       unique(subset_config_default$subset_value),
-      unique(agm$subset_value[!agm$subset_value %in% "All Students"])
+      unique(agm$subset_value[!agm$subset_value %in% "All"])
     )
   })
 
@@ -105,12 +106,12 @@ describe('simulate_agm', {
       )
     # check that there is one distinct p-value per subset_type:
     expect_equal(p_summary$distinct_values, rep(1, nrow(p_summary)))
-    # check that p-value is NA for "All Students"
-    all_students_p_is_na <- p_summary$all_NA[p_summary$subset_type %in% "All Students"]
+    # check that p-value is NA for "All"
+    all_students_p_is_na <- p_summary$all_NA[p_summary$subset_type %in% "All"]
     expect_true(all_students_p_is_na)
 
     # check that p-value is not NA for all other subset types
-    subset_types_p_isnt_na <- p_summary$all_NA[!p_summary$subset_type %in% "All Students"]
+    subset_types_p_isnt_na <- p_summary$all_NA[!p_summary$subset_type %in% "All"]
     expect_equal(subset_types_p_isnt_na, rep(FALSE, length(subset_types_p_isnt_na)))
   })
 
@@ -124,7 +125,7 @@ describe('expand_subsets_agm_df',{
   agm <- sanitize_display$simulate_agm(subset_config_no_male)
   agm_expanded <- agm %>%
     sanitize_display$expand_subsets_agm_df(
-      subset_config_default,
+      desired_subset_config = subset_config_default,
       time_ordinal_column = "cycle_name"
     )
   default_combined_index <- c("reporting_unit_id", "cycle_name", "subset_value", "metric")
@@ -266,6 +267,214 @@ describe('expand_subsets_agm_df',{
       )
     )
   })
+
+  it('propagates accurately when an entire subset_type is missing', {
+
+    agm <- data.frame(
+      reporting_unit_id = "Organization_1",
+      reporting_unit_type = "child_id",
+      subset_type = c("race", "race", "All"),
+      subset_value = c("Race Struct. Disadv.", "Race Struct. Adv. ", "All"),
+      pct_good = c(.5, .5, .5),
+      metric = "item1",
+      cycle_ordinal = 1,
+      se = .01,
+      n = c(10, 10, 20)
+    )
+
+    subset_config <- data.frame(
+      subset_type = c("race", "race", "gender", "gender"),
+      subset_value = c("Race Struct. Disadv.", "Race Struct. Adv. ",
+                       "Girl/Woman", "Boy/Man")
+    )
+
+    # gender is NOT one of the subset_types in agm
+    expect_false("gender" %in% agm$subset_type)
+
+    # but gender IS one of the subset_types in the subset_config
+    expect_true("gender" %in% subset_config$subset_type)
+
+    agm_expanded <- sanitize_display$expand_subsets_agm_df(
+      agm_df_ungrouped = agm,
+      desired_subset_config = subset_config,
+      time_ordinal_column = "cycle_ordinal"
+    )
+
+    # reporting_unit_type is one of the fields that's supposed to be propagated.
+    # It's a stand-in for similar fields that are also supposed to be propagated.
+    expected_reporting_unit_type <- rep("child_id", nrow(agm_expanded))
+    actual_reporting_unit_type <- agm_expanded$reporting_unit_type
+
+    expect_equal(expected_reporting_unit_type, actual_reporting_unit_type)
+
+  })
+
+  it('propagates accurately when the "All" row is missing', {
+    agm <- data.frame(
+      reporting_unit_id = "Organization_1",
+      reporting_unit_type = "child_id",
+      subset_type = c("race", "race"),
+      subset_value = c("Race Struct. Disadv.", "Race Struct. Adv. "),
+      pct_good = c(.5, .5),
+      metric = "item1",
+      cycle_ordinal = 1,
+      se = .01,
+      n = c(10, 10)
+    )
+
+    subset_config <- data.frame(
+      subset_type = c("race", "race", "gender", "gender"),
+      subset_value = c("Race Struct. Disadv.", "Race Struct. Adv. ",
+                       "Girl/Woman", "Boy/Man")
+    )
+
+    # All is NOT one of the subset_types in agm
+    expect_false("All" %in% agm$subset_type)
+
+    agm_expanded <- sanitize_display$expand_subsets_agm_df(
+      agm_df_ungrouped = agm,
+      desired_subset_config = subset_config,
+      time_ordinal_column = "cycle_ordinal"
+    )
+
+    # "All" IS in agm_expanded$subset_type and subset_value
+    expect_true("All" %in% agm_expanded$subset_type)
+    expect_true("All" %in% agm_expanded$subset_value)
+
+    # reporting_unit_type is one of the fields that's supposed to be propagated.
+    # It's a stand-in for similar fields that are also supposed to be propagated.
+    expected_reporting_unit_type <- rep("child_id", nrow(agm_expanded))
+    actual_reporting_unit_type <- agm_expanded$reporting_unit_type
+
+    expect_equal(expected_reporting_unit_type, actual_reporting_unit_type)
+
+
+  })
+
+  it('propagates accurately when a subset_type is missing just from a reporting unit', {
+
+    agm <- data.frame(
+      reporting_unit_id = c("Organization_1", "Organization_1",
+                            "Organization_2", "Organization_2",
+                            "Organization_2", "Organization_2"),
+      reporting_unit_type = "child_id",
+      subset_type = c("race", "race", "race", "race", "gender", "gender"),
+      subset_value = c("Race Struct. Disadv.", "Race Struct. Adv. ",
+                       "Race Struct. Disadv.", "Race Struct. Adv. ",
+                       "Boy/Man", "Girl/Woman"),
+      pct_good = .5,
+      metric = "item1",
+      cycle_ordinal = 1,
+      se = .01,
+      n = 10
+    )
+
+    org1_agm <- agm %>% dplyr::filter(reporting_unit_id %in% "Organization_1")
+    org2_agm <- agm %>% dplyr::filter(reporting_unit_id %in% "Organization_2")
+
+    # gender is in org 2 but not org 1
+    expect_true("gender" %in% org2_agm$subset_type)
+    expect_false("gender" %in% org1_agm$subset_type)
+
+    subset_config <- data.frame(
+      subset_type = c("race", "race", "gender", "gender"),
+      subset_value = c("Race Struct. Disadv.", "Race Struct. Adv. ",
+                       "Girl/Woman", "Boy/Man")
+    )
+
+    # and gender IS in the subset config
+    expect_true("gender" %in% subset_config$subset_type)
+
+    agm_expanded <- sanitize_display$expand_subsets_agm_df(
+      agm_df_ungrouped = agm,
+      desired_subset_config = subset_config,
+      time_ordinal_column = "cycle_ordinal"
+    )
+
+    # reporting_unit_type is one of the fields that's supposed to be propagated.
+    # It's a stand-in for similar fields that are also supposed to be propagated.
+    expected_reporting_unit_type <- rep("child_id", nrow(agm_expanded))
+    actual_reporting_unit_type <- agm_expanded$reporting_unit_type
+
+    expect_equal(expected_reporting_unit_type, actual_reporting_unit_type)
+
+  })
+
+  it('throws an error when propagation by combined_index will lead to a duplicated index', {
+
+    # if there's a column set to be propagated that varies within the index,
+    # it will screw everything up and cause multiple duplicates of the index.
+    # Avoid this by throwing an error.
+
+    agm <- data.frame(
+      reporting_unit_id = "Organization_1",
+      subset_type = c("gender", "gender", "race", "race"),
+      subset_value = c("Boy/Man", "Girl/Woman",
+                       "Race Struct. Adv. ", "Race Struct. Disadv."),
+      pct_good = .5,
+      metric = "item1",
+      cycle_ordinal = 1,
+      extra_col = c(1, 1, 2, 2)
+    )
+
+    # the extra_col varies within the combined_index
+    ec_summary <- agm %>%
+      dplyr::group_by(reporting_unit_id, metric, cycle_ordinal) %>%
+      dplyr::summarise(n_distinct_extra_col = dplyr::n_distinct(extra_col)) %>%
+      dplyr::ungroup()
+
+    # note the two distinct values
+    expect_equal(ec_summary$n_distinct_extra_col, 2)
+
+
+    subset_config <- data.frame(subset_type = c("gender", "gender", "race", "race"),
+                                subset_value = c("Girl/Woman", "Boy/Man",
+                                                 "Race Struct. Adv. ", "Race Struct. Disadv."))
+
+    expect_error(sanitize_display$expand_subsets_agm_df(agm_df_ungrouped = agm,
+                                                        desired_subset_config = subset_config,
+                                                        time_ordinal_column = "cycle_ordinal"),
+                 regexp = "The columns set to be propagated by the combined index are not " %+%
+                   "unique within the combined index.")
+
+  })
+
+  it('throws an error where propagation by combined index and subset_type will lead to a duplicated index', {
+    # This test is the same as the one above, but specifically varies the extra
+    # col WITHIN subset type, and sets the extra col to be propagated within subset_type only
+
+    agm <- data.frame(
+      reporting_unit_id = "Organization_1",
+      subset_type = c("gender", "gender"),
+      subset_value = c("Boy/Man", "Girl/Woman"),
+      pct_good = .5,
+      metric = "item1",
+      cycle_ordinal = 1,
+      extra_col = c(1, 2)
+    )
+
+    # the extra_col varies within the combined_index AND subset_type
+    ec_summary <- agm %>%
+      dplyr::group_by(reporting_unit_id, subset_type, metric, cycle_ordinal) %>%
+      dplyr::summarise(n_distinct_extra_col = dplyr::n_distinct(extra_col)) %>%
+      dplyr::ungroup()
+
+    # note the two distinct values
+    expect_equal(ec_summary$n_distinct_extra_col, 2)
+
+
+    subset_config <- data.frame(subset_type = c("gender", "gender", "race", "race"),
+                                subset_value = c("Girl/Woman", "Boy/Man",
+                                                 "Race Struct. Adv. ", "Race Struct. Disadv."))
+
+    expect_error(sanitize_display$expand_subsets_agm_df(agm_df_ungrouped = agm,
+                                                        desired_subset_config = subset_config,
+                                                        time_ordinal_column = "cycle_ordinal",
+                                                        cols_varying_by_subset_type = "extra_col"),
+                 regexp = "The columns set to be propagated by the combined index are not " %+%
+                   "unique within the combined index.")
+  })
+
 })
 
 

@@ -666,3 +666,27 @@ get_classrooms_from_network <- function (network_ids,
 
   return(unique(classroom_assc))
 }
+
+strip_token <- function (x) {
+    # Matches implementation on Copilot for converting the identifiers that
+    # participants enter in the portal to the `stripped_student_id` that is
+    # actually matched on.
+    # 1. Convert all characters to lower case.
+    # 2. Remove any characters that are not a letter or digit.
+    return(gsub("[^a-z0-9]", "", tolower(x)))
+}
+
+recently_modified_cycles <- function (triton.cycle, report_date, time_lag_threshold) {
+  activity_window_start_date <- as.character(
+    as.POSIXct(report_date) - as.difftime(time_lag_threshold, units="days"))
+
+  modified_schedule_team_ids <- triton.cycle %>%
+    # Consider cycles whose start date is before the report date (a Monday).
+    dplyr::filter(cycle.start_date < report_date) %>%
+    # Limit to cycles which have had their data changed recently
+    dplyr::filter(cycle.modified > activity_window_start_date) %>%
+    dplyr::pull(cycle.team_id) %>%
+    unique()
+
+  return(modified_schedule_team_ids)
+}

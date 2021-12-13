@@ -7,10 +7,11 @@ context("util.R")
 # * Open a terminal window
 # * Change to the gymnast directory
 # * Run this command:
-#   Rscript -e "testthat::auto_test('R', 'tests/testthat')"
+#   Rscript -e "testthat::test_file('tests/testthat/test_util.R')"
 #
-# The test runner will watch your code files and re-run your tests when you
-# change something. Get all those yummy green checks!
+# This will run all the tests in this file once. Run the command again after
+# changes. Sadly, testthat::auto_test() was broken some time at or before
+# version 3.0.4.
 
 if (grepl("tests/testthat$", getwd())) {
   setwd("../..") # root dir of gymnast repo
@@ -111,5 +112,40 @@ describe("is_valid_percent", {
     expect_false(util$is_valid_percent(-30))
     expect_false(util$is_valid_percent(0))
     expect_false(util$is_valid_percent("01%"))
+  })
+
+  it('does not return a pct sign when asked not to',{
+    expect_equal(util$str_percent(1, 2, use_percent_sign = FALSE), '50')
+  })
+})
+
+describe('datetime_to_iso_string', {
+  it('returns current time by default', {
+    datetime_str <- util$datetime_to_iso_string()
+    expect_true(grepl(
+      '^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$',
+      datetime_str
+    ))
+
+    # There will be some tiny difference between the result and the comparison
+    # time so just test that it's within a tolerance.
+    datetime <- strptime(datetime_str, "%Y-%m-%dT%H:%M:%SZ", tz = "GMT")
+    seconds_difference <- difftime(Sys.time(), datetime, units = "secs")
+    expect_true(seconds_difference < 1)
+  })
+
+  it('returns given datetime, formatted', {
+    # Starting with a timezone-agnostic value here to prove that the function
+    # does actually use UTC.
+
+    datetime = as.POSIXct(1127056501, origin = "1970-01-01")
+
+    # On my system this prints:
+    # > [1] "2005-09-18 08:15:01 PDT"
+
+    expect_identical(
+      util$datetime_to_iso_string(datetime),
+      '2005-09-18T15:15:01Z'
+    )
   })
 })

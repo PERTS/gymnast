@@ -5,12 +5,13 @@ context("summarize_copilot.R")
 # To run these tests:
 #
 # * Open a terminal window
-# * Change to the rserve directory
+# * Change to the gymnast directory
 # * Run this command:
-#   Rscript -e "testthat::auto_test('R', 'tests/testthat')"
+#   Rscript -e "testthat::test_file('tests/testthat/test_summarize_copilot.R')"
 #
-# The test runner will watch your code files and re-run your tests when you
-# change something. Get all those yummy green checks!
+# This will run all the tests in this file once. Run the command again after
+# changes. Sadly, testthat::auto_test() was broken some time at or before
+# version 3.0.4.
 
 if (grepl("tests/testthat$", getwd())) {
   setwd("../..")  # root dir of gymnast repo
@@ -526,5 +527,131 @@ describe('map_responses_to_cycles', {
         triton.classroom
       )
     )
+  })
+})
+
+describe('strip_token', {
+  it('converts to lower case', {
+    expect_identical(summarize_copilot$strip_token('ABC123'), 'abc123')
+  })
+
+  it('strips spaces in all locations', {
+    expect_identical(summarize_copilot$strip_token('  a  b  '), 'ab')
+  })
+
+  it('strips unusual whitespace: newlines, tabs', {
+    # \u00A0 is a non-breaking space
+    expect_identical(summarize_copilot$strip_token('\ta\rb\u00A0\n'), 'ab')
+  })
+
+  it('handles characters with no obvious case: chinese, emoji', {
+    # \u5c06 chinese ideograph related to Mahjong.
+    expect_identical(summarize_copilot$strip_token('a\u5c06🔥b'), 'ab')
+  })
+
+  it('handles a typical email address', {
+    expect_identical(
+      summarize_copilot$strip_token('Student.001@school.edu'),
+      'student001schooledu'
+    )
+  })
+})
+
+describe('recently_modified_cycles', {
+  report_date <- '2021-01-16'
+  time_lag_threshold <- 9
+
+  recently_modified_all <- dplyr::tibble(
+    cycle.team_id = c('Team_A', 'Team_A', 'Team_A'),
+    cycle.ordinal = c(1, 2, 3),
+    cycle.start_date = c('2021-01-01', '2021-01-15', '2021-01-30'),
+    cycle.modified = c('2021-01-10 06:00:00','2021-01-10 06:00:00','2021-01-10 06:00:00')
+  )
+
+  all_future <- dplyr::tibble(
+    cycle.team_id = c('Team_B', 'Team_B', 'Team_B'),
+    cycle.ordinal = c(1, 2, 3),
+    cycle.start_date = c('2021-02-01', '2021-02-15', '2021-02-30'),
+    cycle.modified = c('2021-01-10 06:00:00','2021-01-10 06:00:00','2021-01-10 06:00:00')
+  )
+
+  on_report_date_modified <- dplyr::tibble(
+    cycle.team_id = c('Team_C'),
+    cycle.ordinal = c(1),
+    cycle.start_date = report_date,
+    cycle.modified = c('2021-01-10 06:00:00')
+  )
+
+  none_modified <- dplyr::tibble(
+    cycle.team_id = c('Team_D', 'Team_D', 'Team_D'),
+    cycle.ordinal = c(1, 2, 3),
+    cycle.start_date = c('2021-01-01', '2021-01-15', '2021-01-30'),
+    # old modified timestamps
+    cycle.modified = c('2020-01-10 06:00:00','2020-01-10 06:00:00','2020-01-10 06:00:00')
+  )
+
+  # E has ended, F is current, G is future.
+  single_cycle_teams_all_modified <- dplyr::tibble(
+    cycle.team_id = c('Team_E', 'Team_F', 'Team_G'),
+    cycle.ordinal = c(1, 1, 1),
+    cycle.start_date = c('2021-01-01', '2021-01-15', '2021-01-30'),
+    cycle.end_date = c('2021-01-10', '2021-01-20', '2021-02-05'),
+    cycle.modified = c('2021-01-10 06:00:00','2021-01-10 06:00:00','2021-01-10 06:00:00')
+  )
+
+  it('excludes future cycles', {
+    triton.cycle <- all_future
+    team_ids <- summarize_copilot$recently_modified_cycles(
+      triton.cycle,
+      report_date,
+      time_lag_threshold
+    )
+
+    expect_equal(length(team_ids), 0)
+  })
+
+  it('excludes cycles starting on report date', {
+    triton.cycle <- on_report_date_modified
+    team_ids <- summarize_copilot$recently_modified_cycles(
+      triton.cycle,
+      report_date,
+      time_lag_threshold
+    )
+
+    expect_equal(length(team_ids), 0)
+  })
+
+  it('excludes unmodified cycles', {
+    triton.cycle <- none_modified
+    team_ids <- summarize_copilot$recently_modified_cycles(
+      triton.cycle,
+      report_date,
+      time_lag_threshold
+    )
+
+    expect_equal(length(team_ids), 0)
+  })
+
+  it('includes past (ended) and current modified cycles', {
+    triton.cycle <- single_cycle_teams_all_modified
+    team_ids <- summarize_copilot$recently_modified_cycles(
+      triton.cycle,
+      report_date,
+      time_lag_threshold
+    )
+
+    expect_equal(team_ids, c('Team_E', 'Team_F'))
+  })
+
+  it('returns a unique list of team ids', {
+    triton.cycle <- recently_modified_all
+    team_ids <- summarize_copilot$recently_modified_cycles(
+      triton.cycle,
+      report_date,
+      time_lag_threshold
+    )
+
+    # Two cycles match, but they're on the same team, so we should get one id.
+    expect_equal(team_ids, c('Team_A'))
   })
 })

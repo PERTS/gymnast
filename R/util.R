@@ -354,9 +354,10 @@ clean_percent <- function(numerator, denominator, blank_value = 0) {
   ifelse(is_blank, blank_value, raw_pct)
 }
 
-str_percent <- function(numerator, denominator, blank_value = "N/A") {
+str_percent <- function(numerator, denominator, blank_value = 'N/A', use_percent_sign = TRUE) {
   raw_pct <- clean_percent(numerator, denominator, blank_value = NA)
-  ifelse(is.na(raw_pct), blank_value, paste0(as.character(raw_pct), "%"))
+  percent_sign <- ifelse(use_percent_sign, '%', '')
+  ifelse(is.na(raw_pct), blank_value, paste0(as.character(raw_pct), percent_sign))
 }
 
 ###############################################################
@@ -607,3 +608,9 @@ find_day_of_week <- function(increment, day_abbr) {
 
 next_monday <- function() find_day_of_week(+1, "Mon")
 last_monday <- function() find_day_of_week(-1, "Mon")
+
+datetime_to_iso_string <- function (datetime = Sys.time()) {
+  # Takes optional POSIXct (e.g. Sys.time()), defaults to current time.
+  # Returns length-1 character, ISO 8601 format, in UTC.
+  format(datetime, format="%Y-%m-%dT%H:%M:%SZ", tz="GMT")
+}
