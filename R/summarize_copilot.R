@@ -332,6 +332,16 @@ map_responses_to_cycles <- function(response_tbl,
 
   # B/c we loop over every cycle, it's a big efficiency gain to make sure we're
   # considering the minimum possible set of cycles.
+  #   This considers 3 cases:
+  #
+  # 1. This is an ordinal = 1 cycle, where extended_start_date was set by Copilot.
+  # This is kept by the filter. Even if this cycle's other dates are unset, we
+  # will want assign responses to it by default.
+  # 2. This is an ordinal > 1 cycle where start_date was set by the user. Kept by the
+  # filter because code above copied this value into extended_start_date.
+  # 3. This is an ordinal > 1 cycle where neither start_date nor extended_start_date
+  # were are set. These are excluded by the filter because we never want to assign
+  # responses to them.
   potential_cycles <- cycle_extended %>%
     filter(cycle.team_id %in% unique(response_merged$classroom.team_id)) %>%
     filter(!util$is_blank(cycle.extended_start_date))
