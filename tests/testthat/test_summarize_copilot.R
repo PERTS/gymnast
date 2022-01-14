@@ -469,11 +469,11 @@ describe('map_responses_to_cycles', {
   )
 
   triton.cycle <- tribble(
-    ~uid,       ~team_id,     ~start_date,  ~extended_end_date,    ~ordinal,
-    'Cycle_1',  'Team_Viper', '2020-01-01', '2020-01-14',          1,
-    'Cycle_2',  'Team_Viper', '2020-01-15', '2020-01-30',          2,
-    'Cycle_3',  'Team_Fox',   '2020-01-01', '2020-01-14',          1,
-    'Cycle_4',  'Team_Fox',   '2020-01-15', '2020-01-30',          2
+    ~uid,       ~team_id,     ~start_date,  ~extended_end_date,    ~ordinal,  ~extended_start_date,
+    'Cycle_1',  'Team_Viper', '2020-01-01', '2020-01-14',          1,         '',
+    'Cycle_2',  'Team_Viper', '2020-01-15', '2020-01-30',          2,         '',
+    'Cycle_3',  'Team_Fox',   '2020-01-01', '2020-01-14',          1,         '',
+    'Cycle_4',  'Team_Fox',   '2020-01-15', '2020-01-30',          2,         '',
   ) %>% util$prefix_columns('cycle')
 
   triton.classroom <- tribble(
