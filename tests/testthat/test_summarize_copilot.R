@@ -534,16 +534,13 @@ describe('map_responses_to_cycles', {
     triton.cycle <- tribble(
       ~uid,       ~team_id,     ~start_date,  ~extended_end_date,    ~ordinal,  ~extended_start_date,
       'Cycle_1',  'Team_Viper', '2020-01-01', '2020-01-14',          1,         '2019-06-30',
-      'Cycle_2',  'Team_Viper', '2020-01-15', '2020-01-30',          2,         '',
-      'Cycle_3',  'Team_Fox',   '2020-01-01', '2020-01-14',          1,         '',
-      'Cycle_4',  'Team_Fox',   '2020-01-15', '2020-01-30',          2,         '',
+      'Cycle_2',  'Team_Viper', '2020-01-15', '2020-01-30',          2,         ''
     ) %>% util$prefix_columns('cycle')
 
     response_tbl <- tribble(
       ~participant_id, ~created,              ~code,
       'Participant_1', '2019-12-31 12:00:00', 'trout viper', # Team Viper
-      'Participant_2', '2020-01-15 12:00:00', 'bass viper', # Team Viper
-      'Participant_3', '2020-01-01 12:00:00', 'fancy fox' # Team Fox
+      'Participant_2', '2020-01-15 12:00:00', 'bass viper' # Team Viper
     )
 
     # prove that participant_1's response falls outside the start_date, but
@@ -586,16 +583,13 @@ describe('map_responses_to_cycles', {
     triton.cycle <- tribble(
       ~uid,       ~team_id,     ~start_date,  ~extended_end_date,    ~ordinal,  ~extended_start_date,
       'Cycle_1',  'Team_Viper', '',           '2020-01-14',          1,         '2019-06-30',
-      'Cycle_2',  'Team_Viper', '2020-01-15', '2020-01-30',          2,         '',
-      'Cycle_3',  'Team_Fox',   '2020-01-01', '2020-01-14',          1,         '',
-      'Cycle_4',  'Team_Fox',   '2020-01-15', '2020-01-30',          2,         '',
+      'Cycle_2',  'Team_Viper', '2020-01-15', '2020-01-30',          2,         ''
     ) %>% util$prefix_columns('cycle')
 
     response_tbl <- tribble(
       ~participant_id, ~created,              ~code,
       'Participant_1', '2020-01-01 12:00:00', 'trout viper', # Team Viper
       'Participant_2', '2020-01-15 12:00:00', 'bass viper', # Team Viper
-      'Participant_3', '2020-01-01 12:00:00', 'fancy fox' # Team Fox
     )
 
     # now prove that the response is assigned to cycle 1, based on the
