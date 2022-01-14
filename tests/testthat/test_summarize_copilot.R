@@ -29,7 +29,8 @@ modules::import(
   'rename',
   'select',
   'tibble',
-  'tribble'
+  'tribble',
+  'pull'
 )
 
 summarize_copilot <- import_module("summarize_copilot")
@@ -528,6 +529,59 @@ describe('map_responses_to_cycles', {
       )
     )
   })
+
+  it('prioritizes extended_start_date over start_date when both are present', {
+    triton.cycle <- tribble(
+      ~uid,       ~team_id,     ~start_date,  ~extended_end_date,    ~ordinal,  ~extended_start_date,
+      'Cycle_1',  'Team_Viper', '2020-01-01', '2020-01-14',          1,         '2019-06-30',
+      'Cycle_2',  'Team_Viper', '2020-01-15', '2020-01-30',          2,         '',
+      'Cycle_3',  'Team_Fox',   '2020-01-01', '2020-01-14',          1,         '',
+      'Cycle_4',  'Team_Fox',   '2020-01-15', '2020-01-30',          2,         '',
+    ) %>% util$prefix_columns('cycle')
+
+    response_tbl <- tribble(
+      ~participant_id, ~created,              ~code,
+      'Participant_1', '2019-12-31 12:00:00', 'trout viper', # Team Viper
+      'Participant_2', '2020-01-15 12:00:00', 'bass viper', # Team Viper
+      'Participant_3', '2020-01-01 12:00:00', 'fancy fox' # Team Fox
+    )
+
+    # prove that participant_1's response falls outside the start_date, but
+    # inside the extended_start_date
+
+    p1_timestamp <- response_tbl %>%
+      filter(participant_id %in% "Participant_1") %>%
+      pull(created)
+
+    cycle_start_date <- triton.cycle %>%
+      filter(cycle.team_id %in% "Team_Viper",
+             cycle.ordinal %in% 1) %>%
+      pull(cycle.start_date)
+
+    cycle_extended_start_date <- triton.cycle %>%
+      filter(cycle.team_id %in% "Team_Viper",
+             cycle.ordinal %in% 1) %>%
+      pull(cycle.extended_start_date)
+
+    # response timestamp is before cycle_start_date
+    expect_true(p1_timestamp < cycle_start_date)
+
+    # but after cycle_extended_start_date
+    expect_true(p1_timestamp > cycle_extended_start_date)
+
+    # now prove that the response is assigned to cycle 1, based on the
+    # extended_start_date and NOT the start_date
+    actual <- summarize_copilot$map_responses_to_cycles(
+      response_tbl, triton.cycle, triton.classroom)
+
+    p1_cycle <- actual %>%
+      filter(participant_id %in% "Participant_1") %>%
+      pull(cycle_ordinal)
+
+    expect_equal(p1_cycle, 1)
+
+  })
+
 })
 
 describe('strip_token', {
