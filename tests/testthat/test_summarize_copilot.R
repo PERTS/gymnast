@@ -581,9 +581,9 @@ describe('map_responses_to_cycles', {
 
   it('uses start_date_extended when start_date is absent', {
     triton.cycle <- tribble(
-      ~uid,       ~team_id,     ~start_date,  ~extended_end_date,    ~ordinal,  ~extended_start_date,
-      'Cycle_1',  'Team_Viper', '',           '2020-01-14',          1,         '2019-06-30',
-      'Cycle_2',  'Team_Viper', '2020-01-15', '2020-01-30',          2,         ''
+      ~uid,       ~team_id,     ~extended_start_date, ~start_date,  ~extended_end_date, ~end_date, ~ordinal,
+      'Cycle_1',  'Team_Viper', '2019-06-30',         NA,           '2020-01-14',       NA,        1,
+      'Cycle_2',  'Team_Viper', NA,                   '2020-01-15', '2020-01-30',       NA,        2
     ) %>% util$prefix_columns('cycle')
 
     response_tbl <- tribble(
