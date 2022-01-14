@@ -582,6 +582,36 @@ describe('map_responses_to_cycles', {
 
   })
 
+  it('uses start_date_extended when start_date is absent', {
+    triton.cycle <- tribble(
+      ~uid,       ~team_id,     ~start_date,  ~extended_end_date,    ~ordinal,  ~extended_start_date,
+      'Cycle_1',  'Team_Viper', '',           '2020-01-14',          1,         '2019-06-30',
+      'Cycle_2',  'Team_Viper', '2020-01-15', '2020-01-30',          2,         '',
+      'Cycle_3',  'Team_Fox',   '2020-01-01', '2020-01-14',          1,         '',
+      'Cycle_4',  'Team_Fox',   '2020-01-15', '2020-01-30',          2,         '',
+    ) %>% util$prefix_columns('cycle')
+
+    response_tbl <- tribble(
+      ~participant_id, ~created,              ~code,
+      'Participant_1', '2020-01-01 12:00:00', 'trout viper', # Team Viper
+      'Participant_2', '2020-01-15 12:00:00', 'bass viper', # Team Viper
+      'Participant_3', '2020-01-01 12:00:00', 'fancy fox' # Team Fox
+    )
+
+    # now prove that the response is assigned to cycle 1, based on the
+    # extended_start_date. It should NOT be uncycled, as it would have been
+    # before we used the extended_start_date field.
+    actual <- summarize_copilot$map_responses_to_cycles(
+      response_tbl, triton.cycle, triton.classroom)
+
+    p1_cycle <- actual %>%
+      filter(participant_id %in% "Participant_1") %>%
+      pull(cycle_ordinal)
+
+    expect_equal(p1_cycle, 1)
+
+  })
+
 })
 
 describe('strip_token', {
