@@ -344,6 +344,8 @@ map_responses_to_cycles <- function(response_tbl,
     rename(classroom_team_id = classroom.team_id)
 
   # Merge
+  # By using sqldf, we can conduct a merge on dates in a fast way
+  # FYI, in SQL "between" is inclusive
   response_merged <- sqldf(
     "select * from response_for_merge
     left join cycle_for_merge
