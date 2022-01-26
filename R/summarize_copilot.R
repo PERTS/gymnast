@@ -21,6 +21,8 @@ modules::import(
 modules::import("lubridate", "ymd")
 modules::import("stringr", "str_pad")
 modules::import("tidyr", "spread")
+modules::import("sqldf", "sqldf")
+modules::import("utils", "installed.packages")
 
 json_utils <- import_module("json_utils")
 logging <- import_module("logging")
@@ -282,8 +284,8 @@ cycle_dates <- function(triton.team, triton.cycle) {
 }
 
 map_responses_to_cycles <- function(response_tbl,
-                                    triton.cycle,
-                                    triton.classroom) {
+                                        triton.cycle,
+                                        triton.classroom) {
   # Tag each row with the appropriate cycle, based on date. Could be used to
   # tag pd or survey responses.
   #
@@ -299,52 +301,67 @@ map_responses_to_cycles <- function(response_tbl,
   # * created_date
   # * cycle_ordinal
 
+  require(sqldf)
+  require(utils)
+
+  sqldf_version <- installed.packages()["sqldf", "Version"]
+  if(sqldf_version != "0.4-11") warning("This function has been tested with sqldf version 0.4-11, but not with other versions!")
+
   added_cols <- c('cycle_id', 'created_date', 'cycle_ordinal')
   if (any(added_cols %in% names(response_tbl))) {
     stop("map_responses_to_cycles would overwrite columns")
   }
 
-  cycle_extended <- triton.cycle %>%
+  # Prepare cycle data for merge
+  cycle_for_merge <- triton.cycle %>%
+    # Extend cycle dates
     mutate(
       cycle.extended_end_date = ifelse(
         util$is_blank(cycle.extended_end_date),
         cycle.end_date,
         cycle.extended_end_date
       )
-    )
+    ) %>%
+    # Select only the variables we want to bring into the response data; also,
+    # swap periods for underscores, otherwise the sql function won't work
+    select(cycle_id = cycle.uid,
+           cycle_ordinal = cycle.ordinal,
+           cycle_team_id = cycle.team_id,
+           cycle_start_date = cycle.start_date,
+           cycle_extended_end_date = cycle.extended_end_date)
 
-  response_merged <- response_tbl %>%
+  # Prepare response data for merge
+  response_for_merge <- response_tbl %>%
+    # Add Triton classroom information
     left_join(triton.classroom, by = c(code = "classroom.code")) %>%
+    # Convert datetimes to dates
     mutate(
-      # Convert datetimes to dates; char > POSIXlt > char
-      # This will allow us to compare to cycle dates.
       created_date = created %>%
         strptime("%Y-%m-%d %H:%M:%S") %>%
-        strftime("%Y-%m-%d"),
-      cycle_id = NA, # Populated below.
-      cycle_ordinal = NA # Populated below.
-    )
+        strftime("%Y-%m-%d")
+    ) %>%
+    # Swap periods for underscores, otherwise the sql function won't work
+    rename(classroom_team_id = classroom.team_id)
 
-  # B/c we loop over every cycle, it's a big efficiency gain to make sure we're
-  # considering the minimum possible set of cycles.
-  potential_cycles <- cycle_extended %>%
-    filter(cycle.team_id %in% unique(response_merged$classroom.team_id)) %>%
-    filter(!util$is_blank(cycle.start_date))
+  # Merge
+  response_merged <- sqldf(
+    "select * from response_for_merge
+    left join cycle_for_merge
+    on response_for_merge.classroom_team_id = cycle_for_merge.cycle_team_id
+    and response_for_merge.created_date between cycle_for_merge.cycle_start_date and cycle_for_merge.cycle_extended_end_date"
+  )
 
-  # Fill in values of the cycle_ordinal column as their row matches various
-  # cycle dates.
-  for (i in sequence(nrow(potential_cycles))) {
-    this_cycle <- potential_cycles[i, ]
-    in_cycle <- (
-      response_merged$created_date >= this_cycle$cycle.start_date &
-        response_merged$created_date <= this_cycle$cycle.extended_end_date &
-        response_merged$classroom.team_id %in% this_cycle$cycle.team_id
-    )
-    response_merged$cycle_id[in_cycle] <- this_cycle$cycle.uid
-    response_merged$cycle_ordinal[in_cycle] <- this_cycle$cycle.ordinal
-  }
+  # Prepare the merged data for return
+  response_merged <- response_merged %>%
+    # Make tibble
+    tibble() %>%
+    # Remove the variables we only needed for the merge but don't want to return
+    select(-c(cycle_start_date, cycle_extended_end_date, cycle_team_id)) %>%
+    # Plug the periods back into the triton variable names
+    rename(classroom.team_id = classroom_team_id)
 
-  response_merged
+  return(response_merged)
+
 }
 
 get_started_ids <- function(team_cycle_class_participation, threshold) {
