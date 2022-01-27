@@ -51,7 +51,7 @@ describe('simulate_agm', {
     agm <- sanitize_display$simulate_agm(subset_config_default)
     expect_equal(
       unique(subset_config_default$subset_value),
-      unique(agm$subset_value[!agm$subset_value %in% "All Students"])
+      unique(agm$subset_value[!agm$subset_value %in% "All"])
     )
   })
 
@@ -106,12 +106,12 @@ describe('simulate_agm', {
       )
     # check that there is one distinct p-value per subset_type:
     expect_equal(p_summary$distinct_values, rep(1, nrow(p_summary)))
-    # check that p-value is NA for "All Students"
-    all_students_p_is_na <- p_summary$all_NA[p_summary$subset_type %in% "All Students"]
+    # check that p-value is NA for "All"
+    all_students_p_is_na <- p_summary$all_NA[p_summary$subset_type %in% "All"]
     expect_true(all_students_p_is_na)
 
     # check that p-value is not NA for all other subset types
-    subset_types_p_isnt_na <- p_summary$all_NA[!p_summary$subset_type %in% "All Students"]
+    subset_types_p_isnt_na <- p_summary$all_NA[!p_summary$subset_type %in% "All"]
     expect_equal(subset_types_p_isnt_na, rep(FALSE, length(subset_types_p_isnt_na)))
   })
 
@@ -273,8 +273,8 @@ describe('expand_subsets_agm_df',{
     agm <- data.frame(
       reporting_unit_id = "Organization_1",
       reporting_unit_type = "child_id",
-      subset_type = c("race", "race", "All Students"),
-      subset_value = c("Race Struct. Disadv.", "Race Struct. Adv. ", "All Students"),
+      subset_type = c("race", "race", "All"),
+      subset_value = c("Race Struct. Disadv.", "Race Struct. Adv. ", "All"),
       pct_good = c(.5, .5, .5),
       metric = "item1",
       cycle_ordinal = 1,
@@ -309,7 +309,7 @@ describe('expand_subsets_agm_df',{
 
   })
 
-  it('propagates accurately when the "All Students" row is missing', {
+  it('propagates accurately when the "All" row is missing', {
     agm <- data.frame(
       reporting_unit_id = "Organization_1",
       reporting_unit_type = "child_id",
@@ -328,8 +328,8 @@ describe('expand_subsets_agm_df',{
                        "Girl/Woman", "Boy/Man")
     )
 
-    # All Students is NOT one of the subset_types in agm
-    expect_false("All Students" %in% agm$subset_type)
+    # All is NOT one of the subset_types in agm
+    expect_false("All" %in% agm$subset_type)
 
     agm_expanded <- sanitize_display$expand_subsets_agm_df(
       agm_df_ungrouped = agm,
@@ -337,9 +337,9 @@ describe('expand_subsets_agm_df',{
       time_ordinal_column = "cycle_ordinal"
     )
 
-    # "All Students" IS in agm_expanded$subset_type and subset_value
-    expect_true("All Students" %in% agm_expanded$subset_type)
-    expect_true("All Students" %in% agm_expanded$subset_value)
+    # "All" IS in agm_expanded$subset_type and subset_value
+    expect_true("All" %in% agm_expanded$subset_type)
+    expect_true("All" %in% agm_expanded$subset_value)
 
     # reporting_unit_type is one of the fields that's supposed to be propagated.
     # It's a stand-in for similar fields that are also supposed to be propagated.

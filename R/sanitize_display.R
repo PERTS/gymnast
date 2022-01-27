@@ -33,7 +33,7 @@ expand_subsets_agm_df <- function(
   if(length(missing_index) > 0){
     stop(
       "In expand_subsets_agm_df, some indexes were missing: " %+%
-      paste0(missing_index, collapse = ", ")
+        paste0(missing_index, collapse = ", ")
     )
   }
 
@@ -43,7 +43,7 @@ expand_subsets_agm_df <- function(
 
   agm_subset_types <- agm_df_ungrouped$subset_type %>%
     unique() %>%
-    Filter(function (st) !st %in% "All Students", .)
+    Filter(function (st) !st %in% "All", .)
   desired_subset_types <- desired_subset_config$subset_type %>% unique()
   unrecognized_subset_types <- agm_subset_types[
     !agm_subset_types %in% desired_subset_types
@@ -52,9 +52,9 @@ expand_subsets_agm_df <- function(
   if(length(unrecognized_subset_types) > 0){
     stop(
       "In expand_subsets_agm_df, it is required that all subset_types " %+%
-      "in the agm_df_ungrouped input match a subset_type in the " %+%
-      "desired_subset_config. This allows merging on that key. " %+%
-      "Please fix the config file or the agm values before proceeding. "
+        "in the agm_df_ungrouped input match a subset_type in the " %+%
+        "desired_subset_config. This allows merging on that key. " %+%
+        "Please fix the config file or the agm values before proceeding. "
     )
   }
 
@@ -64,8 +64,8 @@ expand_subsets_agm_df <- function(
   expand_vars <- comb_index_time[!comb_index_time %in% "subset_value"]
   complete_subsets <- tidyr::expand_grid(
     agm_df_ungrouped[expand_vars],
-    subset_value = c(desired_subset_config$subset_value, "All Students")
-    ) %>%
+    subset_value = c(desired_subset_config$subset_value, "All")
+  ) %>%
     unique()
 
   observed_subsets <- agm_df_ungrouped[comb_index_time] %>%
@@ -88,7 +88,7 @@ expand_subsets_agm_df <- function(
   if(nrow(indexes_to_propagate) == 0){
     warning(
       "Your desired_subset_config identified no subset values in need " %+%
-      "of propagating. No expansion was performed."
+        "of propagating. No expansion was performed."
     )
     return(agm_df_ungrouped)
   }
@@ -107,16 +107,11 @@ expand_subsets_agm_df <- function(
     dplyr::select(-present) %>%
     ungroup() %>%
     # Back-fill the subset_type field to match what's in the subset_value field
-    # when subset_value is "All Students." This is pretty hacky, but necessary
-    # because "All Students" does not appear in the subset_config, and thus
-    # there's nowhere else to take this value from. We also know the subset_type
-    # for "All Student" will always be "All Students." When we change this
-    # string for Catalyze, the principle will be the same — whatever string we
-    # replace "All Students" with (e.g., "All Respondents") will still not live
-    # in the subset_config and thus will still need to be back-filled here. So
-    # at that point we'll replace the hard-coded "All Students" string with a
-    # variable that can take any value, but the back-filling will stay the same.
-    mutate(subset_type = ifelse(subset_value %in% "All Students",
+    # when subset_value is "All." This is pretty hacky, but necessary because
+    # "All" does not appear in the subset_config, and thus there's nowhere else
+    # to take this value from. We also know the subset_type for "All Students"
+    # or "All Respondents" will always be "All."
+    mutate(subset_type = ifelse(subset_value %in% "All",
                                 subset_value,
                                 subset_type))
 
@@ -287,7 +282,7 @@ display_anon_agm <- function(
   if(ur != tr){
     stop(
       "In display_anon_agm, the combined index does not uniquely identify " %+%
-      "rows."
+        "rows."
     )
   }
 
@@ -295,7 +290,7 @@ display_anon_agm <- function(
   merge_vars <- combined_index[!combined_index %in% "subset_value"]
 
   grand_mean_pct_good <- agm_anon %>%
-    dplyr::filter(subset_value %in% "All Students") %>%
+    dplyr::filter(subset_value %in% "All") %>%
     dplyr::select(dplyr::one_of(c(merge_vars, "pct_good"))) %>%
     dplyr::rename(pct_good_all = pct_good)
 
@@ -342,11 +337,11 @@ simulate_agm <- function(
   team_ids <- paste0("Team_", 1:n_teams)
   class_ids <- paste0("Classroom_", 1:n_classes)
 
-  # add all students to subset config
+  # add "all" to subset config
   subset_config_as <- util$rbind_union(list(
     subset_config,
-    dplyr::tibble(subset_value = "All Students", subset_type = "All Students")
-    )) %>%
+    dplyr::tibble(subset_value = "All", subset_type = "All")
+  )) %>%
     dplyr::mutate(
       subset_type = as.character(subset_type),
       subset_value = as.character(subset_value)
@@ -357,8 +352,8 @@ simulate_agm <- function(
   ns <- subset_config_as %>%
     dplyr::select(subset_value, subset_type) %>%
     dplyr::mutate(n = cell_n)
-  total_n <- sum(ns$n[!ns$subset_value %in% "All Students"])
-  ns$n[ns$subset_value %in% "All Students"] <- total_n
+  total_n <- sum(ns$n[!ns$subset_value %in% "All"])
+  ns$n[ns$subset_value %in% "All"] <- total_n
 
   ns$n[ns$subset_type %in% small_n_types] <- min_cell - 1
 
@@ -368,7 +363,7 @@ simulate_agm <- function(
     reporting_unit_id = c(team_ids, class_ids),
     metric = metrics,
     cycle_name = cycles,
-    subset_value = c(as.character(subset_config$subset_value), "All Students")
+    subset_value = c(as.character(subset_config$subset_value), "All")
   ) %>%
     unique() %>%
     dplyr::left_join(
@@ -383,15 +378,15 @@ simulate_agm <- function(
     ) %>%
     dplyr::mutate(
       reporting_unit_name = gsub("_", " ", reporting_unit_id),
-      grand_mean = ifelse(subset_value %in% "All Students", "All Students", "Subset"),
+      grand_mean = ifelse(subset_value %in% "All", "All", "Subset"),
       pct_good = sample(seq(0, 1, .01), nrow(.), replace = T),
       se = sample(seq(0, .3, .001), nrow(.), replace = T)
     ) %>%
     dplyr::group_by(subset_type) %>%
     dplyr::mutate(p = ifelse(
-      subset_type %in% "All Students",
+      subset_type %in% "All",
       NA, sample(seq(.01, .99, .01), 1)
-      )
+    )
     ) %>%
     dplyr::ungroup()
 
@@ -418,7 +413,7 @@ check_bar_graph_input <- function(
   if(length(absent_required_columns)){
     return(
       "The following missing are needed to render ggplot graph: " %+%
-      paste0(absent_required_columns, collapse = ", ")
+        paste0(absent_required_columns, collapse = ", ")
     )
   }
 
@@ -432,7 +427,7 @@ check_bar_graph_input <- function(
   if(unique_rows != total_rows){
     return(
       "Your ggplot is not set to plot unique values. This means " %+%
-      "nasty aggregation business will ensue and the bars will be wrong."
+        "nasty aggregation business will ensue and the bars will be wrong."
     )
   }
 
@@ -449,9 +444,9 @@ check_bar_graph_input <- function(
   if (nrow(missing_subsets_df) > 0) {
     return(
       "Subset values are missing from the bar graph input df: " %+%
-      paste0(missing_subsets_df$missing_subsets, collapse = ", ") %+%
-      " from reporting units " %+%
-      paste0(missing_subsets_df$reporting_unit_id, collapse = ", ")
+        paste0(missing_subsets_df$missing_subsets, collapse = ", ") %+%
+        " from reporting units " %+%
+        paste0(missing_subsets_df$reporting_unit_id, collapse = ", ")
     )
   }
 
@@ -459,19 +454,19 @@ check_bar_graph_input <- function(
   if(any(is.na(bar_df$pct_good))){
     return(
       "NA values were found in the pct_good field. These will cause " %+%
-      "bars to be missing unexpectedly."
+        "bars to be missing unexpectedly."
     )
   }
   if(any(!is.numeric(bar_df$pct_good))){
     return(
       "Non-numeric values were found in the pct_good field. These will cause " %+%
-      "graphs not to render."
+        "graphs not to render."
     )
   }
   if(!all(bar_df$pct_good <= 1 & bar_df$pct_good >= 0)){
     return(
       "Values outside the bounds of 0 and 1 were found in the pct_good " %+%
-      "field. These indicate something deeply wrong with the data."
+        "field. These indicate something deeply wrong with the data."
     )
   }
 

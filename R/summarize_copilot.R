@@ -284,8 +284,8 @@ cycle_dates <- function(triton.team, triton.cycle) {
 }
 
 map_responses_to_cycles <- function(response_tbl,
-                                        triton.cycle,
-                                        triton.classroom) {
+                                    triton.cycle,
+                                    triton.classroom) {
   # Tag each row with the appropriate cycle, based on date. Could be used to
   # tag pd or survey responses.
   #
@@ -320,6 +320,11 @@ map_responses_to_cycles <- function(response_tbl,
         util$is_blank(cycle.extended_end_date),
         cycle.end_date,
         cycle.extended_end_date
+      ),
+      cycle.extended_start_date = ifelse(
+        util$is_blank(cycle.extended_start_date),
+        cycle.start_date,
+        cycle.extended_start_date
       )
     ) %>%
     # Select only the variables we want to bring into the response data; also,
@@ -327,7 +332,7 @@ map_responses_to_cycles <- function(response_tbl,
     select(cycle_id = cycle.uid,
            cycle_ordinal = cycle.ordinal,
            cycle_team_id = cycle.team_id,
-           cycle_start_date = cycle.start_date,
+           cycle_extended_start_date = cycle.extended_start_date,
            cycle_extended_end_date = cycle.extended_end_date)
 
   # Prepare response data for merge
@@ -350,7 +355,7 @@ map_responses_to_cycles <- function(response_tbl,
     "select * from response_for_merge
     left join cycle_for_merge
     on response_for_merge.classroom_team_id = cycle_for_merge.cycle_team_id
-    and response_for_merge.created_date between cycle_for_merge.cycle_start_date and cycle_for_merge.cycle_extended_end_date"
+    and response_for_merge.created_date between cycle_for_merge.cycle_extended_start_date and cycle_for_merge.cycle_extended_end_date"
   )
 
   # Prepare the merged data for return
@@ -358,7 +363,7 @@ map_responses_to_cycles <- function(response_tbl,
     # Make tibble
     tibble() %>%
     # Remove the variables we only needed for the merge but don't want to return
-    select(-c(cycle_start_date, cycle_extended_end_date, cycle_team_id)) %>%
+    select(-c(cycle_extended_start_date, cycle_extended_end_date, cycle_team_id)) %>%
     # Plug the periods back into the triton variable names
     rename(classroom.team_id = classroom_team_id)
 
