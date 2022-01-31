@@ -604,7 +604,9 @@ get_classrooms_from_network <- function (network_ids,
   # Long form relationship table, unique by network-child
   network_assc <- triton.network %>%
     filter(network.uid %in% network_ids) %>%
-    json_utils$expand_string_array_column(network.association_ids)
+    json_utils$expand_string_array_column(network.association_ids) %>%
+    # Drop any networks that had no associations.
+    filter(!is.na(network.association_ids))
 
   # Structure of df to return.
   classroom_assc <- tibble(
