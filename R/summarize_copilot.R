@@ -22,7 +22,6 @@ modules::import("lubridate", "ymd")
 modules::import("stringr", "str_pad")
 modules::import("tidyr", "spread")
 modules::import("sqldf", "sqldf")
-modules::import("utils", "installed.packages")
 
 json_utils <- import_module("json_utils")
 logging <- import_module("logging")
