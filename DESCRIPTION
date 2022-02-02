@@ -32,6 +32,7 @@ Imports:
     modules (>= 0.8.0),
     pkgload (>= 1.0.2),
     RMySQL (>= 0.10.18),
+    sqldf (== 0.4-11),
     stats (>= 3.6.2),
     stringr (>= 1.4.0),
     tidyr (>= 1.0.1)

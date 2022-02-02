@@ -301,12 +301,6 @@ map_responses_to_cycles <- function(response_tbl,
   # * created_date
   # * cycle_ordinal
 
-  require(sqldf)
-  require(utils)
-
-  sqldf_version <- installed.packages()["sqldf", "Version"]
-  if(sqldf_version != "0.4-11") warning("This function has been tested with sqldf version 0.4-11, but not with other versions!")
-
   added_cols <- c('cycle_id', 'created_date', 'cycle_ordinal')
   if (any(added_cols %in% names(response_tbl))) {
     stop("map_responses_to_cycles would overwrite columns")
@@ -355,7 +349,9 @@ map_responses_to_cycles <- function(response_tbl,
     "select * from response_for_merge
     left join cycle_for_merge
     on response_for_merge.classroom_team_id = cycle_for_merge.cycle_team_id
-    and response_for_merge.created_date between cycle_for_merge.cycle_extended_start_date and cycle_for_merge.cycle_extended_end_date"
+    and response_for_merge.created_date between
+    cycle_for_merge.cycle_extended_start_date and
+    cycle_for_merge.cycle_extended_end_date"
   )
 
   # Prepare the merged data for return
