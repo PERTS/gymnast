@@ -4,7 +4,7 @@ util <- import_module("util")
 
 connect <- function(server_ip, dbname = NA, ssl_file_names = list(),
                     ssl_credentials = list(), password = NULL,
-                    mysql_user = "readonly") {
+                    mysql_user = "readonly", charset = 'utf8mb4') {
   # Get a connection to a MySQL database.
   #
   # Args:
@@ -20,6 +20,8 @@ connect <- function(server_ip, dbname = NA, ssl_file_names = list(),
   #   password - scalar character, optional password to use
   #   mysql_user - scalar character, default "readonly", name of mysql user
   #     account to use
+  #   charset - scalar character, default "utf8mb4", which is PERTS-standard and
+  #     used in triton and saturn dbs.
 
   CNF_PATH <- paste0(getwd(), "/sql_connect.tmp.cnf")
   SERVER_PORT <- 3306
@@ -97,6 +99,9 @@ connect <- function(server_ip, dbname = NA, ssl_file_names = list(),
       unlink(path, force = T)
     }
   }
+
+  safe_charset <- RMySQL::dbEscapeStrings(conn, charset)
+  DBI::dbGetQuery(conn, paste0("SET CHARSET '", safe_charset, "';"))
 
   return(conn)
 }
