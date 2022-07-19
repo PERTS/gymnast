@@ -711,3 +711,26 @@ recently_modified_cycles <- function (triton.cycle, report_date, time_lag_thresh
 
   return(modified_schedule_team_ids)
 }
+
+recently_modified_rosters <- function (triton.participant, report_date, time_lag_threshold) {
+  # The conventions of triton/Copilot allow us to detect ANY roster change by
+  # looking at the `modified` field, which uses the MySQL clause
+  # `ON UPDATE CURRENT_TIMESTAMP`:
+  # * Adding a participant will set modified to the current time
+  # * Removing a participant will _update_ the participant to be in zero
+  #   classrooms, while still on the team, and thus update the modified time.
+  # * Renaming a participant will update the modified time.
+
+  # length-1 character, YYYY-MM-DD format
+  threshold <- as.character(
+    as.POSIXct(report_date) - as.difftime(time_lag_threshold, units="days"))
+
+  # Modified times are in YYYY-MM-DD HH:mm:ss format, so we can use alphabetic
+  # string comparison to the threshold.
+  modified_roster_team_ids <- triton.participant %>%
+    dplyr::filter(participant.modified > threshold) %>%
+    dplyr::pull(participant.team_id) %>%
+    unique()
+
+  return(modified_roster_team_ids)
+}

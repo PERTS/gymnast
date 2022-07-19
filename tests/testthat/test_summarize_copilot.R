@@ -733,3 +733,60 @@ describe('recently_modified_cycles', {
     expect_equal(team_ids, c('Team_A'))
   })
 })
+
+describe('recently_modified_rosters', {
+  # Given these parameters, a "recently modified" entity will be one whose
+  # timestamp is on or after 2021-01-07 00:00:00.
+  report_date <- '2021-01-16'
+  time_lag_threshold <- 9
+
+  # Fields in the participant table we won't use:
+  # * participant.uid
+  # * participant.short_uid
+  # * participant.created
+  # * participant.student_id
+  # * participant.stripped_student_id
+  # * participant.classroom_ids
+  # * participant.in_target_group
+  # * participant.verified
+
+  none_modified <- dplyr::tibble(
+    participant.team_id = c('Team_A', 'Team_A', 'Team_A'),
+    participant.modified = c(
+      '2021-01-06 23:59:59', # last second before threshold
+      '2021-01-05 06:00:00',
+      '2021-01-04 06:00:00'
+    ),
+  )
+
+  some_modified <- dplyr::tibble(
+    participant.team_id = c('Team_B', 'Team_C', 'Team_D'),
+    participant.modified = c(
+      '2021-01-07 00:00:00', # threshold exactly, thus recent
+      '2021-01-08 06:00:00', # after threshold, thus recent
+      '2021-01-04 06:00:00' # not recent
+    ),
+  )
+
+  it('excludes unmodified participants', {
+    triton.participant <- none_modified
+    team_ids <- summarize_copilot$recently_modified_rosters(
+      triton.participant,
+      report_date,
+      time_lag_threshold
+    )
+
+    expect_equal(length(team_ids), 0)
+  })
+
+  it('includes modified participants', {
+    triton.participant <- some_modified
+    team_ids <- summarize_copilot$recently_modified_rosters(
+      triton.participant,
+      report_date,
+      time_lag_threshold
+    )
+
+    expect_equal(team_ids, c('Team_B', 'Team_C'))
+  })
+})
