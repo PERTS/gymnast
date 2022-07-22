@@ -760,9 +760,10 @@ describe('recently_modified_rosters', {
   )
 
   some_modified <- dplyr::tibble(
-    participant.team_id = c('Team_B', 'Team_C', 'Team_D'),
+    participant.team_id = c('Team_B', 'Team_B', 'Team_C', 'Team_D'),
     participant.modified = c(
       '2021-01-07 00:00:00', # threshold exactly, thus recent
+      '2021-01-08 06:00:00', # after threshold, thus recent
       '2021-01-08 06:00:00', # after threshold, thus recent
       '2021-01-04 06:00:00' # not recent
     ),
@@ -787,6 +788,7 @@ describe('recently_modified_rosters', {
       time_lag_threshold
     )
 
+    # Despite multiple participants in these teams, the list should be unique.
     expect_equal(team_ids, c('Team_B', 'Team_C'))
   })
 })
