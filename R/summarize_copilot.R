@@ -734,3 +734,22 @@ recently_modified_rosters <- function (triton.participant, report_date, time_lag
 
   return(modified_roster_team_ids)
 }
+
+recently_created_orgs <- function (
+  triton.organization,
+  report_date,
+  time_lag_threshold
+) {
+  # length-1 character, YYYY-MM-DD format
+  threshold <- as.character(
+    as.POSIXct(report_date) - as.difftime(time_lag_threshold, units="days"))
+
+  # Created times are in YYYY-MM-DD HH:mm:ss format, so we can use alphabetic
+  # string comparison to the threshold.
+  modified_org_ids <- triton.organization %>%
+    dplyr::filter(organization.created > threshold) %>%
+    dplyr::pull(organization.uid) %>%
+    unique()
+
+  return(modified_org_ids)
+}
