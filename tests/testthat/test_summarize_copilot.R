@@ -792,3 +792,52 @@ describe('recently_modified_rosters', {
     expect_equal(team_ids, c('Team_B', 'Team_C'))
   })
 })
+
+describe('recently_created_orgs', {
+  # Given these parameters, a "recently created" entity will be one whose
+  # timestamp is on or after 2021-01-07 00:00:00.
+  report_date <- '2021-01-16'
+  time_lag_threshold <- 9
+
+  none_created <- dplyr::tibble(
+    organization.uid = c('Organization_A', 'Organization_A', 'Organization_A'),
+    organization.created = c(
+      '2021-01-06 23:59:59', # last second before threshold
+      '2021-01-05 06:00:00',
+      '2021-01-04 06:00:00'
+    ),
+  )
+
+  some_created <- dplyr::tibble(
+    organization.uid = c('Organization_B', 'Organization_B', 'Organization_C', 'Organization_D'),
+    organization.created = c(
+      '2021-01-07 00:00:00', # threshold exactly, thus recent
+      '2021-01-08 06:00:00', # after threshold, thus recent
+      '2021-01-08 06:00:00', # after threshold, thus recent
+      '2021-01-04 06:00:00' # not recent
+    ),
+  )
+
+  it('excludes unmodified orgs', {
+    triton.organization <- none_created
+    org_ids <- summarize_copilot$recently_created_orgs(
+      triton.organization,
+      report_date,
+      time_lag_threshold
+    )
+
+    expect_equal(length(org_ids), 0)
+  })
+
+  it('includes modified orgs', {
+    triton.organization <- some_created
+    org_ids <- summarize_copilot$recently_created_orgs(
+      triton.organization,
+      report_date,
+      time_lag_threshold
+    )
+
+    # Despite multiple participants in these teams, the list should be unique.
+    expect_equal(org_ids, c('Organization_B', 'Organization_C'))
+  })
+})

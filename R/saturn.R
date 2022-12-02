@@ -123,7 +123,16 @@ create_service <- function (
   }
 
   get_responses <- function (...) {
+    qa_codes <- c(
+      'BASIC1',
+      'BASIC2',
+      'OVERLAP1',
+      'OVERLAP2',
+      'OVERLAP3'
+    )
+
     wide <- get_raw_responses(...) %>%
+      dplyr::filter(!code %in% qa_codes) %>%
       # It's typical for these to be duplicated with data in meta; rename to
       # prevent collision. We'll check sanity on them next and clean up.
       dplyr::rename(
