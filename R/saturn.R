@@ -124,6 +124,8 @@ create_service <- function (
 
   get_responses <- function (...) {
     wide <- get_raw_responses(...) %>%
+      # Remove QA rows, which cause errors later on
+      dplyr::filter(!grepl("^Response_dashboard-qa", uid)) %>%
       # It's typical for these to be duplicated with data in meta; rename to
       # prevent collision. We'll check sanity on them next and clean up.
       dplyr::rename(
