@@ -5,7 +5,7 @@ util <- import_module("util")
 connect <- function(server_ip, dbname = NA, ssl_file_names = list(),
                     ssl_credentials = list(), password = NULL,
                     mysql_user = "readonly", charset = 'utf8mb4',
-                    SERVER_PORT = port) {
+                    port = NULL) {
   # Get a connection to a MySQL database.
   #
   # Args:
@@ -62,7 +62,7 @@ connect <- function(server_ip, dbname = NA, ssl_file_names = list(),
     user = mysql_user,
     dbname = dbname,
     host = server_ip,
-    port = SERVER_PORT
+    port = port
   )
 
   # If we're using a password, add it to the arguments.
