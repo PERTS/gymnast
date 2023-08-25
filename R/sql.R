@@ -219,7 +219,7 @@ create_neptune_service <- function() {
 create_triton_service <- function() {
   # Requires that perts_crypt.vc be mounted.
   return(create_service(
-    server_ip = "35.188.76.62",
+    server_ip = "127.0.0.1",
     dbname = "triton",
     ssl_file_names = list(
       ca = "triton_sql_production-01-analysis-replica.ca",
