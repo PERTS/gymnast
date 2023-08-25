@@ -17,7 +17,7 @@ json_utils <- import_module("json_utils")
 logging <- import_module("logging")
 sql <- import_module("sql")
 
-IP_ANALYSIS_REPLICA <- '34.66.52.115'
+IP_ANALYSIS_REPLICA <- '127.0.0.1'
 IP_LOCALHOST <- '127.0.0.1'
 
 create_service <- function (
