@@ -62,7 +62,8 @@ create_service <- function (
       dbname = db_name,
       ssl_credentials = ssl_credentials,
       password = password,
-      mysql_user = mysql_user
+      mysql_user = mysql_user,
+      port = 3421
     )
 
     safe_survey_label <- conn$escape_strings(survey_label)

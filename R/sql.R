@@ -4,7 +4,8 @@ util <- import_module("util")
 
 connect <- function(server_ip, dbname = NA, ssl_file_names = list(),
                     ssl_credentials = list(), password = NULL,
-                    mysql_user = "readonly", charset = 'utf8mb4') {
+                    mysql_user = "readonly", charset = 'utf8mb4',
+                    SERVER_PORT = port) {
   # Get a connection to a MySQL database.
   #
   # Args:
@@ -24,7 +25,6 @@ connect <- function(server_ip, dbname = NA, ssl_file_names = list(),
   #     used in triton and saturn dbs.
 
   CNF_PATH <- paste0(getwd(), "/sql_connect.tmp.cnf")
-  SERVER_PORT <- 3306
 
   # These will be deleted as soon as they're not needed.
   temporary_file_paths <- CNF_PATH
@@ -228,7 +228,8 @@ create_triton_service <- function() {
     ),
     mysql_user = "readonly",
     password_file_name = "triton_replica_readonly_password.txt",
-    password = NULL
+    password = NULL,
+    port = 3411
   ))
 }
 
