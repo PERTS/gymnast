@@ -1,5 +1,9 @@
 # packages: DBI, RMySQL
 
+# NOTE: In order to access our databases, you must first follow the instructions
+# for connecting to production databases, here:
+# https://docs.google.com/document/d/184dsSF-esWgJ-TS_da3--UkFNb1oIur-r99X-7Xmhfg/edit#heading=h.upesquweiol3
+
 util <- import_module("util")
 
 connect <- function(server_ip, dbname = NA, ssl_file_names = list(),
