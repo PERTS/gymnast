@@ -1,10 +1,15 @@
 # packages: DBI, RMySQL
 
+# NOTE: In order to access our databases, you must first follow the instructions
+# for connecting to production databases, here:
+# https://docs.google.com/document/d/184dsSF-esWgJ-TS_da3--UkFNb1oIur-r99X-7Xmhfg/edit#heading=h.upesquweiol3
+
 util <- import_module("util")
 
 connect <- function(server_ip, dbname = NA, ssl_file_names = list(),
                     ssl_credentials = list(), password = NULL,
-                    mysql_user = "readonly", charset = 'utf8mb4') {
+                    mysql_user = "readonly", charset = 'utf8mb4',
+                    port = NULL) {
   # Get a connection to a MySQL database.
   #
   # Args:
@@ -24,7 +29,6 @@ connect <- function(server_ip, dbname = NA, ssl_file_names = list(),
   #     used in triton and saturn dbs.
 
   CNF_PATH <- paste0(getwd(), "/sql_connect.tmp.cnf")
-  SERVER_PORT <- 3306
 
   # These will be deleted as soon as they're not needed.
   temporary_file_paths <- CNF_PATH
@@ -62,7 +66,7 @@ connect <- function(server_ip, dbname = NA, ssl_file_names = list(),
     user = mysql_user,
     dbname = dbname,
     host = server_ip,
-    port = SERVER_PORT
+    port = port
   )
 
   # If we're using a password, add it to the arguments.
@@ -219,7 +223,7 @@ create_neptune_service <- function() {
 create_triton_service <- function() {
   # Requires that perts_crypt.vc be mounted.
   return(create_service(
-    server_ip = "35.188.76.62",
+    server_ip = "127.0.0.1",
     dbname = "triton",
     ssl_file_names = list(
       ca = "triton_sql_production-01-analysis-replica.ca",
@@ -228,7 +232,8 @@ create_triton_service <- function() {
     ),
     mysql_user = "readonly",
     password_file_name = "triton_replica_readonly_password.txt",
-    password = NULL
+    password = NULL,
+    port = 3411
   ))
 }
 

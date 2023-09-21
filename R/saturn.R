@@ -9,6 +9,10 @@
 #
 # * saturn_service$get_responses(survey_label) - returns a data frame
 
+# NOTE: In order to access our databases, you must first follow the instructions
+# for connecting to production databases, here:
+# https://docs.google.com/document/d/184dsSF-esWgJ-TS_da3--UkFNb1oIur-r99X-7Xmhfg/edit#heading=h.upesquweiol3
+
 # packages: dplyr, lubridate
 
 modules::import('dplyr', `%>%`)
@@ -17,7 +21,7 @@ json_utils <- import_module("json_utils")
 logging <- import_module("logging")
 sql <- import_module("sql")
 
-IP_ANALYSIS_REPLICA <- '34.66.52.115'
+IP_ANALYSIS_REPLICA <- '127.0.0.1'
 IP_LOCALHOST <- '127.0.0.1'
 
 create_service <- function (
@@ -62,7 +66,8 @@ create_service <- function (
       dbname = db_name,
       ssl_credentials = ssl_credentials,
       password = password,
-      mysql_user = mysql_user
+      mysql_user = mysql_user,
+      port = 3421
     )
 
     safe_survey_label <- conn$escape_strings(survey_label)
