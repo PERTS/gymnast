@@ -471,7 +471,7 @@ find_crypt_paths <- function(
     }
 
     if (is.na(volume_patterns)) {
-      volume_patterns <- c("NO.NAME", "Untitled")
+      volume_patterns <- c("NO.NAME", "Untitled", "ACCESS")
     }
 
     pattern <- "(" %+% paste(volume_patterns, collapse = "|") %+% ")"
